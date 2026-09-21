@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "Nuestro universo · Our universe",
+  "short_name": "J & J",
+  "description": "Un universo para Julisa y Jesús. A universe for Julisa and Jesús.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#171322",
+  "theme_color": "#171322",
+  "icons": [
+    {"src":"assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"assets/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}
