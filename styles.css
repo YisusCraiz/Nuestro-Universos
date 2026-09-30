@@ -28,6 +28,8 @@ button{touch-action:manipulation}img,audio,iframe{max-width:100%}
 dialog{overscroll-behavior:contain;max-height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
 .page-heading,.hero-content,.quick-card,.game-panel,.gate-inner{min-width:0;overflow-wrap:break-word}
 .wheel-wrap{overflow:hidden}
+.delete-music{color:#ffb9be;border:1px solid #ffb9be35;border-radius:8px;margin-top:10px;padding:8px 12px;min-height:44px;background:transparent;font-size:.875rem}
+.btn.danger{background:#ffb9be;color:#391d27}.delete-song-title{color:var(--gold);overflow-wrap:anywhere;margin-bottom:14px}
 @media(min-width:761px) and (max-width:1100px){.wheel-layout{grid-template-columns:1fr}.wheel-layout>.stack{text-align:center;max-width:500px;margin:auto}.hero-content{max-width:440px}.sidebar .brand{font-size:1.2rem;padding:0 8px}.nav button{font-size:.875rem}.topbar{height:auto;min-height:75px;gap:16px;padding-top:12px;padding-bottom:12px}.anniversary{max-width:150px}}
 @media(max-width:760px){
   :root{--tools-height:64px}

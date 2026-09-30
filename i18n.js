@@ -3,11 +3,11 @@
 'use strict';
 (() => {
   const dictionary = Object.assign(Object.create(null), {
-    'Nuestro universo':'Our universe', 'Nuestro universo /':'Our universe /',
+    'Sopas y laberintos':'Word searches & mazes', 'Verdad o reto':'Truth or dare', 'Misiones JJ':'JJ missions', 'Temporadas':'Seasons', 'Un rincón para nosotros':'A little place for us', 'Ocho juegos, dos nombres y una revancha pendiente.':'Eight games, two names and a rematch waiting.', 'Nuestro universo':'Our universe', 'Nuestro universo /':'Our universe /',
     '21 de septiembre · para ti':'September 21 · for you', '21 de septiembre':'September 21',
     'Hay encuentros':'Some encounters', 'que se vuelven':'become an entire', 'universo.':'universe.',
     'Y el mío empezó el día que te conocí.':'And mine began the day I met you.',
-    'JULISA & JESÚS · UN RINCÓN SOLO NUESTRO':'JULISA & JESÚS · A LITTLE PLACE JUST FOR US',
+    'JULISSA & JESÚS · UN RINCÓN SOLO NUESTRO':'JULISSA & JESÚS · A LITTLE PLACE JUST FOR US',
     'Nuestra pequeña contraseña':'Our little secret', 'Todo empezó un día…':'It all started one day…',
     '¿Recuerdas la fecha en que nos conocimos?':'Do you remember the date we met?',
     'Día':'Day', 'Mes':'Month', 'Elige el mes':'Choose the month',
@@ -109,10 +109,10 @@
     'Estas flores tienen un solo destino: tú.':'These flowers have just one destination: you.',
     'Usar mi animación HTML':'Use my HTML animation','Usar estas flores':'Use these flowers',
     'También puedes guardar una animación propia en un solo archivo HTML.':'You can also save your own animation in a single HTML file.',
-    'Flores amarillas para Julisa':'Yellow flowers for Julisa',
+    'Flores amarillas para Julissa':'Yellow flowers for Julissa',
     'Flores amarillas para la más hermosa de mi universo':'Yellow flowers for the most beautiful girl in my universe',
     'Con todo mi cariño':'With all my love','Para la más hermosa':'For the most beautiful girl','de mi universo':'in my universe',
-    'Julisa, estas flores siempre van a ser para ti. ♡':'Julisa, these flowers will always be for you. ♡',
+    'Julissa, estas flores siempre van a ser para ti. ♡':'Julissa, these flowers will always be for you. ♡',
     'No se pudo cambiar la animación. Inténtalo otra vez.':'Could not change the animation. Please try again.',
     'Tu propia animación':'Your own animation',
     'Elige un HTML con estilos y scripts incluidos. Las imágenes y sonidos deben estar integrados como datos; los recursos externos no se cargan.':'Choose an HTML file with styles and scripts included. Images and sounds must be embedded as data; external resources will not load.',
@@ -145,7 +145,15 @@
     'No se pudo abrir la instalación. Sigue los pasos de tu navegador.':'Could not open installation. Follow the steps for your browser.',
     'Instalación solicitada. Confirma en tu dispositivo.':'Installation requested. Confirm on your device.',
     'Listo, ya puedes buscar el icono en tu dispositivo ♡':'All set! Look for the icon on your device ♡',
-    'Idioma':'Language','De':'From'
+    'Idioma':'Language','De':'From',
+    'Eliminar canción':'Delete song','¿Eliminar esta canción?':'Delete this song?',
+    'Solo puedes eliminar las canciones que tú subiste.':'You can only delete songs you uploaded.',
+    'Se eliminarán la canción, su portada y sus comentarios para los dos. También se quitará de las playlists. Esta acción no se puede deshacer.':'The song, its cover and its comments will be deleted for both of you, including its playlist entries. This cannot be undone.',
+    'Cancelar':'Cancel','Eliminando…':'Deleting…','Canción eliminada':'Song deleted',
+    'Reintentar limpieza':'Retry file cleanup',
+    'No se pudo eliminar. Revisa tu conexión y ejecuta la actualización 03 de Supabase si todavía no lo hiciste.':'Could not delete. Check your connection and run Supabase update 03 if you have not done so yet.',
+    'No pudimos confirmar la eliminación. Reintenta; tus archivos no se han borrado.':'We could not confirm deletion. Try again; your files have not been deleted.',
+    'La canción ya se eliminó de la lista, pero falta limpiar sus archivos. Pulsa Reintentar limpieza. Si cierras, podrás revisar esos archivos en Supabase Storage.':'The song was removed from the list, but its files still need to be cleaned up. Tap Retry file cleanup. If you close this window, you can review those files in Supabase Storage.'
   });
   const defaults = { julisa: 'en', jesus: 'es' };
   const key = 'universe-language';
@@ -232,7 +240,7 @@
   function apply(){
     observer.disconnect();walk(document.body);
     document.documentElement.lang=language;
-    document.title=language==='en'?'Our universe · Julisa & Jesús':'Nuestro universo · Julisa & Jesús';
+    document.title=language==='en'?'Our universe · Julissa & Jesús':'Nuestro universo · Julissa & Jesús';
     document.querySelectorAll('[data-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.language===language)));
     observer.observe(document.body,options);
   }
