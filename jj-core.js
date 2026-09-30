@@ -37,7 +37,7 @@ const oldSaveScore=saveScore;
 saveScore=async(game,score,attempt=crypto.randomUUID())=>{if(state.demo){demoScores[game]??=[];const old=demoScores[game].find(x=>x.handle===state.profile.handle);if(old)old.best=JJ.games[game].lower?Math.min(old.best,score):Math.max(old.best,score);else demoScores[game].push({handle:state.profile.handle,best:score});return;}await rpc('record_game_once',{p_game:game,p_score:score,p_attempt:attempt});};
 
 menus.splice(3,0,['playlists','♫','Playlists']);
-menus.push(['puzzles','⌘','Sopas y laberintos'],['truth','♠','Verdad o reto'],['missions','✦','Misiones JJ'],['season','☾','Temporadas']);
+menus.push(['puzzles','⌘','Game'],['truth','♠','Verdad o reto'],['missions','✦','Misiones JJ'],['season','☾','Temporadas']);
 const originalNavigate=navigate;
 navigate=async function(page){jjCleanup();let navigationVersion;try{
   if(['playlists','puzzles','truth','missions','season'].includes(page)){

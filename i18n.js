@@ -249,6 +249,7 @@
     language=next;
     if(remember){explicit=true;try{localStorage.setItem(key,next);}catch{}}
     apply();
+    window.dispatchEvent?.(new Event('universe-language'));
   }
   document.addEventListener('click',event=>{
     const button=event.target.closest('[data-language]');
