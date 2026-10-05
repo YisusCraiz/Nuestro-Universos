@@ -4,7 +4,7 @@
 (() => {
   const dictionary = Object.assign(Object.create(null), {
     'Te pienso':'Thinking of you','Perfiles':'Profiles','Calendario':'Calendar','Metas':'Goals','Eventos':'Events','Eliminaciones':'Deletions',
-    'Sopas y laberintos':'Word searches & mazes', 'Verdad o reto':'Truth or dare', 'Misiones JJ':'JJ missions', 'Temporadas':'Seasons', 'Un rincón para nosotros':'A little place for us', 'Trece juegos, dos nombres y una revancha pendiente.':'Thirteen games, two names and a rematch waiting.', 'Nuestro universo':'Our universe', 'Nuestro universo /':'Our universe /',
+    'Sopas y laberintos':'Word searches & mazes', 'Verdad o reto':'Truth or dare', 'Misiones JJ':'JJ missions', 'Temporadas':'Seasons', 'Un rincón para nosotros':'A little place for us', 'Trece juegos, dos nombres y una revancha pendiente.':'Thirteen games, two names and a rematch waiting.', 'Nuestro universo':'Our universe', 'Videoclips':'Music videos', 'Nuestro universo /':'Our universe /',
     '21 de septiembre · para ti':'September 21 · for you', '21 de septiembre':'September 21',
     'Hay encuentros':'Some encounters', 'que se vuelven':'become an entire', 'universo.':'universe.',
     'Y el mío empezó el día que te conocí.':'And mine began the day I met you.',
