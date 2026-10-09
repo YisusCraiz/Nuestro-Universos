@@ -3,7 +3,7 @@
 'use strict';
 (() => {
   const dictionary = Object.assign(Object.create(null), {
-    'Te pienso':'Thinking of you','Perfiles':'Profiles','Calendario':'Calendar','Metas':'Goals','Eventos':'Events','Eliminaciones':'Deletions',
+    'Nueve regalos para ti':'Nine gifts for you','Te pienso':'Thinking of you','Perfiles':'Profiles','Calendario':'Calendar','Metas':'Goals','Eventos':'Events','Eliminaciones':'Deletions',
     'Sopas y laberintos':'Word searches & mazes', 'Verdad o reto':'Truth or dare', 'Misiones JJ':'JJ missions', 'Temporadas':'Seasons', 'Un rincón para nosotros':'A little place for us', 'Trece juegos, dos nombres y una revancha pendiente.':'Thirteen games, two names and a rematch waiting.', 'Nuestro universo':'Our universe', 'Videoclips':'Music videos', 'Puzle secreto':'Secret puzzle', 'Nuestro universo /':'Our universe /',
     '21 de septiembre · para ti':'September 21 · for you', '21 de septiembre':'September 21',
     'Hay encuentros':'Some encounters', 'que se vuelven':'become an entire', 'universo.':'universe.',
