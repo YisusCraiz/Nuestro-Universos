@@ -37,7 +37,7 @@
   // Never cache Supabase, sessions, uploads, config.js or private media.
   // This worker only provides a bilingual offline explanation for page navigation.
   if('serviceWorker' in navigator && window.isSecureContext && location.protocol!=='file:') {
-    navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'})
+    navigator.serviceWorker.register('./sw.js?v=v17-correccion-app-juego',{scope:'./',updateViaCache:'none'})
       .catch(error=>console.warn('Home-screen offline fallback unavailable:',error));
   }
 })();
