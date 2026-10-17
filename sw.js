@@ -2,7 +2,7 @@
 const BASE = new URL('./', self.location.href);
 // Scope-derived cache names prevent collisions with other projects on the same GitHub host.
 const PREFIX = `jj-offline-${BASE.pathname}-`;
-const CACHE = `${PREFIX}v16`;
+const CACHE = `${PREFIX}v23-live`;
 const OFFLINE = new URL('offline.html', BASE).href;
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.add(OFFLINE)).then(()=>self.skipWaiting()));
@@ -18,7 +18,7 @@ self.addEventListener('fetch',event=>{
     return fallback || new Response('Sin conexión / Offline',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});
   }));
 });
-const PUSH_PAGES=new Set(['home','music','memories','messages','playlists','calendar','goals','games','affection','videos']);
+const PUSH_PAGES=new Set(['home','music','memories','messages','playlists','calendar','goals','games','affection','videos','live']);
 self.addEventListener('push',event=>{
  let data={};try{data=event.data?.json()||{};}catch{}
  const page=PUSH_PAGES.has(data.page)?data.page:'home';
