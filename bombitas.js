@@ -74,7 +74,7 @@ async function bbPage(v){
   const ps=players();s.players.forEach((p,i)=>{if(p.alive)bbCharacter(c,p.x*T+30,p.y*T+32,51,ps[i]?.handle||(i?'julisa':'jesus'),ps[i]?.skin||'casual',dir!==null&&i===local?s.time:0);});
   if(model){$('#bb-score-a').textContent=`${ps[0]?.name||'Jesús'} · ${score[0]}`;$('#bb-score-b').textContent=`${ps[1]?.name||'Julie'} · ${score[1]}`;$('#bb-round').textContent=`${round} · ${Math.floor(model.time/1000)}s`;
    if(room&&(!connected||Date.now()-lastPeer>4000))status(say('Pausa: esperando la conexión del otro. Si no vuelve, salgan y creen otra sala.','Paused: waiting for your partner. If they do not return, leave and create another room.'));
-   else if(performance.now()<roundAt)status(say('¡Prepárense! ','Get ready! ')+Math.ceil((roundAt-performance.now())/1000));
+   else if(performance.now()<roundAt&&!model.over)status(say('¡Prepárense! ','Get ready! ')+Math.ceil((roundAt-performance.now())/1000));
    else if(model.over)status(matchOver?`${ps[score[0]>=5?0:1]?.name} · `+say('¡Ganó la partida! Pulsa revancha.','Won the match! Start a rematch.'):(model.winner===null?say('¡Empate!','Draw!'):`${ps[model.winner]?.name} · `+say('¡Punto!','Point!')));
    else status(say('¡Cuidado con tus propias bombas!','Watch out for your own bombs!'));
   }else status(room?say('Esperando a los dos. Quien creó la sala inicia la partida.','Waiting for both players. The room creator starts.'):say('Practica o crea una sala para Julie.','Practice or create a room for Julie.'));
@@ -95,7 +95,7 @@ async function bbPage(v){
  const blur=()=>{dir=null;drop=false;remote.dir=null;};document.addEventListener('keydown',key);document.addEventListener('keyup',key);window.addEventListener('blur',blur);document.addEventListener('visibilitychange',blur);
  const heartbeat=setInterval(()=>{if(!valid()||!room||document.hidden||tab!=='play')return;send('hello',{id:user});},1000);
  let polling=false;const poll=setInterval(async()=>{if(!valid()||!room||polling||document.hidden)return;polling=true;try{const r=await rpc('bb_room',{p_code:room.code});if(valid()&&r.id===room?.id){if(r.guest!==room.guest){model=null;peerReady=false;}room=r;paintRoom();}}catch(e){if(valid()){connected=false;error(e);}}finally{polling=false;}},2500);
- document.querySelectorAll('[data-bb-tab]').forEach(b=>b.onclick=async()=>{const next=b.dataset.bbTab;if(next===tab)return;if(room||model)await leave();if(!valid())return;tab=next;document.querySelectorAll('[data-bb-tab]').forEach(t=>t.setAttribute('aria-selected',String(t===b)));try{await loadShop();}catch(e){error(e);}if(!valid())return;if(tab==='play')paintPlay();else paintShop();});
+ document.querySelectorAll('[data-bb-tab]').forEach(b=>b.onclick=async()=>{if(busy)return;const next=b.dataset.bbTab;if(next===tab)return;if(room||model)await leave();if(!valid())return;tab=next;document.querySelectorAll('[data-bb-tab]').forEach(t=>t.setAttribute('aria-selected',String(t===b)));try{await loadShop();}catch(e){error(e);}if(!valid())return;if(tab==='play')paintPlay();else paintShop();});
  JJ.cleanups.push(()=>{stopped=true;cancelAnimationFrame(frame);clearInterval(heartbeat);clearInterval(poll);document.removeEventListener('keydown',key);document.removeEventListener('keyup',key);document.removeEventListener('visibilitychange',blur);window.removeEventListener('blur',blur);if(sound)sound.close();leave();});
  try{await loadShop();}catch(e){error(e);}if(!valid())return;paintPlay();frame=requestAnimationFrame(loop);
 }
