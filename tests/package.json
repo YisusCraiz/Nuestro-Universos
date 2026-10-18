@@ -1,1 +1,11 @@
-{"private":true,"scripts":{"test":"node universe.cjs"},"devDependencies":{"@electric-sql/pglite":"0.3.14"}}
+{
+  "private": true,
+  "scripts": {
+    "test": "cd .. && node tests/universe.cjs && node tests/cards.cjs && node tests/cards-matches.cjs",
+    "test:ui": "cd .. && node tests/ui.cjs && node tests/cards-ui.cjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "playwright": "^1.58.0"
+  }
+}
