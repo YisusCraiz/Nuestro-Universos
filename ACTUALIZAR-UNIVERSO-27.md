@@ -15,9 +15,9 @@ Comics permite que cada uno suba sus propios capítulos, les asigne un orden y r
 
 ## Noticias
 
-`news.json` contiene las notas en español e inglés. Esta actualización incluye una traducción revisada. El flujo `Registrar noticias` registra el mensaje del último commit de cada actualización de main. Para notas revisadas, añade `en.title` y `en.body`; de lo contrario, se usa el traductor MyMemory con caché local y un aviso si no está disponible. No se envían archivos ni claves al traductor.
+`news.json` contiene las notas en español e inglés. Esta actualización incluye una traducción revisada. El flujo `Publicar universo y noticias` reconstruye el historial desde los commits y lo incorpora al sitio antes de publicarlo. Para notas revisadas, añade `en.title` y `en.body`; de lo contrario, se usa el traductor MyMemory con caché local y un aviso si no está disponible. No se envían archivos ni claves al traductor.
 
-GitHub necesita permitir escritura a GitHub Actions. En GitHub Pages con publicación desde rama, los commits creados por `GITHUB_TOKEN` no disparan una nueva compilación: vuelve a ejecutar la publicación de Pages después de generar las noticias, o integra `node tools/build-news.cjs` en tu propio flujo de publicación antes de subir el artefacto. Las futuras notas deben describir cambios para Julissa; el mensaje del commit es el texto que se registra automáticamente.
+En GitHub → Settings → Pages, selecciona **GitHub Actions** como fuente de publicación. Después, cada cambio de main publicará la página y su historial de noticias juntos. Los mensajes de commit son el texto automático de las novedades; escribe mensajes claros para Julissa.
 
 ## Avisos
 
@@ -32,3 +32,4 @@ No se realizó una entrega a teléfonos reales ni se ejecutaron migraciones cont
 Pruebas en PostgreSQL embebido: descuento de monedas, compra sin duplicados, saldo independiente por perfil, título inválido, autoría del cómic, rutas de imágenes, lectura compartida y bloqueo de edición ajena.
 
 Prueba de navegador móvil (390 × 844): menús agrupados, inicio de sopa de letras, biblioteca de música, formulario de cómic, títulos y noticias en inglés, sin errores de JavaScript. `tests/universe.cjs` requiere instalar las dependencias de `tests/package.json`; `tests/ui.cjs` requiere Playwright y Edge.
+

@@ -1,16 +1,21 @@
-name: Registrar noticias
+name: Publicar universo y noticias
 on:
   push:
     branches: [main]
-    paths-ignore: [news.json]
+  workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 concurrency:
-  group: universe-news
+  group: pages
   cancel-in-progress: false
 jobs:
-  news:
+  publish:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,12 +24,9 @@ jobs:
         with:
           node-version: '22'
       - run: node tools/build-news.cjs
-      - name: Guardar noticia
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add news.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'docs: registrar noticia de actualización'
-            git push
-          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - uses: actions/deploy-pages@v4
+        id: deployment
