@@ -1,5 +1,21 @@
 # Bombitas JJ
 
+## v25.2 · Apuesta opcional de monedas JJ
+
+1. Ejecutar **una sola vez** `supabase/26-bombitas-apuestas.sql` después de SQL 25. El archivo también admite reejecución y conserva apuestas/pagos anteriores.
+2. Integrar la versión y actualizar ambos celulares a v25.2 antes de crear la sala.
+3. En Reglas, el anfitrión elige **Apuesta por persona (JJ)**. Con 0 JJ juegan sin apostar. La práctica contra bot siempre usa 0.
+4. Con una cantidad positiva, pulsa **Proponer y reservar**. El otro ve el mismo importe y pulsa **Aceptar apuesta**. El botón de inicio permanece bloqueado hasta que ambas reservas se confirmen en la base de datos. No se permite apostar más que el saldo disponible.
+5. El ganador de la partida (no de cada ronda) recibe el bote de ambos. Ejemplo: 3 JJ cada uno → bote de 6 JJ; ganancia neta del ganador +3 JJ y pérdida del otro −3 JJ. Las rondas empatadas no cambian la apuesta.
+
+Las monedas aceptadas se reservan: dejan de estar disponibles para comprar skins o apostar simultáneamente en otra sala. El saldo de toda la página incluye ganancias, pérdidas y reservas. Cambiar las reglas o el importe exige cancelar la oferta y aceptarla de nuevo; cada revancha tiene una apuesta nueva.
+
+Una pausa breve conserva la reserva. Salir/cancelar antes de registrar resultados devuelve las monedas. Al finalizar, ambos clientes comunican el ganador; el reparto se confirma una sola vez cuando coinciden. Si discrepan se libera la reserva sin transferir monedas. Si falta una confirmación, se reintenta; la confirmación pendiente se conserva en el dispositivo. Las reservas pendientes caducan con la sala (máximo cuatro horas) y vuelven a estar disponibles aunque el otro teléfono no regrese. Una cancelación posterior al primer resultado no puede convertir ese resultado pendiente en un pago unilateral.
+
+Se mantiene el modelo de anfitrión de confianza descrito abajo: los resultados provienen de los dos clientes, no de un servidor antitrampas independiente.
+
+Pruebas adicionales: `node tests/bombitas-wagers-sql.cjs` (requiere `@electric-sql/pglite`, o indicar su ruta con `PGLITE_MODULE`). Ejecuta SQL 25 y 26 en un PostgreSQL local con cuentas ficticias, verifica reservas, saldo insuficiente, compras, pagos idempotentes, caducidad y recuperación. La prueba de dos controladores también cubre una oferta que el invitado no puede pagar, aceptación de una oferta menor y pago automático del bote una sola vez.
+
 ## Actualización v25.1 · después de probar con dos celulares
 
 Si SQL 25 ya se ejecutó, esta actualización **no requiere otro SQL ni repetirlo**. Integrar los cambios en main y actualizar la página en ambos celulares antes de crear una sala nueva. No mezclar jugadores con v25.0 y v25.1.
