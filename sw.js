@@ -2,7 +2,7 @@
 const BASE = new URL('./', self.location.href);
 // Scope-derived cache names prevent collisions with other projects on the same GitHub host.
 const PREFIX = `jj-offline-${BASE.pathname}-`;
-const CACHE = `${PREFIX}v25-2-bombitas`;
+const CACHE = `${PREFIX}v27-universo`;
 const OFFLINE = new URL('offline.html', BASE).href;
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.add(OFFLINE)).then(()=>self.skipWaiting()));
@@ -32,3 +32,4 @@ self.addEventListener('notificationclick',event=>{
  event.notification.close();const page=PUSH_PAGES.has(event.notification.data?.page)?event.notification.data.page:'home';
  event.waitUntil((async()=>{const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});for(const client of windows){const url=new URL(client.url);if(url.origin===BASE.origin&&url.pathname.startsWith(BASE.pathname)){await client.focus();client.postMessage({type:'jj-push-open',page});return;}}const url=new URL('./',BASE);url.searchParams.set('jj-open',page);await self.clients.openWindow(url.href);})());
 });
+
