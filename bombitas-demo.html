@@ -2,4 +2,4 @@
 const state={profile:{id:'demo-jesus',handle:'jesus',display_name:'Jesús'},version:0,demo:true},JJ={cleanups:[]},menus=[];
 const $=s=>document.querySelector(s),bi=es=>es,say=es=>es,esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function jjCleanup(){JJ.cleanups.splice(0).forEach(f=>f());}function clearTimers(){}function shell(){}async function loadSections(){}function sectionAllowed(){return true;}async function navigate(){}async function rpc(){throw Error('DEMO');}async function getDashboard(){return {coins:0};}
-</script><script src="bombitas-engine.js"></script><script src="bombitas.js"></script><script>navigate('bombitas');</script></body></html>
+</script><script src="bombitas-engine.js"></script><script src="bombitas-session.js"></script><script src="bombitas.js"></script><script src="bombitas-play.js"></script><script>navigate('bombitas');</script></body></html>

@@ -1,5 +1,19 @@
 # Bombitas JJ
 
+## Actualización v25.1 · después de probar con dos celulares
+
+Si SQL 25 ya se ejecutó, esta actualización **no requiere otro SQL ni repetirlo**. Integrar los cambios en main y actualizar la página en ambos celulares antes de crear una sala nueva. No mezclar jugadores con v25.0 y v25.1.
+
+- Sala al inicio del apartado: crear, copiar el código y unirse con confirmación visible. Se muestran los dos nombres y si realmente están conectados.
+- El anfitrión elige 30–600 segundos **por ronda** y 1–10 victorias para ganar la partida. Ambos reciben las mismas reglas. Se bloquean hasta que termina la partida o salen de la sala.
+- El límite de tiempo incluye la fase de cierre de la arena. Los empates no suman victorias; la duración total de la partida depende del número de rondas.
+- El inicio/revancha se bloquea durante una partida. Los sondeos de sala ya no borran la simulación. Los estados tienen revisión monotónica para descartar mensajes atrasados.
+- Cada toque de bomba se guarda hasta recibir confirmación del anfitrión. Los reenvíos no colocan bombas extra. Se distinguen bomba colocada, casilla ocupada y límite de bombas alcanzado; también se muestra cuántas bombas quedan disponibles.
+- Modo horizontal/pantalla completa con cruceta a la izquierda y bomba a la derecha. El bloqueo automático de orientación depende del navegador; si no está disponible se pide girar el celular con rotación automática. Se puede salir con el botón de pantalla completa.
+- Nueva ilustración transparente con 16 sprites frontales (dos personajes × ocho atuendos), utilizada tanto en la tienda como en la arena. Tienen animación de balanceo al moverse; aún no son animaciones dibujadas de caminar en cuatro direcciones.
+
+Validación adicional: `node tests/bombitas-session.cjs` y `node tests/bombitas-multiplayer.cjs`. La segunda prueba ejecuta dos instancias reales del controlador con reloj/red simulados: conexión, reglas, segundo inicio, pérdida del primer envío de bomba, confirmación y pausa/reanudación. La calidad de conexión y el bloqueo de orientación todavía deben probarse en los celulares físicos.
+
 ## Activar en la página
 
 1. Ejecutar `supabase/25-bombitas.sql` en el editor SQL de su proyecto Supabase existente. No repetir las actualizaciones anteriores. El archivo agrega sus propias tablas; no borra monedas, misiones ni recuerdos.
