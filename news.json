@@ -1,3 +1,26 @@
 [
- {"version":"v27-universo","date":"2026-10-18","es":{"title":"Un universo más organizado","body":"Games reúne nuestros minijuegos, puzles, Verdad o reto y Bombitas. Musicas reúne Nuestra música, Playlist y Videoclips. Estrenamos Comics para los capítulos de Jesús y Julissa, títulos en los perfiles y este espacio de noticias bilingües. También mejoramos la comprobación de los permisos de notificaciones."},"en":{"title":"A more organized universe","body":"Games brings together our minigames, puzzles, Truth or dare and Bombitas. Music brings together Our music, Playlists and Music videos. We are adding Comics for Jesús and Julissa’s chapters, profile titles and this bilingual news space. We also improved notification permission checks."}}
+  {
+    "version": "v29-cartas-armario",
+    "date": "2026-10-18",
+    "es": {
+      "title": "Un armario para todas nuestras aventuras",
+      "body": "La Tienda está al principio del menú y conserva tus skins de Bombitas. Compra y equipa una sola vez para los juegos compatibles. Estrenamos Última carta JJ, nuestro juego de cartas tipo UNO para dos, con desafíos +4, aviso de UNO, puntuación y reglas de la casa configurables. Bombitas y el juego de cartas ahora comparten una forma más clara de crear salas, unirse y compartir invitaciones."
+    },
+    "en": {
+      "title": "One wardrobe for all our adventures",
+      "body": "Shop is near the top of the menu and keeps your Bombitas skins. Buy and equip once for supported games. Meet Last Card JJ, our two-player UNO-style card game, with +4 challenges, UNO calls, scoring and customizable house rules. Bombitas and the card game now offer clearer room creation, joining and shareable invites."
+    }
+  },
+  {
+    "version": "v27-universo",
+    "date": "2026-10-18",
+    "es": {
+      "title": "Un universo más organizado",
+      "body": "Games reúne nuestros minijuegos, puzles, Verdad o reto y Bombitas. Musicas reúne Nuestra música, Playlist y Videoclips. Estrenamos Comics para los capítulos de Jesús y Julissa, títulos en los perfiles y este espacio de noticias bilingües. También mejoramos la comprobación de los permisos de notificaciones."
+    },
+    "en": {
+      "title": "A more organized universe",
+      "body": "Games brings together our minigames, puzzles, Truth or dare and Bombitas. Music brings together Our music, Playlists and Music videos. We are adding Comics for Jesús and Julissa’s chapters, profile titles and this bilingual news space. We also improved notification permission checks."
+    }
+  }
 ]
