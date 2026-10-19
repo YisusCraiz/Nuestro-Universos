@@ -10,3 +10,5 @@
 .cards-active .cards-player p{margin:3px 0;font-size:.8rem}.cards-active .cards-player span{font-size:.8rem}
 .cards-active .cards-status{margin:12px 0;padding:10px}.cards-active .cards-table{margin:12px 0;padding:14px;min-height:160px}
 .cards-room-details{font-size:.9rem}.cards-room-details summary{cursor:pointer}.cards-active .cards-score{font-size:.85rem}
+
+.cards-rules label[hidden]{display:none}.cards-bet-summary{padding:10px;border:1px solid #f4cf6b55;border-radius:12px}

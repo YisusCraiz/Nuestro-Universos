@@ -8,8 +8,8 @@ for(let match=0;match<8;match++){
  let turns=0;
  while(room.game.winner===null&&turns++<1000){const who=room.game.turn;if(ids[who]!==current){await as(ids[who]);room=await call();}const g=room.game;let action,data={};
   if(g.needs_color){action='color';data={color:'r'};}
-  else if(g.pending_kind==='4'){action=turns%3?'draw':'challenge';}
-  else{const eligible=g.hand.filter(c=>(!g.drawn||g.drawn===c)&&(g.pending?(room.rules.stack&&c[1]==='d'):(c[0]==='w'||c[0]===g.color||(g.top[0]!=='w'&&c[1]===g.top[1]))));const card=eligible.find(c=>c[0]!=='w')||eligible[0];if(card){action='play';const color=['r','y','g','b'].sort((a,b)=>g.hand.filter(c=>c[0]===b).length-g.hand.filter(c=>c[0]===a).length)[0];data={card,color,uno:true};}else action=g.drawn?'pass':'draw';}
+  else if(g.pending_kind==='4'){action=g.penalty_started||g.pending!==4||turns%3?'draw':'challenge';}
+  else{const eligible=g.hand.filter(c=>(!g.drawn||g.drawn===c)&&(g.pending?(!g.penalty_started&&room.rules.stack&&c[1]==='d'):((!g.drawing||g.drawn)&&(c[0]==='w'||c[0]===g.color||(g.top[0]!=='w'&&c[1]===g.top[1])))));const card=eligible.find(c=>c[0]!=='w')||eligible[0];if(card){action='play';const color=['r','y','g','b'].sort((a,b)=>g.hand.filter(c=>c[0]===b).length-g.hand.filter(c=>c[0]===a).length)[0];data={card,color,uno:true};}else action=g.drawn?'pass':'draw';}
   room=await call(action,data);moves++;
   if(turns%20===0||room.game.winner!==null){await pg.exec('reset role');const s=(await pg.query('select game from public.jj_card_rooms where code=$1',[room.code])).rows[0].game;const all=[...s.deck,...s.pile,...s.hands.flat()];assert.equal(all.length,108);assert.equal(new Set(all).size,108);await as(ids[who]);}
  }
