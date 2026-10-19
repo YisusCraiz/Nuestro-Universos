@@ -1,5 +1,17 @@
 [
   {
+    "version": "v30-juegos-fluidos",
+    "date": "2026-10-19",
+    "es": {
+      "title": "Revancha más fluida y nuevas reglas para las cartas",
+      "body": "Bombitas suaviza el movimiento del invitado, responde antes a los controles y reduce el trabajo de pantalla. Última carta corrige la respuesta con +2 incluso al cerrar una ronda, roba una carta por pulsación y permite elegir cuántas rondas debes ganar. También añade apuestas de monedas: ambos confirman la reserva antes de jugar y el servidor entrega el bote al ganador de la partida. Salir de una partida con apuesta cuenta como derrota."
+    },
+    "en": {
+      "title": "Smoother rematches and new card-game rules",
+      "body": "Bombitas smooths guest movement, responds sooner to controls and reduces screen work. Last Card fixes +2 stacking even on a final card, draws one card per click and lets you choose how many rounds you need to win. Coin wagers are now available: both players confirm their reserved stakes before playing, and the server pays the pot to the match winner. Leaving an active wagered match forfeits your stake."
+    }
+  },
+  {
     "version": "v29-cartas-armario",
     "date": "2026-10-18",
     "es": {

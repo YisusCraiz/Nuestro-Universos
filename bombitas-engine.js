@@ -29,6 +29,7 @@ const BombitasEngine = (() => {
   const alive=s.players.map((p,i)=>p.alive?i:-1).filter(i=>i>=0);if(alive.length<2){s.over=true;s.winner=alive[0]??null;}
   if(!s.over&&s.time>=(s.limit||122000)){s.over=true;s.winner=null;}
  }
- return {W,H,create,input,tick};
+ function advance(s,dt,beforeStep=()=>{}){let remaining=Math.min(250,Math.max(0,dt));while(remaining>0&&!s.over){const step=Math.min(16,remaining);remaining-=step;beforeStep();tick(s,step);}}
+ return {W,H,create,input,tick,advance};
 })();
 if(typeof module!=='undefined')module.exports=BombitasEngine;

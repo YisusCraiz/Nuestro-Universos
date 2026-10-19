@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "test": "cd .. && node tests/universe.cjs && node tests/cards.cjs && node tests/cards-matches.cjs",
-    "test:ui": "cd .. && node tests/ui.cjs && node tests/cards-ui.cjs"
+    "test": "cd .. && node tests/universe.cjs && node tests/cards.cjs && node tests/cards30.cjs && node tests/cards-matches.cjs && node tests/bombitas-motion.cjs",
+    "test:ui": "cd .. && node tests/ui.cjs && node tests/cards-ui.cjs && node tests/bombitas-network.cjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
