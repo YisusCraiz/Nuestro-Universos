@@ -1,5 +1,17 @@
 [
   {
+    "version": "v31-baraja-halloween",
+    "date": "2026-10-19",
+    "es": {
+      "title": "Volver, disfrazarnos y barajar",
+      "body": "Ahora hay un botón Atrás que vuelve a la pantalla anterior sin cerrar sesión. El cierre de cuenta se llama Cerrar sesión. La tienda suma nueve disfraces de Halloween para Jesús y Julissa. Games estrena Baraja inglesa con Ochos locos, Veintiuno en duelo y Carta alta: salas, invitaciones, rondas configurables y apuestas JJ compartidas con los demás juegos."
+    },
+    "en": {
+      "title": "Go back, dress up and shuffle",
+      "body": "There is now a Back button to return to the previous screen without signing out. The account exit is clearly labeled Sign out. Shop adds nine Halloween costumes for Jesús and Julissa. Games introduces Playing cards with Crazy eights, Twenty-one duel and High card: rooms, invitations, configurable round goals and JJ wagers sharing the same wallet as the other games."
+    }
+  },
+  {
     "version": "v30-juegos-fluidos",
     "date": "2026-10-19",
     "es": {
