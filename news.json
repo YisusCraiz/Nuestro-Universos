@@ -1,5 +1,17 @@
 [
   {
+    "version": "v33-vs-casino-billar",
+    "date": "2026-10-20",
+    "es": {
+      "title": "Vs, billar y una noche de casino",
+      "body": "Los juegos compartidos ahora están en Vs. Los minijuegos dan 1 JJ al terminar y 2 JJ extra al superar el récord vigente de ambos, con un límite diario. Bombitas separa la simulación del dibujo y anticipa tu movimiento para responder antes. Estrenamos Billar JJ para dos, con reglas, rondas y apuestas JJ; y Casino JXJ con tragamonedas, ruleta, póker de cinco cartas y carreras. Cada JXJ cuesta 2 JJ; puedes cambiarlos de vuelta y tener suerte con un pequeño bonus."
+    },
+    "en": {
+      "title": "Vs, pool and a casino night",
+      "body": "Shared games now live in Vs. Minigames award 1 JJ for finishing and 2 extra JJ for beating the current record across both players, with daily limits. Bombitas separates simulation from rendering and predicts your movement for faster feedback. Meet two-player Pool JJ with rules, round goals and JJ wagers, plus the JXJ Casino with slots, roulette, five-card draw poker and horse racing. Each JXJ costs 2 JJ; exchange them back for JJ with a small chance of a bonus."
+    }
+  },
+  {
     "version": "v31-baraja-halloween",
     "date": "2026-10-19",
     "es": {

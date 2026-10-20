@@ -10,6 +10,17 @@ const BombitasMotion=(()=>{
    const alpha=1-Math.exp(-dt/38);shown[i]=snap?{x,y}:{x:old.x+(x-old.x)*alpha,y:old.y+(y-old.y)*alpha};return shown[i];
   });
  }};}
- return {create};
+ // Replay only unacknowledged movement. No predicted bomb, collision result or winner
+ // is sent to the host; its next snapshot always supplies the real board.
+ function predictor(engine=BombitasEngine){let view=null,pending=[],received=0,base=0;
+  const clone=s=>({...s,players:s.players.map(p=>({...p})),items:{...s.items}});
+  return {reset(){view=null;pending=[];},receive(s,ack,now){
+   received=now;base=s.time;view=clone(s);pending=pending.filter(c=>c.seq>ack&&now-c.at<500);
+   for(const cmd of pending){view.time=Math.max(view.time,cmd.time);engine.input(view,cmd.local,cmd.dir,false);}
+  },input(s,seq,local,dir,now){if(!view)this.receive(s,-1,now);const time=base+Math.min(250,Math.max(0,now-received));pending.push({seq,local,dir,time,at:now});if(pending.length>24)pending.shift();
+   view.time=Math.max(view.time,time);engine.input(view,local,dir,false);
+  },sample(s,local,now){if(!view)return s;return {...s,players:s.players.map((p,i)=>i===local&&p.alive?{...p,x:view.players[i].x,y:view.players[i].y}:p)};}};
+ }
+ return {create,predictor};
 })();
 if(typeof module!=='undefined')module.exports=BombitasMotion;
