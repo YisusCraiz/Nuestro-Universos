@@ -1,4 +1,4 @@
-const {fixture,HOST,GUEST,OUT}=require('./cards.cjs'),assert=require('node:assert/strict');
+const {fixture,HOST,GUEST,OUT}=require('./vs32.cjs'),assert=require('node:assert/strict');
 (async()=>{const pg=await fixture();let room,checks=0;
 async function as(id){await pg.exec('reset role');await pg.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await pg.exec('set role authenticated');}
 async function call(action='read',data={},revision=room?.revision){return(await pg.query('select public.jj_table($1,$2,$3,$4) v',[action,room?.code||'',revision??null,JSON.stringify(data)])).rows[0].v;}
