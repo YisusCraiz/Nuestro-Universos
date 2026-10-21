@@ -1,5 +1,17 @@
 [
   {
+    "version": "v34.1-piano-resplandor",
+    "date": "2026-10-20",
+    "es": {
+      "title": "El piano confirma tus aciertos con luz",
+      "body": "Ahora una pulsación aceptada como Perfecto o Bien ilumina en blanco la casilla y su tecla. Una pulsación fuera de rango no produce resplandor. Las instrucciones explican esta señal para seguir el ritmo con más claridad."
+    },
+    "en": {
+      "title": "Piano hits now light up",
+      "body": "A press accepted as Perfect or Good now lights up the note tile and its key in white. Out-of-window presses create no glow. The instructions explain this cue to make following the rhythm clearer."
+    }
+  },
+  {
     "version": "v34-piano-mascotas",
     "date": "2026-10-20",
     "es": {
