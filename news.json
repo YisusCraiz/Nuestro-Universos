@@ -1,5 +1,17 @@
 [
   {
+    "version": "35",
+    "date": "2026-10-20",
+    "es": {
+      "title": "19 nuevas mascotas para coleccionar",
+      "body": "Llegan gatitos, perritos, un ajolote, un kitsune carmesí y más compañeros inspirados en nuestras referencias. Las nuevas mascotas cuestan entre 140 y 500 JJ. Busca por nombre, filtra por familia o por tu colección y ordena por precio en Tienda → Mascotas. Puedes elegir una para acompañarte en los menús o seleccionar ninguna. Las cuatro mascotas anteriores conservan su precio."
+    },
+    "en": {
+      "title": "19 new companions to collect",
+      "body": "Meet kittens, puppies, an axolotl, a crimson kitsune and more companions inspired by our references. New pets cost 140–500 JJ. Search by name, filter by family or your collection, and sort by price in Shop → Companions. Choose one to join you in the menus, or choose none. The four original companions keep their prices."
+    }
+  },
+  {
     "version": "v34.1-piano-resplandor",
     "date": "2026-10-20",
     "es": {
