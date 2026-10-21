@@ -1,5 +1,17 @@
 [
   {
+    "version": "35.1",
+    "date": "2026-10-21",
+    "es": {
+      "title": "El casino cobra vida",
+      "body": "Las tragamonedas giran y detienen sus tres rodillos uno a uno; la ruleta gira hasta el número ganador y los caballos corren por un hipódromo decorado. Las animaciones muestran el resultado confirmado de tu apuesta. Si tienes movimiento reducido activado, el resultado aparece directamente."
+    },
+    "en": {
+      "title": "The casino comes to life",
+      "body": "Slots spin and stop their three reels one by one; the roulette wheel spins to the winning number and horses race along a decorated track. Animations show the confirmed result of your bet. If reduced motion is enabled, the result appears immediately."
+    }
+  },
+  {
     "version": "35",
     "date": "2026-10-20",
     "es": {
