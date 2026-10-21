@@ -2,7 +2,7 @@
 const BASE = new URL('./', self.location.href);
 // Scope-derived cache names prevent collisions with other projects on the same GitHub host.
 const PREFIX = `jj-offline-${BASE.pathname}-`;
-const CACHE = `${PREFIX}v34-piano-mascotas`;
+const CACHE = `${PREFIX}v34.1-piano-resplandor`;
 const OFFLINE = new URL('offline.html', BASE).href;
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.add(OFFLINE)).then(()=>self.skipWaiting()));
