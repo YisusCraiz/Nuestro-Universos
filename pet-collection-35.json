@@ -1,0 +1,192 @@
+[
+  {
+    "id": "maneki",
+    "es": "Suerte de cascabel",
+    "en": "Lucky Bell",
+    "skin": "cat",
+    "price": 220,
+    "family": "cats",
+    "ref": "698480223500313468.jpg",
+    "subject": "A plump calico lucky cat waving one paw, happy closed eyes, red collar with golden bell."
+  },
+  {
+    "id": "samoyed",
+    "es": "Nube de nieve",
+    "en": "Snow Cloud",
+    "skin": "pajamas",
+    "price": 180,
+    "family": "dogs",
+    "ref": "441915782202617361.jpg",
+    "subject": "A fluffy white Samoyed puppy with a tiny happy pink tongue and creamy ears."
+  },
+  {
+    "id": "shiba",
+    "es": "Sakura Shiba",
+    "en": "Sakura Shiba",
+    "skin": "yukata",
+    "price": 240,
+    "family": "dogs",
+    "ref": "1137721924647613999.jpg",
+    "subject": "An orange and cream Shiba puppy with one pink sakura flower beside its ear, large glossy eyes."
+  },
+  {
+    "id": "inari",
+    "es": "Inari carmesí",
+    "en": "Crimson Inari",
+    "skin": "kitsune",
+    "price": 480,
+    "family": "fantasy",
+    "ref": "1021332021751073869.jpg",
+    "subject": "A fluffy white kitsune with red ears, paws, forehead markings and nine distinct white tails with red tips, joyful face. Also inspired by the second kitsune reference."
+  },
+  {
+    "id": "axolotl",
+    "es": "Ajolotito rosa",
+    "en": "Pink Axolotl",
+    "skin": "casual",
+    "price": 200,
+    "family": "aquatic",
+    "ref": "1064045849478860857.jpg",
+    "subject": "A round soft pink axolotl with three fluffy pink gills on each side, four tiny legs and curled tail."
+  },
+  {
+    "id": "hamster",
+    "es": "Pipita",
+    "en": "Sunny Seed",
+    "skin": "pajamas",
+    "price": 140,
+    "family": "small",
+    "ref": "°домашний питомец♡_.jpg",
+    "subject": "A round beige hamster with warm gray head stripes holding a single sunflower seed with tiny paws."
+  },
+  {
+    "id": "tuxedo",
+    "es": "Michi esmoquin",
+    "en": "Tuxedo Mochi",
+    "skin": "cat",
+    "price": 180,
+    "family": "cats",
+    "ref": "1136525656056123915.jpg",
+    "subject": "A fluffy black and white tuxedo kitten, big glossy eyes, fluffy upright curved tail."
+  },
+  {
+    "id": "poodle",
+    "es": "Canela rizada",
+    "en": "Curly Cinnamon",
+    "skin": "casual",
+    "price": 160,
+    "family": "dogs",
+    "ref": "1150317929847359044.jpg",
+    "subject": "ONLY the apricot poodle from the upper left of the collage: fluffy curly apricot puppy with round floppy ears."
+  },
+  {
+    "id": "pigeon",
+    "es": "Palomita nube",
+    "en": "Cloud Pigeon",
+    "skin": "casual",
+    "price": 150,
+    "family": "small",
+    "ref": "1150317929847359044.jpg",
+    "subject": "ONLY the gray pigeon from the collage: a round gray pigeon with soft mint and lilac neck band, tiny pink feet."
+  },
+  {
+    "id": "clownfish",
+    "es": "Coralín",
+    "en": "Little Coral",
+    "skin": "sharkshirt",
+    "price": 190,
+    "family": "aquatic",
+    "ref": "1150317929847359044.jpg",
+    "subject": "ONLY the orange clownfish from the collage: a cheerful round orange clownfish with three creamy white bands, small fins and tail. Floating without water or bubbles."
+  },
+  {
+    "id": "chick",
+    "es": "Brotito",
+    "en": "Little Sprout",
+    "skin": "casual",
+    "price": 140,
+    "family": "small",
+    "ref": "1150317929847359044.jpg",
+    "subject": "ONLY the yellow chick from the collage: a tiny round yellow chick with a green two-leaf sprout on its head, orange beak and tiny wings."
+  },
+  {
+    "id": "dino",
+    "es": "Dino celeste",
+    "en": "Sky Dino",
+    "skin": "shark",
+    "price": 320,
+    "family": "fantasy",
+    "ref": "1150317929847359044.jpg",
+    "subject": "ONLY the blue dinosaur from the collage: a friendly pastel blue baby dinosaur with tiny back spines, short arms and a curled tail."
+  },
+  {
+    "id": "penguin",
+    "es": "Pingüi violeta",
+    "en": "Violet Penguin",
+    "skin": "pajamas",
+    "price": 230,
+    "family": "small",
+    "ref": "1150317929847359044.jpg",
+    "subject": "ONLY the purple penguin from the collage: a round lavender blue baby penguin with creamy belly, little yellow beak and yellow feet."
+  },
+  {
+    "id": "pearl",
+    "es": "Perlita rosa",
+    "en": "Pink Pearl",
+    "skin": "cat",
+    "price": 280,
+    "family": "cats",
+    "ref": "1137158974674366565.jpg",
+    "subject": "A fluffy white kitten with pastel pink ear insides and tail tip, huge amber pink glossy eyes, raising one little pink paw."
+  },
+  {
+    "id": "hoodie",
+    "es": "Lobito nocturno",
+    "en": "Midnight Pup",
+    "skin": "ninja",
+    "price": 350,
+    "family": "dogs",
+    "ref": "1092052609660520631.jpg",
+    "subject": "A gray and white fluffy husky wolf puppy wearing a cozy black hooded sweatshirt with tiny paw embroidery, hood down and ears visible."
+  },
+  {
+    "id": "spaniel",
+    "es": "Toffee orejitas",
+    "en": "Floppy Toffee",
+    "skin": "casual",
+    "price": 170,
+    "family": "dogs",
+    "ref": "1107604102122669881.jpg",
+    "subject": "A cream and caramel spaniel puppy with very long floppy brown ears and tiny rounded paws."
+  },
+  {
+    "id": "wolf",
+    "es": "Luna plateada",
+    "en": "Silver Moon",
+    "skin": "kitsune",
+    "price": 380,
+    "family": "dogs",
+    "ref": "1116681670145544912.jpg",
+    "subject": "A silver gray and cream wolf cub with big pointed ears, fluffy curled tail and warm pink amber eyes."
+  },
+  {
+    "id": "sharkcat",
+    "es": "Michi tiburón",
+    "en": "Shark Kitty",
+    "skin": "shark",
+    "price": 420,
+    "family": "cats",
+    "ref": "Cat.jpg",
+    "subject": "An orange tabby kitten wearing an adorable blue shark onesie, face visible in the open white-toothed shark hood, side fins and a small tail."
+  },
+  {
+    "id": "chainsaw",
+    "es": "Pochi motosierra",
+    "en": "Chainsaw Pochi",
+    "skin": "devil",
+    "price": 500,
+    "family": "fantasy",
+    "ref": "1130262837756034556.jpg",
+    "subject": "A cute round orange fantasy chainsaw puppy inspired by Pochita, tiny paws, huge shiny eyes, small rounded gray chainsaw forehead blade and dark handle arch on its back, little cord tail. Harmless toy-like cute design."
+  }
+]
