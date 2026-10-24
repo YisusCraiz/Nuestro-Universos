@@ -1,0 +1,18 @@
+const {chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+(async()=>{const root=process.cwd(),errors=[];const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+(new URL(req.url,'http://local').pathname==='/'?'/index.html':new URL(req.url,'http://local').pathname));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(file,(e,b)=>{if(e){res.writeHead(404).end();return;}res.setHeader('Content-Type',({'.js':'application/javascript','.css':'text/css','.html':'text/html','.json':'application/json'})[path.extname(file)]||'application/octet-stream');res.end(b);});});await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
+try{
+ browser=await chromium.launch({headless:true,...(process.env.PW_CHROMIUM_PATH?{executablePath:process.env.PW_CHROMIUM_PATH}:{})});const page=await browser.newPage({viewport:{width:390,height:844}});page.on('pageerror',e=>errors.push(e.message));await page.route('**/*.supabase.co/**',r=>r.abort());await page.goto('http://127.0.0.1:'+server.address().port);
+ await page.evaluate(async()=>{state.demo=true;state.profile={id:'demo-jesus',handle:'jesus',display_name:'Jesús'};economyDemo=()=>({players:[{handle:'jesus',name:'Jesús',jj:20,jxj:5,casino_spent:30},{handle:'julisa',name:'Julissa',jj:40,jxj:5,casino_spent:10}]});await navigate('home');});
+ assert.equal(await page.locator('.economy-ranking').count(),3);assert.match(await page.locator('[data-ranking=jj] li').first().textContent(),/Julissa.*40 JJ/);assert.match(await page.locator('[data-ranking=jxj] li').first().textContent(),/1 =/);assert.match(await page.locator('[data-ranking=casino_spent] li').first().textContent(),/Jesús.*30 JXJ/);
+ await page.locator('#refresh-rankings').click();assert.equal(await page.locator('#competition-slot').count(),1);assert.equal(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth),true);
+ await page.screenshot({path:'/tmp/rankings-mobile.png',fullPage:true});
+ await page.locator('[data-language=en]').first().click();assert.equal(await page.getByText('Most JJ coins',{exact:true}).isVisible(),true);
+ await page.evaluate(()=>navigate('missions'));assert.equal(await page.locator('.mission-grid:not(.daily-grid) .mission').count(),22);assert.equal(await page.locator('.daily-grid .mission').count(),7);assert.match(await page.locator('.page-heading').textContent(),/22 weekly missions/);
+ await page.screenshot({path:'/tmp/missions-mobile.png',fullPage:true});
+ await page.setViewportSize({width:1440,height:1000});await page.evaluate(()=>navigate('home'));assert.equal(await page.locator('.economy-ranking').count(),3);assert.equal(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth),true);await page.screenshot({path:'/tmp/rankings-desktop.png',fullPage:true});
+ // Lost response is explicit and retryable, without replacing a previously loaded board.
+ await page.evaluate(()=>{economyDemo=()=>{throw Error('offline test');};});await page.locator('#refresh-rankings').click();assert.match(await page.locator('#ranking-state').textContent(),/Could not refresh/);assert.equal(await page.locator('.economy-ranking').count(),3);assert.equal(await page.locator('#refresh-rankings').isEnabled(),true);
+ await page.evaluate(()=>{economyDemo=()=>({players:[]});});await page.locator('#refresh-rankings').click();assert.equal(await page.locator('[data-ranking=jj] li').count(),0);
+ assert.deepEqual(errors,[]);console.log('PASS: mobile/desktop rankings, ties, refresh/retry, English, 22 weekly/7 daily missions; no page errors.');
+}finally{await browser?.close();server.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
