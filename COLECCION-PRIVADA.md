@@ -81,3 +81,13 @@ Pruebas: `node tests/collection150.cjs` y `node tests/collection150-ui.cjs`. Ver
 Arte generado con la herramienta integrada y la referencia de identidad de ambos, en `assets/collection/sixth-universe-v1.webp` (6 × 5). Prompt: dumplings, avión de papel, hierbas aromáticas, kayak, sombras con las manos, álbum de pegatinas, juego de mesa, planetario, pretzels, fresas, minigolf y paseo en canal; bardo con dragón, bruja de mariposas, ferrocarril de nubes, herrero celestial, cartógrafa y restaurante submarino; laberinto de girasoles, pueblo de jengibre, viajero de arena, cantante estelar, carruaje alado y ciudad de espejos; pozo de deseos, tortugas de cristal, globos de constelaciones, escalera del sol y la luna y variantes EXE obsidiana y coral. Sin rótulos, marcos ni márgenes.
 
 Pruebas: `node tests/collection180.cjs` y `node tests/collection180-ui.cjs`. Cubren conservación de datos, sobres mixtos, fabricación EXE, filtros, ilustraciones, intercambios y premios sin duplicaciones.
+
+## Ampliación: Séptimo universo · Japón
+
+`20261024200227_album_japan_universe.sql` añade las treinta cartas #181–#210, todas de temática japonesa, sin modificar las 180 anteriores ni los saldos, copias, ofertas, favoritos, descubrimientos y premios cobrados. Distribución: 12 Comunes, 8 Raras, 5 Épicas, 3 Legendarias y 2 EXE. Cada carta tiene una nueva dedicatoria de Jesús para Julissa en ambos idiomas. Se conservan precio, probabilidades y garantía; el progreso llega a 210. Nuevos premios únicos por 190, 200 y 210 descubrimientos: 900, 1000 y 1400 JJ. La visibilidad no cambia.
+
+Se añade el filtro Colección «Séptimo universo · Japón» y el filtro Tema «Japón». Las cartas conservan su categoría habitual y una etiqueta adicional `japon`, por lo que pueden encontrarse tanto por temporada/fantasía como por Japón.
+
+Arte creado con la herramienta integrada y referencia de identidad en `assets/collection/seventh-japan-v1.webp` (6 × 5). Prompt: onigiri, matcha, yukata, hortensias y paraguas, shogi, pincel, takoyaki, tatami, daruma, temari, mercado y koi; ronin, guardiana del torii, kitsune, shakuhachi, taiko y hanami; té entre arces, jardín nevado, guardián tengu, figura de nieve, grullas sobre Fuji y ciudad maneki-neko; bote de faroles, castillos del sol y la luna, puente de Tanabata, cerámica kintsugi y EXE ronin neón y kitsune digital. Fantasía japonesa original, sin rótulos, kanji, marcos ni márgenes.
+
+Pruebas: `node tests/collection210.cjs` y `node tests/collection210-ui.cjs`. Incluyen conservación de las 180 cartas, etiquetas, filtro Japón, sobres mixtos, fabricación EXE, intercambios e idempotencia de premios.

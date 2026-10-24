@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "test": "cd .. && node tests/universe.cjs && node tests/cards.cjs && node tests/cards30.cjs && node tests/cards-matches.cjs && node tests/bombitas-motion.cjs && node tests/playing31.cjs && node tests/vs32.cjs && node tests/piano34.cjs && node tests/piano-duo.cjs && node tests/collection.cjs && node tests/news-private.cjs && node tests/collection60.cjs && node tests/collection90.cjs && node tests/collection120.cjs && node tests/collection150.cjs && node tests/collection180.cjs && node tests/rankings-missions.cjs",
-    "test:ui": "cd .. && node tests/ui.cjs && node tests/cards-ui.cjs && node tests/bombitas-network.cjs && node tests/vs-ui.cjs && node tests/piano-ui.cjs && node tests/cards-recovery-ui.cjs && node tests/piano-duo-ui.cjs && node tests/collection-ui.cjs && node tests/collection60-ui.cjs && node tests/collection90-ui.cjs && node tests/collection120-ui.cjs && node tests/collection150-ui.cjs && node tests/collection180-ui.cjs && node tests/rankings-missions-ui.cjs"
+    "test": "cd .. && node tests/universe.cjs && node tests/cards.cjs && node tests/cards30.cjs && node tests/cards-matches.cjs && node tests/bombitas-motion.cjs && node tests/playing31.cjs && node tests/vs32.cjs && node tests/piano34.cjs && node tests/piano-duo.cjs && node tests/collection.cjs && node tests/news-private.cjs && node tests/collection60.cjs && node tests/collection90.cjs && node tests/collection120.cjs && node tests/collection150.cjs && node tests/collection180.cjs && node tests/collection210.cjs && node tests/rankings-missions.cjs",
+    "test:ui": "cd .. && node tests/ui.cjs && node tests/cards-ui.cjs && node tests/bombitas-network.cjs && node tests/vs-ui.cjs && node tests/piano-ui.cjs && node tests/cards-recovery-ui.cjs && node tests/piano-duo-ui.cjs && node tests/collection-ui.cjs && node tests/collection60-ui.cjs && node tests/collection90-ui.cjs && node tests/collection120-ui.cjs && node tests/collection150-ui.cjs && node tests/collection180-ui.cjs && node tests/collection210-ui.cjs && node tests/rankings-missions-ui.cjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",
