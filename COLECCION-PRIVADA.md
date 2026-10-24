@@ -1,0 +1,43 @@
+# Colección privada · Primer universo
+
+Preparada para Jesús y Julissa. La migración crea `collection=false`: no activa la sorpresa al desplegar ni al terminar las pruebas. Solo Jesús puede verla mientras está oculta. El servidor también rechaza consultas y operaciones de Julissa mientras siga desactivada. No se envían notificaciones. Los commits con prefijo `[internal]` no aparecen en las noticias compartidas.
+
+## Abrir y revelar
+
+Jesús puede abrir **Álbum JJ** en el menú. Al decidir revelar la sorpresa, ir a **Perfiles → Apartados que puede ver Julissa → Álbum JJ** y activar el interruptor. No hace falta editar código. La aplicación de Julissa recibe la visibilidad al actualizar sus secciones.
+
+## Contenido
+
+30 cartas: 12 Comunes, 8 Raras, 5 Épicas, 3 Legendarias y 2 EXE. Cada carta incluye una dedicatoria original en español e inglés, escrita de Jesús para Julissa. No se atribuyen a Julissa palabras que no haya escrito. Las ilustraciones conservan el diseño de los personajes de `assets/romantic-game-couple.png`: pelo rizado y gafas negras de Jesús; pelo castaño largo y gafas claras de Julissa.
+
+La ilustración generada está en `assets/collection/first-universe-v1.webp`, un atlas de seis columnas por cinco filas. El cliente recorta visualmente cada celda mediante CSS, con una versión WebP optimizada para cargar rápido, conservando la composición del original. Creado con la herramienta integrada de generación de imágenes. Prompt: treinta escenas originales en cuadrícula uniforme, desde Lego, billetera, cine, tenis, llamadas y otoño hasta samurái, vampira, magia estelar, reino de cristal, hilos rojos, alas, jardín del tiempo, meteoros y versiones EXE azul y rosa. Sin texto, marcos ni márgenes. La referencia guía la identidad; no se reutiliza su escena.
+
+## Economía expansiva solicitada
+
+Un sobre cuesta **30 JJ** y entrega tres cartas. Un sobre inicial por usuario es gratuito. Los valores se calculan en servidor; los JJ usan el monedero compartido existente y no el saldo JxJ del casino.
+
+| Rareza | Probabilidad base por carta | Venta | Fragmentos al reciclar | Coste de fabricación |
+|---|---:|---:|---:|---:|
+| Común | 70 % | 4 JJ | 1 | 8 |
+| Rara | 20 % | 35 JJ | 4 | 24 |
+| Épica | 8 % | 80 JJ | 12 | 70 |
+| Legendaria | 1.7 % | 220 JJ | 35 | 200 |
+| EXE | 0.3 % | 650 JJ | 90 | 500 |
+
+Si van nueve sobres sin Épica o superior, la tercera carta del siguiente sube a Épica cuando sea necesario. Cualquier Épica, Legendaria o EXE reinicia el contador. Las probabilidades publicadas son las base, antes de esa garantía.
+
+Simulación reproducible con semilla 246813579, generador LCG `(1664525*x+1013904223) mod 2^32`, 100000 sobres: venta media **66.44606 JJ**, ganancia neta media **36.44606 JJ** por sobre al vender las tres cartas. Se aplicaron 1196 mejoras por garantía. Es una economía deliberadamente expansiva, sin límite diario de cartas ni venta; las ganancias no están garantizadas en cada sobre. Tres comunes se venden por 12 JJ.
+
+Se premia descubrir 10, 20 y 30 cartas distintas con 40, 100 y 250 JJ, una vez por usuario. Los descubrimientos se conservan aunque una copia se venda, recicle o intercambie.
+
+## Intercambios
+
+Hasta cinco copias por lado, JJ o combinación de ambos. Ofertas, contraofertas, aceptación, rechazo y cancelación. Cada operación se confirma mostrando lo que entrega cada parte. Las copias y JJ ofrecidos se reservan en servidor; los pedidos se validan al aceptar. Las monedas reservadas se descuentan al proponer y se entregan al receptor al aceptar. Si se cancela, rechaza o vence la oferta, se devuelven una sola vez. Las ofertas duran siete días y su caducidad se procesa al consultar u operar la colección.
+
+Las favoritas están protegidas frente a ventas, reciclaje y ofertas. Una copia reservada tampoco puede venderse ni ofrecerse dos veces. Los cambios son transaccionales y usan los mismos bloqueos de monedero que la tienda. Las solicitudes tienen UUID y recibo: reintentar una respuesta perdida no compra ni vende otra vez. La operación pendiente se conserva en el navegador por usuario.
+
+## Instalación y comprobación
+
+Aplicar después de SQL 34 `supabase/migrations/20261024065246_collectible_cards.sql`. La migración no cambia los saldos existentes ni entrega cartas automáticamente. Tablas y lógica en esquema privado, RLS y acceso directo revocado; RPC pública invocadora con permisos para usuarios autenticados. La función interna comprueba membresía y visibilidad antes de leer o mutar.
+
+`npm test --prefix tests` ejecuta las pruebas de servidor, economía e información privada en noticias. `node tests/collection-ui.cjs` prueba dos navegadores móviles, apartado oculto, apertura de tres cartas, favoritas, respuesta perdida, intercambio y diseño de escritorio. Usa el navegador de Playwright instalado (por defecto, el canal msedge usado por las pruebas existentes). No utiliza las cuentas ni los saldos reales.
