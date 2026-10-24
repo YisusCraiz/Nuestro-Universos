@@ -95,3 +95,7 @@ Pruebas: `node tests/collection210.cjs` y `node tests/collection210-ui.cjs`. Inc
 
 ## Octavo universo · Throne of Seal · #211–240
 30 fanarts de Jesús y Julissa inspirados en el donghua: caballero de luz, asesina de sombras, templos, compañeros mágicos y tronos. Nuevo filtro Throne of Seal, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 220/230/240: 1050/1150/1600 JJ. Conserva sobres, probabilidades, economía anterior y ocultación para Julissa. Arte: `assets/collection/eighth-throne-v1.webp`.
+
+
+## Noveno universo · Black Clover · #241–270
+30 fanarts de Jesús y Julissa inspirados en el anime: antimagia, magia de agua, grimorios, Toros Negros y otras variantes de caballeros mágicos. Nuevo filtro Black Clover, dedicatorias español/inglés; 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 250/260/270: 1200/1300/1800 JJ. Conserva sobres, probabilidades y ocultación para Julissa. Arte: `assets/collection/ninth-clover-v1.webp`.
