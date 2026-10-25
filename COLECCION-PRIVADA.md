@@ -123,3 +123,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Decimoquinto universo · Falling Into Your Smile · #421–450
 30 fanarts de Jesús y Julie en ambiente de esports inspirados en Lu Sicheng, Tong Yao y ZGDX: base, entrenamientos, torneos, gato, momentos cotidianos y victoria. Filtro del drama, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 430/440/450: 2100/2200/3000 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/fifteenth-falling-smile-v1.webp`.
+
+
+## Decimosexto universo · Combat Continent I / Soul Land · #451–480
+30 fanarts de Jesús y Julie inspirados en Tang San y Xiao Wu del primer donghua Douluo Dalu: espíritus marciales, hierba azul plateada, martillo, conejo, anillos de alma, academia, bosque y tridente. Filtro de la serie, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 460/470/480: 2250/2350/3200 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/sixteenth-soul-land-v1.webp`.
