@@ -111,3 +111,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Duodécimo universo · Gyutaro y Daki · #331–360
 30 fanarts de la pareja adulta en cosplay: Jesús inspirado en Gyutaro y Julie en Daki/Ume, con hoces, cintas obi, faroles y ciruelos. Dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 340/350/360: 1650/1750/2400 JJ, dentro de la pestaña Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/twelfth-kimetsu-moon-v1.webp`.
+
+
+## Decimotercer universo · Formas demoníacas · #361–390
+30 versiones de Jesús/Gyutaro y Julie/Daki-Ume con piel pálida, maquillaje y marcas faciales, ojos sobrenaturales, colmillos y rasgos demoníacos conservando rostros y lentes. Filtro Formas demoníacas, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 370/380/390: 1800/1900/2600 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/thirteenth-demon-forms-v1.webp`.
