@@ -99,3 +99,7 @@ Pruebas: `node tests/collection210.cjs` y `node tests/collection210-ui.cjs`. Inc
 
 ## Noveno universo · Black Clover · #241–270
 30 fanarts de Jesús y Julissa inspirados en el anime: antimagia, magia de agua, grimorios, Toros Negros y otras variantes de caballeros mágicos. Nuevo filtro Black Clover, dedicatorias español/inglés; 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 250/260/270: 1200/1300/1800 JJ. Conserva sobres, probabilidades y ocultación para Julissa. Arte: `assets/collection/ninth-clover-v1.webp`.
+
+
+## Décimo universo · Kimetsu no Yaiba · #271–300
+30 fanarts de Jesús y Julissa inspirados en el anime: cazadores, respiraciones de agua, trueno, llamas, niebla, flores, amor y mariposas, glicinas y dos EXE. Filtro Kimetsu no Yaiba y dedicatorias español/inglés. 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 280/290/300: 1350/1450/2000 JJ. Conserva economía y la configuración actual de visibilidad; el apartado ya estaba desbloqueado al aplicar esta ampliación. Arte: `assets/collection/tenth-kimetsu-v1.webp`.
