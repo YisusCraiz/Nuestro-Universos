@@ -115,3 +115,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Decimotercer universo · Formas demoníacas · #361–390
 30 versiones de Jesús/Gyutaro y Julie/Daki-Ume con piel pálida, maquillaje y marcas faciales, ojos sobrenaturales, colmillos y rasgos demoníacos conservando rostros y lentes. Filtro Formas demoníacas, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 370/380/390: 1800/1900/2600 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/thirteenth-demon-forms-v1.webp`.
+
+
+## Decimocuarto universo · Death Note · #391–420
+30 fanarts de Jesús y Julie inspirados en Light, L y Misa, detectives, cuadernos, manzanas, ajedrez y siluetas shinigami. Filtro Death Note, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 400/410/420: 1950/2050/2800 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/fourteenth-death-note-v1.webp`.
