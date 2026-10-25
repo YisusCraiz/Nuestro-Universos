@@ -119,3 +119,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Decimocuarto universo · Death Note · #391–420
 30 fanarts de Jesús y Julie inspirados en Light, L y Misa, detectives, cuadernos, manzanas, ajedrez y siluetas shinigami. Filtro Death Note, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 400/410/420: 1950/2050/2800 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/fourteenth-death-note-v1.webp`.
+
+
+## Decimoquinto universo · Falling Into Your Smile · #421–450
+30 fanarts de Jesús y Julie en ambiente de esports inspirados en Lu Sicheng, Tong Yao y ZGDX: base, entrenamientos, torneos, gato, momentos cotidianos y victoria. Filtro del drama, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 430/440/450: 2100/2200/3000 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/fifteenth-falling-smile-v1.webp`.
