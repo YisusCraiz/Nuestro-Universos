@@ -127,3 +127,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Decimosexto universo · Combat Continent I / Soul Land · #451–480
 30 fanarts de Jesús y Julie inspirados en Tang San y Xiao Wu del primer donghua Douluo Dalu: espíritus marciales, hierba azul plateada, martillo, conejo, anillos de alma, academia, bosque y tridente. Filtro de la serie, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 460/470/480: 2250/2350/3200 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/sixteenth-soul-land-v1.webp`.
+
+
+## Decimoséptimo universo · Combat Continent II / Soul Land II · #481–510
+30 fanarts de Jesús y Julie inspirados en Huo Yuhao y Tang Wutong/Wang Dong’er: ojos espirituales, hielo, escorpión de jade, mariposas de luz, herramientas de alma y Camino Dorado. Filtro de la segunda serie, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 490/500/510: 2400/2500/3400 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/seventeenth-soul-land-ii-v1.webp`.
