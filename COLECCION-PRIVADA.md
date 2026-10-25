@@ -103,3 +103,7 @@ Pruebas: `node tests/collection210.cjs` y `node tests/collection210-ui.cjs`. Inc
 
 ## Décimo universo · Kimetsu no Yaiba · #271–300
 30 fanarts de Jesús y Julissa inspirados en el anime: cazadores, respiraciones de agua, trueno, llamas, niebla, flores, amor y mariposas, glicinas y dos EXE. Filtro Kimetsu no Yaiba y dedicatorias español/inglés. 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 280/290/300: 1350/1450/2000 JJ. Conserva economía y la configuración actual de visibilidad; el apartado ya estaba desbloqueado al aplicar esta ampliación. Arte: `assets/collection/tenth-kimetsu-v1.webp`.
+
+
+## Recompensas y undécimo universo · Kimetsu: lazos · #301–330
+Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muestra progreso y estados reclamado, bloqueado o disponible, conservando todos los premios anteriores. 30 fanarts de la pareja adulta: Jesús como Tanjiro u Obanai; Julie como Nezuko o Mitsuri. Dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 310/320/330: 1500/1600/2200 JJ. Conserva visibilidad y economía. Arte: `assets/collection/eleventh-kimetsu-bonds-v1.webp`.
