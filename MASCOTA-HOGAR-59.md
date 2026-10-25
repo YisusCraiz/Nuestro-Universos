@@ -23,8 +23,6 @@ Ejemplos en nivel 1: mascota de 60 JJ → 2 JJ/h visible, 0.5 JJ/h desconectado;
 
 `node --check jj-pet-home.js`: sintaxis correcta. No se ha validado visualmente en un navegador ni aplicado la actualización en producción.
 
-## Activación pendiente
+## Activación autorizada
 
-La revisión automática bloqueó la migración por requerir autorización explícita para cambiar las funciones de mascotas y dinero en la base de datos de producción. No se ha modificado la base de datos ni publicado este cambio.
-
-Después de la aprobación: aplicar `supabase/59-mascota-hogar.sql` en el proyecto existente, verificar con usuario autenticado, revisar advisors, integrar el PR y comprobar la publicación de GitHub Pages. No integrar el frontend antes de la migración. No repetir la migración: renombra la función anterior una sola vez.
+El propietario autorizó la actualización el 25 de octubre de 2026. Migración aplicada y verificada en producción con una transacción de pruebas revertida al terminar: cobro, monedero, mejoras, repetición de solicitudes y permisos. Los avisos de RLS sin políticas corresponden a tablas privadas sin acceso directo; las funciones autorizadas comprueban pertenencia y usan un search_path vacío.
