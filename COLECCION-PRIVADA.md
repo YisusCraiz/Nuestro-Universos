@@ -107,3 +107,7 @@ Pruebas: `node tests/collection210.cjs` y `node tests/collection210-ui.cjs`. Inc
 
 ## Recompensas y undécimo universo · Kimetsu: lazos · #301–330
 Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muestra progreso y estados reclamado, bloqueado o disponible, conservando todos los premios anteriores. 30 fanarts de la pareja adulta: Jesús como Tanjiro u Obanai; Julie como Nezuko o Mitsuri. Dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 310/320/330: 1500/1600/2200 JJ. Conserva visibilidad y economía. Arte: `assets/collection/eleventh-kimetsu-bonds-v1.webp`.
+
+
+## Duodécimo universo · Gyutaro y Daki · #331–360
+30 fanarts de la pareja adulta en cosplay: Jesús inspirado en Gyutaro y Julie en Daki/Ume, con hoces, cintas obi, faroles y ciruelos. Dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 340/350/360: 1650/1750/2400 JJ, dentro de la pestaña Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/twelfth-kimetsu-moon-v1.webp`.
