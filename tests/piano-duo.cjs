@@ -1,11 +1,11 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {fixture,HOST,GUEST,OUT,SONG}=require('./piano34.cjs');
-(async()=>{const pg=await fixture();await pg.exec(fs.readFileSync('supabase/migrations/20261024063503_piano_duo.sql','utf8'));
+(async()=>{const pg=await fixture();await pg.exec(fs.readFileSync('supabase/migrations/20261024063503_piano_duo.sql','utf8'));await pg.exec(fs.readFileSync('supabase/migrations/20261025021739_piano_room_recovery.sql','utf8'));
 const as=async id=>{await pg.exec('reset role');await pg.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await pg.exec('set role authenticated');};
 let room;const call=async(action='read',data={},code=room?.code||'')=>(await pg.query('select public.jj_piano_room($1,$2,$3) d',[action,code,JSON.stringify(data)])).rows[0].d;
 const settings={song:SONG,difficulty:1,duration:20,times:Array.from({length:30},(_,i)=>1200+i*600)};
-await as(HOST);room=await call('create',settings);assert.equal(room.code.length,8);const hostRun=room.run;await assert.rejects(call('create',settings),/ROOM_ACTIVE/);await assert.rejects(call('start'),/NOT_READY/);
-await as(OUT);await assert.rejects(call('join'),/NOT_MEMBER/);await assert.rejects(pg.query('select * from public.jj_piano_rooms'));
+await as(HOST);room=await call('create',settings);assert.equal(room.code.length,8);assert.equal((await call('recover')).code,room.code);const hostRun=room.run;await assert.rejects(call('create',settings),/ROOM_ACTIVE/);await assert.rejects(call('start'),/NOT_READY/);
+await as(GUEST);await assert.rejects(call('recover'),/ROOM_NOT_FOUND/);await as(OUT);await assert.rejects(call('join'),/NOT_MEMBER/);await assert.rejects(pg.query('select * from public.jj_piano_rooms'));
 await as(GUEST);room=await call('join');assert.equal(room.ready,false);assert.equal(room.run,null);room=await call('ready');assert.equal(room.ready,true);const guestRun=room.run;assert.notEqual(hostRun,guestRun);assert.equal((await call('ready')).run,guestRun);await assert.rejects(call('start'),/HOST_ONLY/);
 await as(HOST);room=await call('start');assert.ok(Date.parse(room.starts_at)>Date.parse(room.server_now));assert.equal((await call('start')).starts_at,room.starts_at);
 await pg.exec('reset role');await pg.query("update public.jj_piano_runs set started=clock_timestamp()-interval '30 seconds' where id in($1,$2)",[hostRun,guestRun]);await as(HOST);
