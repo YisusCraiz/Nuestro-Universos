@@ -139,3 +139,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Decimonoveno universo · My Name · #541–570
 30 fanarts de Jesús inspirado en Jeon Pildo y Julie en Yoon Jiwoo/Oh Hyejin: investigación, boxeo, neón, lluvia, puerto y confianza. Dedicatorias bilingües, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 550/560/570: 2700/2800/3800 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/nineteenth-my-name-v1.webp`, con recortes calibrados.
+
+
+## Vigésimo universo · Doupo Cangqiong · #571–600
+Jesús/Xiao Yan y Julie/Xiao Xun’er, fuego celestial y alquimia. 30 cartas, dos EXE. Hitos 580/590/600: 2850/2950/4000 JJ. Recortes calibrados.
