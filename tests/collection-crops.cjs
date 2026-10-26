@@ -14,4 +14,4 @@ for(const [collection,file] of Object.entries(files)){
   assert.ok(Math.abs(x+w-(xs[col+1]-6))<1e-7);assert.ok(Math.abs(y+h-(ys[row+1]-6))<1e-7);count++;
  }
 }
-assert.equal(count,540);console.log('PASS: all 540 cards sample only their measured panel, with a six-pixel interior margin at every size.');
+assert.equal(count,570);console.log('PASS: all 570 cards sample only their measured panel, with a six-pixel interior margin at every size.');

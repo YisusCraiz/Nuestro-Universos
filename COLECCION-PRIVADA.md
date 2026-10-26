@@ -135,3 +135,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Decimoctavo universo · Fate/stay night · #511–540
 30 fanarts de Jesús inspirado en Shirou Emiya y Julie en Rin Tohsaka: proyección, espadas gemelas, joyas mágicas, colgante, Fuyuki y escenas cotidianas. Dedicatorias bilingües, 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 520/530/540: 2550/2650/3600 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/eighteenth-fate-v1.webp`, con límites de recorte calibrados.
+
+
+## Decimonoveno universo · My Name · #541–570
+30 fanarts de Jesús inspirado en Jeon Pildo y Julie en Yoon Jiwoo/Oh Hyejin: investigación, boxeo, neón, lluvia, puerto y confianza. Dedicatorias bilingües, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 550/560/570: 2700/2800/3800 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/nineteenth-my-name-v1.webp`, con recortes calibrados.
