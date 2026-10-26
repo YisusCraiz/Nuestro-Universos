@@ -131,3 +131,7 @@ Los hitos se reclaman en la pestaña Recompensas, separada de La máquina. Muest
 
 ## Decimoséptimo universo · Combat Continent II / Soul Land II · #481–510
 30 fanarts de Jesús y Julie inspirados en Huo Yuhao y Tang Wutong/Wang Dong’er: ojos espirituales, hielo, escorpión de jade, mariposas de luz, herramientas de alma y Camino Dorado. Filtro de la segunda serie, dedicatorias español/inglés, 12 comunes, 8 raras, 5 épicas, 3 legendarias y 2 EXE. Hitos 490/500/510: 2400/2500/3400 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/seventeenth-soul-land-ii-v1.webp`.
+
+
+## Decimoctavo universo · Fate/stay night · #511–540
+30 fanarts de Jesús inspirado en Shirou Emiya y Julie en Rin Tohsaka: proyección, espadas gemelas, joyas mágicas, colgante, Fuyuki y escenas cotidianas. Dedicatorias bilingües, 12 comunes, 8 raras, 5 épicas, 3 legendarias, 2 EXE. Hitos 520/530/540: 2550/2650/3600 JJ en Recompensas. Conserva visibilidad y economía. Arte: `assets/collection/eighteenth-fate-v1.webp`, con límites de recorte calibrados.
