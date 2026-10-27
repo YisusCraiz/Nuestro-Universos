@@ -1,0 +1,8 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const {fixture,HOST,GUEST}=require('./collection600.cjs');
+(async()=>{const pg=await fixture();const sql=fs.readFileSync(process.env.ALBUM_BALANCE_SQL||'supabase/migrations/20261027053625_album_rewards_equal_450.sql','utf8');await pg.exec(sql);await pg.exec(sql);
+await pg.exec("update public.section_visibility set visible=true where section='collection'");await pg.query("insert into jj_collect.discoveries select $1,id from jj_collect.catalog on conflict do nothing",[HOST]);await pg.query("select set_config('request.jwt.claim.sub',$1,false)",[HOST]);
+const call=(n,r=crypto.randomUUID())=>pg.query("select public.jj_collection('claim',$1,jsonb_build_object('milestone',$2::int)) d",[r,n]).then(r=>r.rows[0].d);
+let d=(await pg.query('select public.jj_collection() d')).rows[0].d,balance=d.coins;for(const n of Array.from({length:60},(_,i)=>(i+1)*10)){const r=crypto.randomUUID();d=await call(n,r);assert.equal(d.payload.amount,450);balance+=450;assert.equal(d.coins,balance);assert.equal((await call(n,r)).coins,balance);await assert.rejects(call(n),/ALREADY_CLAIMED/);}await assert.rejects(call(0),/BAD_MILESTONE/);
+await pg.query("select set_config('request.jwt.claim.sub',$1,false)",[GUEST]);await assert.rejects(call(10),/NOT_COMPLETE/);
+const frontend=fs.readFileSync('jj-collection.js','utf8');assert.match(frontend,/<strong>\+450 JJ<\/strong>/);assert.doesNotMatch(frontend,/\[40,100,250/);await pg.close();console.log('PASS: equal 450 JJ awards, server/client agreement, wallet deltas, retries, claimed/incomplete protection and repeat-safe update.');})().catch(e=>{console.error(e);process.exitCode=1;});
