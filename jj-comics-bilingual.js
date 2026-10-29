@@ -1,7 +1,7 @@
 'use strict';
 // Reserved keys cannot collide with owner/path image keys. Legacy transcripts stay intact.
 function comicLanguage(row){const code=row?.page_text?.__comic_language?.code;return ['es','en'].includes(code)?code:'unassigned';}
-let comicLanguageFilter=say('es','en');
+let comicLanguageFilter=null;
 function comicTitle(row){return comicLanguage(row)==='en'?(row.title_en?.trim()||row.title):row.title;}
 function comicCover(row){return row?.page_text?.__comic_cover?.path||row?.pages?.[0];}
 async function comicImage(path,img,current){
@@ -61,12 +61,13 @@ universeComicForm=function(row){
 universeComics=async function(v){
  const rows=state.demo?[]:await lifeRows('universe_comics');if(v!==state.version)return;
  const options=[['es','Español','Español'],['en','English','English'],['unassigned','Sin clasificar','Unassigned']];
+ if(comicLanguageFilter===null){const preferred=say('es','en');comicLanguageFilter=rows.some(r=>comicLanguage(r)===preferred)?preferred:options.find(([code])=>rows.some(r=>comicLanguage(r)===code))?.[0]||preferred;}
  const paint=()=>{
   if(v!==state.version)return;
   const selected=rows.filter(r=>comicLanguage(r)===comicLanguageFilter).sort((a,b)=>a.position-b.position||String(a.created_at||'').localeCompare(String(b.created_at||'')));
   $('#main').innerHTML=lifeHeading('Cómics','Comics','Nuestras historias, una portada a la vez.','Our stories, one cover at a time.')+
    `<div class="comic-toolbar"><label>${bi('Idioma del cómic','Comic language')}<select id="comic-language-filter">${options.map(([code,es,en])=>`<option value="${code}" ${comicLanguageFilter===code?'selected':''}>${say(es,en)} (${rows.filter(r=>comicLanguage(r)===code).length})</option>`).join('')}</select></label>${jjButton('add-comic','+ Añadir cómic','+ Add comic')}</div>`+
-   `<div class="comic-library">${selected.map(r=>`<article class="comic-card"><button class="comic-card-open" data-read-comic="${esc(r.id)}"><span class="comic-card-cover"><img data-comic-cover="${esc(r.id)}" alt="${esc(comicTitle(r))}" loading="lazy" style="opacity:0"><span class="comic-cover-placeholder">${bi('Cómic','Comic')}</span></span><h2 translate="no">${esc(comicTitle(r))}</h2></button>${r.owner_id===state.profile.id?`<button class="text-button" data-edit-comic="${esc(r.id)}">${bi('Editar cómic','Edit comic')}</button>`:''}</article>`).join('')}</div>${selected.length?'':`<p class="comic-empty">${bi('Todavía no hay cómics en este idioma.','No comics in this language yet.')}</p>`}`;
+   `<div class="comic-library">${selected.map(r=>`<article class="comic-card"><button class="comic-card-open" data-read-comic="${esc(r.id)}"><span class="comic-card-cover"><img data-comic-cover="${esc(r.id)}" alt="${esc(comicTitle(r))}" loading="lazy" style="opacity:0"><span class="comic-cover-placeholder">${bi('Cómic','Comic')}</span></span><h2 translate="no">${esc(comicTitle(r))}</h2></button>${r.owner_id===state.profile.id?`<button class="text-button" data-edit-comic="${esc(r.id)}">${bi('Editar cómic','Edit comic')}</button>`:''}</article>`).join('')}</div>${selected.length?'':`<p class="comic-empty">${bi('No hay cómics en este filtro. Elige otro idioma arriba; los anteriores sin idioma están en Sin clasificar.','No comics match this filter. Choose another language above; older comics without a language are under Unassigned.')}</p>`}${comicLanguageFilter==='unassigned'&&selected.length?`<p class="hint">${bi('Estos cómics aún no tienen idioma. Abre Editar cómic y elige Español o English para clasificarlos.','These comics do not have a language yet. Open Edit comic and choose Español or English to classify them.')}</p>`:''}`;
   const filter=$('#comic-language-filter');filter.onchange=e=>{comicLanguageFilter=e.target.value;paint();};$('#add-comic').onclick=()=>universeComicForm();
   document.querySelectorAll('[data-edit-comic]').forEach(b=>b.onclick=()=>universeComicForm(rows.find(r=>r.id===b.dataset.editComic)));
   document.querySelectorAll('[data-read-comic]').forEach(b=>b.onclick=()=>universeReadComic(rows.find(r=>r.id===b.dataset.readComic)));
