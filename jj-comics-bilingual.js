@@ -66,10 +66,17 @@ universeComics=async function(v){
   const selected=rows.filter(r=>comicLanguage(r)===comicLanguageFilter).sort((a,b)=>a.position-b.position||String(a.created_at||'').localeCompare(String(b.created_at||'')));
   $('#main').innerHTML=lifeHeading('Cómics','Comics','Nuestras historias, una portada a la vez.','Our stories, one cover at a time.')+
    `<div class="comic-toolbar"><label>${bi('Idioma del cómic','Comic language')}<select id="comic-language-filter">${options.map(([code,es,en])=>`<option value="${code}" ${comicLanguageFilter===code?'selected':''}>${say(es,en)} (${rows.filter(r=>comicLanguage(r)===code).length})</option>`).join('')}</select></label>${jjButton('add-comic','+ Añadir cómic','+ Add comic')}</div>`+
-   `<div class="comic-library">${selected.map(r=>`<article class="comic-card"><button class="comic-card-open" data-read-comic="${esc(r.id)}"><span class="comic-card-cover"><img data-comic-cover="${esc(r.id)}" alt="${esc(comicTitle(r))}" loading="lazy" hidden><span class="comic-cover-placeholder">${bi('Cómic','Comic')}</span></span><h2 translate="no">${esc(comicTitle(r))}</h2></button>${r.owner_id===state.profile.id?`<button class="text-button" data-edit-comic="${esc(r.id)}">${bi('Editar cómic','Edit comic')}</button>`:''}</article>`).join('')}</div>${selected.length?'':`<p class="comic-empty">${bi('Todavía no hay cómics en este idioma.','No comics in this language yet.')}</p>`}`;
+   `<div class="comic-library">${selected.map(r=>`<article class="comic-card"><button class="comic-card-open" data-read-comic="${esc(r.id)}"><span class="comic-card-cover"><img data-comic-cover="${esc(r.id)}" alt="${esc(comicTitle(r))}" loading="lazy" style="opacity:0"><span class="comic-cover-placeholder">${bi('Cómic','Comic')}</span></span><h2 translate="no">${esc(comicTitle(r))}</h2></button>${r.owner_id===state.profile.id?`<button class="text-button" data-edit-comic="${esc(r.id)}">${bi('Editar cómic','Edit comic')}</button>`:''}</article>`).join('')}</div>${selected.length?'':`<p class="comic-empty">${bi('Todavía no hay cómics en este idioma.','No comics in this language yet.')}</p>`}`;
   const filter=$('#comic-language-filter');filter.onchange=e=>{comicLanguageFilter=e.target.value;paint();};$('#add-comic').onclick=()=>universeComicForm();
   document.querySelectorAll('[data-edit-comic]').forEach(b=>b.onclick=()=>universeComicForm(rows.find(r=>r.id===b.dataset.editComic)));
   document.querySelectorAll('[data-read-comic]').forEach(b=>b.onclick=()=>universeReadComic(rows.find(r=>r.id===b.dataset.readComic)));
-  document.querySelectorAll('[data-comic-cover]').forEach(img=>{const row=rows.find(r=>r.id===img.dataset.comicCover),path=comicCover(row);if(!path)return;img.onload=()=>{img.hidden=false;img.nextElementSibling.hidden=true;};comicImage(path,img,()=>v===state.version&&img.isConnected).catch(()=>{});});
+  document.querySelectorAll('[data-comic-cover]').forEach(img=>{
+   const row=rows.find(r=>r.id===img.dataset.comicCover),path=comicCover(row);if(!path)return;
+   const current=()=>v===state.version&&img.isConnected,placeholder=img.nextElementSibling;
+   let retry;
+   const failed=()=>{if(!current())return;img.style.opacity='0';placeholder.hidden=false;placeholder.textContent=say('Portada pendiente','Cover unavailable');if(!retry){retry=document.createElement('button');retry.className='text-button';retry.textContent=say('Reintentar portada','Retry cover');retry.onclick=load;img.closest('.comic-card').append(retry);}retry.disabled=false;};
+   const load=async()=>{if(retry)retry.disabled=true;try{await comicImage(path,img,current);}catch{failed();}};
+   img.onload=()=>{if(!current())return;img.style.opacity='1';placeholder.hidden=true;retry?.remove();retry=null;};img.onerror=failed;load();
+  });
  };paint();
 };
