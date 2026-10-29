@@ -1,75 +1,75 @@
 'use strict';
-// Page text is keyed by Storage path, so reordering never separates a translation from its image.
-// Reserved metadata key cannot collide with owner/path image keys.
+// Reserved keys cannot collide with owner/path image keys. Legacy transcripts stay intact.
 function comicLanguage(row){const code=row?.page_text?.__comic_language?.code;return ['es','en'].includes(code)?code:'unassigned';}
-let comicLanguageFilter='all';
-function comicTitle(row){return say(row.title,row.title_en?.trim()||row.title);}
+let comicLanguageFilter=say('es','en');
+function comicTitle(row){return comicLanguage(row)==='en'?(row.title_en?.trim()||row.title):row.title;}
+function comicCover(row){return row?.page_text?.__comic_cover?.path||row?.pages?.[0];}
+async function comicImage(path,img,current){
+ const {data,error}=await db.storage.from('universe-comics').createSignedUrl(path,3600);
+ if(!current())return;if(error)throw error;img.src=data.signedUrl;
+}
 universeReadComic=async function(row){
- modal(`<h2>${bi(esc(row.title),esc(row.title_en?.trim()||row.title))}</h2><p>${bi('Los diálogos traducidos aparecen debajo de cada página.','Translated dialogue appears below each page.')}</p><div class="comic-reader" id="universe-reader"></div>`);
- const root=$('#universe-reader'),generation=modalVersion;const current=()=>root.isConnected&&modalVersion===generation;
- for(const [i,path] of row.pages.entries()){
-  if(!current())return;
-  const article=document.createElement('article');article.innerHTML=`<h3>${bi('Página','Page')} ${i+1} / ${row.pages.length}</h3>`;root.append(article);
-  try{const {data,error}=await db.storage.from('universe-comics').createSignedUrl(path,3600);if(!current())return;if(error)throw error;
-   const link=document.createElement('a');link.href=data.signedUrl;link.target='_blank';link.rel='noopener';link.setAttribute('aria-label',say('Ampliar página ','Enlarge page ')+(i+1));
-   const img=document.createElement('img');img.src=data.signedUrl;img.alt=say('Página del cómic ','Comic page ')+(i+1);img.loading='lazy';link.append(img);article.append(link);
-  }catch{if(!current())return;const p=document.createElement('p');p.innerHTML=bi('No se pudo cargar la imagen. Cierra y vuelve a abrir para reintentar.','Image could not load. Close and reopen to retry.');article.append(p);}
-  if(!current())return;
-  const text=row.page_text?.[path]||{},box=document.createElement('section');box.className='comic-dialogue';
-  const es=text.es?.trim(),en=text.en?.trim();
-  box.innerHTML=`<h4>${bi('Diálogos · en orden de lectura','Dialogue · in reading order')}</h4><div class="comic-transcript">${bi(esc(es||'Transcripción en español pendiente.'),esc(en||'English translation is not available for this page yet.'))}</div>`;article.append(box);
- }
+ modal(`<div class="comic-reader-heading"><h2 translate="no">${esc(comicTitle(row))}</h2><p>${bi('Desliza para leer el cómic completo.','Scroll to read the complete comic.')}</p></div><div class="comic-reader comic-reader-continuous" id="universe-reader" translate="no"></div>`);
+ const root=$('#universe-reader'),generation=modalVersion,current=()=>root.isConnected&&modalVersion===generation;
+ await Promise.all(row.pages.map(async(path,i)=>{
+  const article=document.createElement('article'),img=document.createElement('img');img.alt=say('Página ','Page ')+(i+1);img.loading=i?'lazy':'eager';img.decoding='async';article.append(img);root.append(article);
+  const failed=()=>{if(!current()||article.querySelector('button'))return;const retry=document.createElement('button');retry.className='comic-page-retry';retry.textContent=say('Reintentar página ','Retry page ')+(i+1);retry.onclick=async()=>{retry.disabled=true;try{await comicImage(path,img,current);if(current())retry.remove();}catch{retry.disabled=false;}};article.append(retry);};
+  img.onerror=failed;try{await comicImage(path,img,current);}catch{failed();}
+ }));
 };
 universeComicForm=function(row){
- const owner=state.profile.id,handle=state.profile.handle;let pages=[...(row?.pages||[])],texts=structuredClone(row?.page_text||{});
- modal(`<h2>${bi('Preparar capítulo bilingüe','Prepare bilingual chapter')}</h2><form id="universe-comic-form" class="stack">
- <label>${bi('Idioma de las imágenes del cómic','Language of the comic images')}<select name="comic_language" required><option value="">${bi('Elige un idioma','Choose a language')}</option><option value="es" ${comicLanguage(row)==='es'?'selected':''}>Español</option><option value="en" ${comicLanguage(row)==='en'?'selected':''}>English</option></select></label>
- <label>${bi('Título en español','Spanish title')}<input name="title" required maxlength="120" value="${esc(row?.title||'')}"></label>
- <label>${bi('Título en inglés','English title')}<input name="title_en" maxlength="120" value="${esc(row?.title_en||'')}"></label>
- <label>${bi('Orden del capítulo','Chapter order')}<input name="position" type="number" min="1" max="9999" required value="${row?.position||1}"></label>
- <p>${bi('Escribe los diálogos por viñeta, en orden de lectura. La imagen conserva sus globos originales. Puedes guardar una traducción en inglés para Julissa.','Enter dialogue by panel in reading order. Original speech bubbles stay in the image. You can save an English translation for Julissa.')}</p>
+ const owner=state.profile.id,handle=state.profile.handle;let pages=[...(row?.pages||[])],cover=row?.page_text?.__comic_cover?.path||'',coverFile=null;
+ const files=new Map();
+ modal(`<h2>${bi('Preparar cómic','Prepare comic')}</h2><form id="universe-comic-form" class="stack">
+ <label>${bi('Título del cómic','Comic title')}<input name="title" required maxlength="120" value="${esc(row?comicTitle(row):'')}"></label>
+ <label>${bi('Idioma de las imágenes','Image language')}<select name="comic_language" required><option value="">${bi('Elige un idioma','Choose a language')}</option><option value="es" ${comicLanguage(row)==='es'||!row&&comicLanguageFilter==='es'?'selected':''}>Español</option><option value="en" ${comicLanguage(row)==='en'||!row&&comicLanguageFilter==='en'?'selected':''}>English</option></select></label>
+ <label>${bi('Portada · JPG, PNG o WebP · hasta 50 MB','Cover · JPG, PNG or WebP · up to 50 MB')}<input name="cover" type="file" accept="image/jpeg,image/png,image/webp"></label>
+ <img id="comic-cover-preview" class="comic-cover-preview" alt="${say('Vista previa de portada','Cover preview')}" hidden><p class="hint">${bi('La portada se muestra en la colección. Si no añades una, se usará la primera página.','The cover appears in the collection. Without a separate cover, the first page is used.')}</p>
+ <button type="button" id="comic-cover-reset" class="text-button">${bi('Usar primera página como portada','Use first page as cover')}</button>
+ <label>${bi('Orden del cómic','Comic order')}<input name="position" type="number" min="1" max="9999" required value="${row?.position||1}"></label>
  <div id="comic-page-order"></div><label>${bi('Añadir páginas · JPG, PNG, WebP · 50 MB por imagen','Add pages · JPG, PNG, WebP · 50 MB per image')}<input name="pages" type="file" multiple accept="image/jpeg,image/png,image/webp"></label>
- <p class="hint">${bi('La traducción automática usa un servicio externo: solo se envía el texto de la página al pulsar Traducir; no la imagen. Revisa el resultado antes de guardar. No extrae texto de imágenes.','Automatic translation uses an external service: only page text is sent when you press Translate; images are not sent. Review before saving. It does not extract image text.')}</p>
- <p id="comic-form-status" role="status"></p><button type="submit" class="btn">${bi('Guardar capítulo','Save chapter')}</button></form>`);
+ <p id="comic-form-status" role="status"></p><button type="submit" class="btn">${bi('Guardar cómic','Save comic')}</button></form>`);
  const form=$('#universe-comic-form'),generation=modalVersion,current=()=>form.isConnected&&generation===modalVersion&&state.profile?.id===owner;
- let translating=false;
- const capture=()=>{for(const input of form.querySelectorAll('[data-comic-text]')){const path=pages[+input.dataset.page];if(path){texts[path]||={};texts[path][input.dataset.comicText]=input.value;}}};
+ let objectUrl='',previewVersion=0;
+ const preview=async()=>{const version=++previewVersion,img=$('#comic-cover-preview');if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl='';}img.hidden=true;img.removeAttribute('src');const path=cover||pages[0],file=coverFile||files.get(path);if(file){objectUrl=URL.createObjectURL(file);img.src=objectUrl;img.hidden=false;}else if(path){try{await comicImage(path,img,()=>current()&&version===previewVersion);if(current()&&version===previewVersion)img.hidden=false;}catch{}}};
+ $('#modal').addEventListener('close',()=>{if(objectUrl)URL.revokeObjectURL(objectUrl);},{once:true});
+ const valid=file=>['image/jpeg','image/png','image/webp'].includes(file.type)&&file.size>0&&file.size<=50*1024*1024;
+ const status=message=>{if(current())$('#comic-form-status').textContent=message;};
  const paint=()=>{
-  $('#comic-page-order').innerHTML=pages.map((path,i)=>`<fieldset class="comic-edit-page"><legend>${bi('Página','Page')} ${i+1}</legend><div class="row"><button type="button" data-move-page="${i}" data-delta="-1" ${i===0?'disabled':''}>↑</button><button type="button" data-move-page="${i}" data-delta="1" ${i===pages.length-1?'disabled':''}>↓</button><button type="button" data-remove-page="${i}">${bi('Quitar','Remove')}</button></div><label>${bi('Diálogos en español','Spanish dialogue')}<textarea data-comic-text="es" data-page="${i}" maxlength="10000" rows="5">${esc(texts[path]?.es||'')}</textarea></label><label>${bi('Diálogos en inglés','English dialogue')}<textarea data-comic-text="en" data-page="${i}" maxlength="10000" rows="5">${esc(texts[path]?.en||'')}</textarea></label><button type="button" data-translate-page="${i}">${bi('Traducir texto ES → EN','Translate text ES → EN')}</button></fieldset>`).join('');
-  form.querySelectorAll('[data-move-page]').forEach(b=>b.onclick=()=>{capture();const i=+b.dataset.movePage,j=i+(+b.dataset.delta);[pages[i],pages[j]]=[pages[j],pages[i]];paint();});
-  form.querySelectorAll('[data-remove-page]').forEach(b=>b.onclick=()=>{capture();pages.splice(+b.dataset.removePage,1);paint();});
-  form.querySelectorAll('[data-translate-page]').forEach(b=>b.onclick=async()=>{if(translating)return;capture();const path=pages[+b.dataset.translatePage],source=texts[path]?.es?.trim(),target=form.querySelector(`[data-comic-text="en"][data-page="${b.dataset.translatePage}"]`);if(!source){$('#comic-form-status').textContent=say('Primero escribe los diálogos en español.','Enter the Spanish dialogue first.');return;}if(target.value.trim()){ $('#comic-form-status').textContent=say('Borra la traducción inglesa si quieres reemplazarla automáticamente.','Clear the English translation if you want to replace it automatically.');return;}
-   translating=true;b.disabled=true;try{const en=await freeTranslate(source,'es','en');if(!current())return;const index=pages.indexOf(path),field=form.querySelector(`[data-comic-text="en"][data-page="${index}"]`);if(index>=0&&field&&!field.value.trim()&&form.querySelector(`[data-comic-text="es"][data-page="${index}"]`)?.value.trim()===source){texts[path].en=en;field.value=en;}$('#comic-form-status').textContent=say('Traducción preparada. Revisa los diálogos y guarda el capítulo.','Translation prepared. Review the dialogue and save the chapter.');}catch{if(current())$('#comic-form-status').textContent=say('No se pudo traducir. Puedes pegar tu traducción o reintentar más tarde.','Could not translate. Paste your translation or try again later.');}finally{translating=false;if(b.isConnected)b.disabled=false;}});
+  $('#comic-page-order').innerHTML=pages.map((path,i)=>`<fieldset class="comic-edit-page"><legend>${bi('Página','Page')} ${i+1}</legend><p translate="no">${esc(files.get(path)?.name||path.split('/').pop())}</p><div class="row"><button type="button" data-move-page="${i}" data-delta="-1" ${i===0?'disabled':''}>↑</button><button type="button" data-move-page="${i}" data-delta="1" ${i===pages.length-1?'disabled':''}>↓</button><button type="button" data-remove-page="${i}">${bi('Quitar','Remove')}</button></div></fieldset>`).join('');
+  form.querySelectorAll('[data-move-page]').forEach(b=>b.onclick=()=>{const i=+b.dataset.movePage,j=i+(+b.dataset.delta);[pages[i],pages[j]]=[pages[j],pages[i]];paint();});
+  form.querySelectorAll('[data-remove-page]').forEach(b=>b.onclick=()=>{pages.splice(+b.dataset.removePage,1);paint();});preview();
  };
- paint();
- // Stage files immediately, allowing text editing before the first save.
- const files=new Map();form.elements.pages.onchange=()=>{capture();const selected=[...form.elements.pages.files];if(selected.some(f=>!['image/jpeg','image/png','image/webp'].includes(f.type)||!f.size||f.size>50*1024*1024)||pages.length+selected.length>100){$('#comic-form-status').textContent=say('Máximo 100 páginas, JPG/PNG/WebP de hasta 50 MB.','Up to 100 JPG/PNG/WebP pages, up to 50 MB each.');form.elements.pages.value='';return;}for(const file of selected){const path=owner+'/'+crypto.randomUUID();pages.push(path);files.set(path,file);}form.elements.pages.value='';paint();};
- form.onsubmit=async e=>{e.preventDefault();if(!ensureLive()||translating)return;if(!form.reportValidity())return;capture();if(!pages.length){$('#comic-form-status').textContent=say('Añade al menos una página.','Add at least one page.');return;}busyModal(true);form.querySelectorAll('button,input,textarea,select').forEach(b=>b.disabled=true);
-  try{for(const path of pages){const file=files.get(path);if(!file)continue;const {error}=await db.storage.from('universe-comics').upload(path,file,{contentType:file.type,upsert:false});if(error)throw error;files.delete(path);}
-   if(!current())throw Error('SESSION_CHANGED');
-   const payload={title:form.elements.title.value.trim(),title_en:form.elements.title_en.value.trim(),position:+form.elements.position.value,pages,page_text:{...Object.fromEntries(pages.map(p=>[p,texts[p]||{es:'',en:''}])),__comic_language:{code:form.elements.comic_language.value}}};
+ form.elements.cover.onchange=()=>{const file=form.elements.cover.files[0];if(!file)return;if(!valid(file)){status(say('Usa JPG, PNG o WebP de hasta 50 MB.','Use JPG, PNG or WebP up to 50 MB.'));form.elements.cover.value='';return;}coverFile=file;cover=owner+'/'+crypto.randomUUID();preview();};
+ $('#comic-cover-reset').onclick=()=>{cover='';coverFile=null;form.elements.cover.value='';preview();};
+ form.elements.pages.onchange=()=>{const selected=[...form.elements.pages.files];if(selected.some(f=>!valid(f))||pages.length+selected.length>100){status(say('Máximo 100 páginas, JPG/PNG/WebP de hasta 50 MB.','Up to 100 JPG/PNG/WebP pages, up to 50 MB each.'));form.elements.pages.value='';return;}for(const file of selected){const path=owner+'/'+crypto.randomUUID();pages.push(path);files.set(path,file);}form.elements.pages.value='';paint();};paint();
+ form.onsubmit=async e=>{
+  e.preventDefault();if(!ensureLive()||!form.reportValidity())return;if(!pages.length){status(say('Añade al menos una página.','Add at least one page.'));return;}
+  busyModal(true);form.querySelectorAll('button,input,select').forEach(b=>b.disabled=true);
+  try{
+   const upload=async(path,file)=>{const {error}=await db.storage.from('universe-comics').upload(path,file,{contentType:file.type,upsert:false});if(error)throw error;};
+   for(const path of pages){if(files.has(path)){await upload(path,files.get(path));files.delete(path);}}
+   if(coverFile){await upload(cover,coverFile);coverFile=null;}if(!current())throw Error('SESSION_CHANGED');
+   const title=form.elements.title.value.trim(),language=form.elements.comic_language.value;
+   const page_text={...row?.page_text,__comic_language:{code:language},__comic_cover:{path:cover}};
+   const payload={title,title_en:language==='en'?title:'',position:+form.elements.position.value,pages,page_text};
    const query=row?db.from('universe_comics').update({...payload,revision:row.revision+1}).eq('id',row.id).eq('revision',row.revision):db.from('universe_comics').insert({...payload,owner_id:owner,owner_handle:handle});
-   const {data,error}=await query.select('id');if(error)throw error;if(!data.length)throw Error(say('El capítulo cambió. Cierra y vuelve a abrir.','Chapter changed. Close and reopen.'));if(!current())return;$('#modal').close();await navigate('comics');
-  }catch(error){if(current())$('#comic-form-status').textContent=error.message||say('No se guardó. Reintenta.','Not saved. Retry.');}finally{busyModal(false);form.querySelectorAll('button,input,textarea,select').forEach(b=>b.disabled=false);if(current())paint();}
+   const {data,error}=await query.select('id');if(error)throw error;if(!data.length)throw Error(say('El cómic cambió. Cierra y vuelve a abrir.','Comic changed. Close and reopen.'));if(!current())return;comicLanguageFilter=language;$('#modal').close();await navigate('comics');
+  }catch(error){status(error.message||say('No se guardó. Reintenta.','Not saved. Retry.'));}finally{busyModal(false);form.querySelectorAll('button,input,select').forEach(b=>b.disabled=false);if(current())paint();}
  };
 };
-
-// Filter only the image language; transcript translations remain independent.
 universeComics=async function(v){
  const rows=state.demo?[]:await lifeRows('universe_comics');if(v!==state.version)return;
- const options=[['all','Todos','All'],['es','Español','Español'],['en','English','English'],['unassigned','Sin clasificar','Unassigned']];
- const label=code=>code==='es'?'Español':code==='en'?'English':say('Sin clasificar','Unassigned');
+ const options=[['es','Español','Español'],['en','English','English'],['unassigned','Sin clasificar','Unassigned']];
  const paint=()=>{
   if(v!==state.version)return;
-  $('#main').innerHTML=lifeHeading('Cómics','Comics','Elige el idioma para encontrar tu próxima historia.','Choose a language to find your next story.')+
-   `<label class="stack">${bi('Idioma del cómic','Comic language')}<select id="comic-language-filter">${options.map(([code,es,en])=>`<option value="${code}" ${comicLanguageFilter===code?'selected':''}>${say(es,en)} (${rows.filter(r=>code==='all'||comicLanguage(r)===code).length})</option>`).join('')}</select></label>`+
-   ['jesus','julisa'].map(handle=>{
-    const selected=rows.filter(r=>r.owner_handle===handle&&(comicLanguageFilter==='all'||comicLanguage(r)===comicLanguageFilter)).sort((a,b)=>a.position-b.position||String(a.created_at||'').localeCompare(String(b.created_at||'')));
-    return `<section class="game-panel"><h2 translate="no">${esc(names[handle])}</h2>${selected.map(r=>`<div class="row"><button class="btn secondary" data-read-comic="${r.id}" translate="no">${r.position}. ${bi(esc(r.title),esc(r.title_en?.trim()||r.title))}</button><span class="hint" translate="no">${label(comicLanguage(r))}</span>${state.profile.handle===handle?`<button class="text-button" data-edit-comic="${r.id}">${bi('Editar y ordenar','Edit & arrange')}</button>`:''}</div>`).join('')||`<p>${bi('No hay capítulos en esta selección.','No chapters in this selection.')}</p>`}${state.profile.handle===handle?jjButton('add-comic','+ Añadir capítulo','+ Add chapter'):''}</section>`;
-   }).join('');
-  $('#comic-language-filter').onchange=e=>{comicLanguageFilter=e.target.value;paint();};
-  if($('#add-comic'))$('#add-comic').onclick=()=>universeComicForm();
+  const selected=rows.filter(r=>comicLanguage(r)===comicLanguageFilter).sort((a,b)=>a.position-b.position||String(a.created_at||'').localeCompare(String(b.created_at||'')));
+  $('#main').innerHTML=lifeHeading('Cómics','Comics','Nuestras historias, una portada a la vez.','Our stories, one cover at a time.')+
+   `<div class="comic-toolbar"><label>${bi('Idioma del cómic','Comic language')}<select id="comic-language-filter">${options.map(([code,es,en])=>`<option value="${code}" ${comicLanguageFilter===code?'selected':''}>${say(es,en)} (${rows.filter(r=>comicLanguage(r)===code).length})</option>`).join('')}</select></label>${jjButton('add-comic','+ Añadir cómic','+ Add comic')}</div>`+
+   `<div class="comic-library">${selected.map(r=>`<article class="comic-card"><button class="comic-card-open" data-read-comic="${esc(r.id)}"><span class="comic-card-cover"><img data-comic-cover="${esc(r.id)}" alt="${esc(comicTitle(r))}" loading="lazy" hidden><span class="comic-cover-placeholder">${bi('Cómic','Comic')}</span></span><h2 translate="no">${esc(comicTitle(r))}</h2></button>${r.owner_id===state.profile.id?`<button class="text-button" data-edit-comic="${esc(r.id)}">${bi('Editar cómic','Edit comic')}</button>`:''}</article>`).join('')}</div>${selected.length?'':`<p class="comic-empty">${bi('Todavía no hay cómics en este idioma.','No comics in this language yet.')}</p>`}`;
+  const filter=$('#comic-language-filter');filter.onchange=e=>{comicLanguageFilter=e.target.value;paint();};$('#add-comic').onclick=()=>universeComicForm();
   document.querySelectorAll('[data-edit-comic]').forEach(b=>b.onclick=()=>universeComicForm(rows.find(r=>r.id===b.dataset.editComic)));
   document.querySelectorAll('[data-read-comic]').forEach(b=>b.onclick=()=>universeReadComic(rows.find(r=>r.id===b.dataset.readComic)));
+  document.querySelectorAll('[data-comic-cover]').forEach(img=>{const row=rows.find(r=>r.id===img.dataset.comicCover),path=comicCover(row);if(!path)return;img.onload=()=>{img.hidden=false;img.nextElementSibling.hidden=true;};comicImage(path,img,()=>v===state.version&&img.isConnected).catch(()=>{});});
  };paint();
 };
