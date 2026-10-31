@@ -1,0 +1,43 @@
+'use strict';
+/* Secret adventures: bilingual narrator/player, local and cross-device prototype.
+   Multiplayer transport and reward authorization must be connected to authenticated Supabase RPCs before production. */
+(()=>{
+const stories=[
+ {id:'comics',title:['La biblioteca de los recuerdos perdidos','The Library of Lost Memories'],reward:['Nuestros cómics','Our Comics'],scenes:[
+ [['Una carta flotante pide ayuda: los personajes escaparon de sus libros.','A floating letter asks for help: characters have escaped their books.'],[['Entro a la biblioteca.','I enter the library.'],['¿Es otra locura de Jesús?','Is this another of Jesus’s crazy ideas?'],['¿Hay comida?','Is there food?']]],
+ [['Un búho con lentes explica que un caballero diminuto se declaró en huelga.','An owl with glasses explains that a tiny knight has gone on strike.'],[['Le ordeno detenerse.','I order him to stop.'],['Le pregunto por su sueldo.','I ask about his salary.'],['Lo persigo.','I chase him.']]],
+ [['Tres libros flotan: uno ríe, otro suspira y el último guarda secretos.','Three books float: one laughs, another sighs, and the last holds secrets.'],[['Abro el libro divertido.','I open the funny book.'],['Elijo el romántico.','I choose the romantic one.'],['Elijo el misterioso.','I choose the mysterious one.']]],
+ [['Un dragón diminuto pregunta qué crece cuando se comparte.','A tiny dragon asks what grows when shared.'],[['El amor.','Love.'],['La pizza.','Pizza.'],['Los chistes malos.','Bad jokes.']]],
+ [['Un villano protesta porque Julissa siempre es la protagonista. Tropieza con su capa.','A villain protests that Julissa is always the main character. He trips over his cape.'],[['Soy la protagonista.','I am the main character.'],['Le ofrezco otro papel.','I offer him another role.'],['Me río.','I laugh.']]],
+ [['Un espejo muestra risas, conversaciones y un universo compartido.','A mirror shows laughter, conversations, and a shared universe.'],[['Lo especial son las personas.','The people make it special.'],['Los momentos inesperados.','The unexpected moments.'],['Tener con quién compartirlo.','Having someone to share it with.']]],
+ [['En una puerta aparecen los nombres Jesús y Julissa. El búho habla de un autor que crea mientras todos duermen.','A door bears the names Jesus and Julissa. The owl speaks of an author who creates while everyone sleeps.'],[['¿Por qué hace tanto?','Why does he do so much?'],['¿Cuántas sorpresas faltan?','How many surprises remain?'],['¿Puedo adoptar al búho?','Can I adopt the owl?']]],
+ [['Los estantes se iluminan. El búho entrega una llave: cada libro es una nueva aventura para compartir.','The shelves light up. The owl hands over a key: every book is a new adventure to share.'],[['Quiero descubrirlas todas.','I want to discover them all.'],['Quiero leerlas con Jesús.','I want to read them with Jesus.'],['¡Que comience la aventura!','Let the adventure begin!']]]
+ ]},
+ {id:'video',title:['Operación BU: El fantasma que robó Halloween','Operation BOO: The Ghost Who Stole Halloween'],reward:['Julissa, este es tu susto','Julissa, This Is Your Scare'],scenes:[
+ [['Un agente calabaza llama: un fantasma ha escondido un objeto secreto.','A pumpkin agent calls: a ghost has hidden a secret object.'],[['Acepto el caso.','I accept the case.'],['¿Cuánto pagan?','How much does it pay?'],['¿Por qué yo?','Why me?']]],
+ [['Un vampiro sale entre humo, estornuda y pierde sus colmillos de plástico.','A vampire emerges through smoke, sneezes, and loses his plastic fangs.'],[['Me río.','I laugh.'],['Le ayudo.','I help him.'],['Pregunto por el fantasma.','I ask about the ghost.']]],
+ [['Tres calabazas parlantes dicen ser cantante, detective y sandía.','Three talking pumpkins claim to be a singer, a detective, and a watermelon.'],[['Hablo con la detective.','I talk to the detective.'],['Escucho a la cantante.','I listen to the singer.'],['Pregunto a la sandía.','I ask the watermelon.']]],
+ [['Bubu, un fantasma con moño, dice «¡BU!» y pregunta si te asustó.','Bubu, a ghost wearing a bow tie, says “BOO!” and asks if you were scared.'],[['Finjo miedo.','I pretend to be scared.'],['Le digo que es adorable.','I tell him he is adorable.'],['Pregunto qué escondió.','I ask what he hid.']]],
+ [['Una bruja intenta hacerse invisible, pero solo consigue que baile su sombrero.','A witch tries to turn invisible, but only makes her hat dance.'],[['Pruebo la poción.','I try the potion.'],['Pido una pista.','I ask for a clue.'],['Me llevo el sombrero.','I take the hat.']]],
+ [['Un esqueleto con audífonos exige una prueba musical y pierde la mandíbula.','A skeleton wearing headphones demands a musical challenge and loses his jaw.'],[['Bailo.','I dance.'],['Canto.','I sing.'],['Le devuelvo la mandíbula.','I return his jaw.']]],
+ [['Una nota en un escenario oscuro dice: «Para Julissa. Espero que esto te haga reír».','A note on a dark stage says: “For Julissa. I hope this makes you laugh.”'],[['¿Jesús hizo esto?','Did Jesus make this?'],['¡Quiero verlo!','I want to see it!'],['¿Bubu canta?','Does Bubu sing?']]],
+ [['Bubu toma un micrófono: «¡Tenemos un estreno exclusivo creado por alguien que ama verte sonreír!»','Bubu grabs a microphone: “An exclusive premiere made by someone who loves seeing you smile!”'],[['¡Que empiece!','Let it begin!'],['Quiero verlo con Jesús.','I want to watch it with Jesus.'],['¡Revela la sorpresa!','Reveal the surprise!']]]
+ ]}
+];
+const tr=(a,l)=>a[l==='en'?1:0];
+const state={story:null,step:0,choice:null,lang:'es',mode:'single',role:'narrator'};
+const style=document.createElement('style');style.textContent='.jj-adventures{max-width:740px;margin:2rem auto;padding:22px;border:1px solid #9d80bc;border-radius:22px;background:#21182d;color:#fff;font-family:system-ui}.jj-adventures button,.jj-adventures select{padding:11px;margin:5px;border:1px solid #aa8dc8;border-radius:12px;background:#38264a;color:#fff;cursor:pointer}.jj-adventures button:focus-visible{outline:3px solid #f7c873}.jj-adventures .story{background:#33253f;padding:20px;border-radius:14px;line-height:1.65}.jj-adventures .choices button{display:block;width:100%;text-align:left}.jj-adventures .choices button[aria-pressed=true]{background:#70509a}.jj-adventures small{color:#d6c6e8}';document.head.append(style);
+function mount(){if(document.getElementById('jj-secret-adventures'))return;const root=document.createElement('section');root.id='jj-secret-adventures';root.className='jj-adventures';document.getElementById('app')?.after(root);if(!root.isConnected)document.body.append(root);render();}
+function render(){const root=document.getElementById('jj-secret-adventures');if(!root)return;root.replaceChildren();const h=(tag,text,parent=root)=>{const el=document.createElement(tag);el.textContent=text;parent.append(el);return el;};const btn=(label,fn,parent=root)=>{const b=h('button',label,parent);b.type='button';b.onclick=fn;return b;};
+h('h2',state.lang==='es'?'Misiones secretas · Prueba':'Secret Missions · Preview');
+const lang=document.createElement('select');[['es','Español'],['en','English']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;lang.append(o)});lang.value=state.lang;lang.onchange=()=>{state.lang=lang.value;render()};root.append(lang);
+h('small',state.lang==='es'?'Demostración local: no desbloquea contenido ni sincroniza dispositivos todavía.':'Local preview: does not unlock content or sync devices yet.');
+if(!state.story){stories.forEach(s=>btn(tr(s.title,state.lang),()=>{state.story=s;state.step=0;state.choice=null;render()}));return}
+const s=state.story;h('h3',tr(s.title,state.lang));h('small',`${state.step+1} / ${s.scenes.length}`);
+if(state.step===s.scenes.length){h('p',state.lang==='es'?'¡Misión completada!':'Mission complete!');h('strong',tr(s.reward,state.lang));btn(state.lang==='es'?'Volver':'Back',()=>{state.story=null;render()});return}
+const scene=s.scenes[state.step];h('p',tr(scene[0],state.lang)).className='story';const choices=h('div','');choices.className='choices';scene[1].forEach((opt,i)=>{const b=btn(String.fromCharCode(65+i)+'. '+tr(opt,state.lang),()=>{state.choice=i;render()},choices);b.setAttribute('aria-pressed',String(state.choice===i))});
+if(state.choice!==null){h('p',state.lang==='es'?'Julissa ha elegido una respuesta. Jesús puede continuar la narración.':'Julissa has chosen an answer. Jesus can continue narrating.');btn(state.lang==='es'?'Siguiente escena':'Next scene',()=>{state.step++;state.choice=null;render()})}
+btn(state.lang==='es'?'Salir':'Exit',()=>{state.story=null;render()});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+})();
