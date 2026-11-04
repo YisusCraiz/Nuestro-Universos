@@ -10,7 +10,7 @@ function bbCharacter(ctx,x,y,size,handle,skin='casual',time=0){
      const art=new Image();
      art.onload=()=>window.dispatchEvent(new Event('bb-art-ready'));
      matchingPajamas[profile]=art;
-     art.src='assets/bombitas/matching-pajamas-'+profile+'.webp';
+     art.src='assets/bombitas/matching-pajamas-v2-'+profile+'.webp';
    }
    const art=matchingPajamas[profile];
    if(art.naturalWidth){
