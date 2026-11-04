@@ -5,10 +5,12 @@ let comicLanguageFilter=null;
 function comicTitle(row){return comicLanguage(row)==='en'?(row.title_en?.trim()||row.title):row.title;}
 function comicCover(row){return row?.page_text?.__comic_cover?.path||row?.pages?.[0];}
 async function comicImage(path,img,current){
+ if(/^assets\/winter-event\/(cover|page-[1-6])\.webp$/.test(path)){if(current())img.src=path;return;}
  const {data,error}=await db.storage.from('universe-comics').createSignedUrl(path,3600);
  if(!current())return;if(error)throw error;img.src=data.signedUrl;
 }
 universeReadComic=async function(row){
+ if(row.winterEvent){const data=await WinterEvent.read();if(data.completed_at)openWinterComic(data,false,comicLanguage(row));return;}
  modal(`<div class="comic-reader-heading"><h2 translate="no">${esc(comicTitle(row))}</h2><p>${bi('Desliza para leer el cómic completo.','Scroll to read the complete comic.')}</p></div><div class="comic-reader comic-reader-continuous" id="universe-reader" translate="no"></div>`);
  const root=$('#universe-reader'),generation=modalVersion,current=()=>root.isConnected&&modalVersion===generation;
  await Promise.all(row.pages.map(async(path,i)=>{
@@ -59,7 +61,9 @@ universeComicForm=function(row){
  };
 };
 universeComics=async function(v){
- const rows=state.demo?[]:await lifeRows('universe_comics');if(v!==state.version)return;
+ const rows=state.demo?[]:await lifeRows('universe_comics');
+ try{rows.push(...await WinterEvent.comicRows());}catch{}
+ if(v!==state.version)return;
  const options=[['es','Español','Español'],['en','English','English'],['unassigned','Sin clasificar','Unassigned']];
  if(comicLanguageFilter===null){const preferred=say('es','en');comicLanguageFilter=rows.some(r=>comicLanguage(r)===preferred)?preferred:options.find(([code])=>rows.some(r=>comicLanguage(r)===code))?.[0]||preferred;}
  const paint=()=>{
