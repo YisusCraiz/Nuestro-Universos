@@ -1,9 +1,9 @@
 /* Enabled only by the Christmas theme. */
-body[data-jj-theme="christmas"] {
+html[data-season="christmas"] body {
   background: radial-gradient(ellipse at top, #234c48, #102b32 58%, #101e2b);
   color: #fff6df;
 }
-body[data-jj-theme="christmas"]::after {
+html[data-season="christmas"] body::after {
   content: "";
   position: fixed;
   inset: -90px 0 0;
@@ -18,5 +18,12 @@ body[data-jj-theme="christmas"]::after {
   to { background-position: 67px 270px, -88px 318px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body[data-jj-theme="christmas"]::after { animation: none; opacity: .35; }
+  html[data-season="christmas"] body::after { animation: none; opacity: .35; }
 }
+html[data-season="christmas"] .gate-art { background:linear-gradient(0deg,#152323ed,transparent 70%),url(assets/christmas/couple.webp) center 28%/cover; }
+html[data-season="christmas"] .avatar {color:transparent;background-size:170%;background-position:50% 14%;border:2px solid #eacb86;}
+html[data-season="christmas"] .avatar.jesus {background-image:url(assets/christmas/sprite-1-0.webp)}
+html[data-season="christmas"] .avatar.julisa {background-image:url(assets/christmas/sprite-0-1.webp)}
+html[data-season="christmas"] .hero-photo {object-position:center 25%}
+.winter-arrival {position:fixed;inset:0;z-index:10000;display:grid;align-content:end;justify-items:center;padding:2rem;background:#0b1c25 url(assets/christmas/plaza.webp) center/contain no-repeat;}
+.winter-arrival strong {background:#18352e;color:#fff2cb;padding:.75rem 1.5rem;border:1px solid #eacb86;border-radius:2rem}
