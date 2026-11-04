@@ -24,7 +24,7 @@ function seasonalSale(id,now=new Date()) {
   const day = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Matamoros',month:'2-digit',day:'2-digit'}).formatToParts(now);
   const stamp = day.find(p=>p.type==='month').value+day.find(p=>p.type==='day').value;
   if(id.startsWith('christmas-')) return JJ.season==='christmas' && stamp >= '1101' && stamp <= '1231';
-  if(id.startsWith('halloween-') || HalloweenSkins.some(s=>s[0]===id)) return stamp>='0926' && stamp<='1031';
+  if(id.startsWith('halloween-') || HalloweenSkins.some(s=>s[0]===id)) return JJ.settings==='halloween' || (JJ.settings==='auto' && stamp>='0926' && stamp<='1031');
   return true;
 }
 async function christmasArrival() {
