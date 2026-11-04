@@ -1,0 +1,22 @@
+/* Enabled only by the Christmas theme. */
+body[data-jj-theme="christmas"] {
+  background: radial-gradient(ellipse at top, #234c48, #102b32 58%, #101e2b);
+  color: #fff6df;
+}
+body[data-jj-theme="christmas"]::after {
+  content: "";
+  position: fixed;
+  inset: -90px 0 0;
+  z-index: 200;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 1px, transparent 2px), radial-gradient(circle, #fff9 1.5px, transparent 2.5px);
+  background-size: 67px 90px, 113px 135px;
+  animation: jj-christmas-snow 12s linear infinite;
+}
+@keyframes jj-christmas-snow {
+  from { background-position: 0 0, 25px 48px; }
+  to { background-position: 67px 270px, -88px 318px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-jj-theme="christmas"]::after { animation: none; opacity: .35; }
+}
