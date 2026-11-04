@@ -1,7 +1,25 @@
 'use strict';
 const BBSkins=[['casual','De diario','Everyday',0,'#faf7ec'],['catshirt','Camiseta gatuna','Cat tee',3,'#e6b4cf'],['sharkshirt','Camiseta tiburón','Shark tee',3,'#80bfd1'],['cat','Disfraz de gato','Cat costume',6,'#b4a2cf'],['shark','Disfraz tiburón','Shark costume',6,'#69a7c1'],['pajamas','Pijama de gatitos','Kitten pajamas',4,'#a8d6c1'],['ninja','Ninja nocturno','Night ninja',7,'#494e7c'],['yukata','Yukata lunar','Moon yukata',8,'#d99bac']];
+BBSkins.push(['five-more-minutes','Cinco minutos más','Five more minutes',4,'#13738a']);
+const matchingPajamas = {};
 const BBArt=new Image();BBArt.onload=()=>window.dispatchEvent(new Event('bb-art-ready'));BBArt.src='assets/bombitas/characters-v2.png';
 function bbCharacter(ctx,x,y,size,handle,skin='casual',time=0){
+ if(skin==='five-more-minutes'){
+   const profile=handle==='julisa'?'julisa':'jesus';
+   if(!matchingPajamas[profile]){
+     const art=new Image();
+     art.onload=()=>window.dispatchEvent(new Event('bb-art-ready'));
+     matchingPajamas[profile]=art;
+     art.src='assets/bombitas/matching-pajamas-'+profile+'.webp';
+   }
+   const art=matchingPajamas[profile];
+   if(art.naturalWidth){
+     const height=size*1.24,width=height*art.naturalWidth/art.naturalHeight;
+     ctx.drawImage(art,x-width/2,y-size*.94+Math.sin(time/110)*size*.025,width,height);
+     return;
+   }
+   skin='casual';
+ }
  if(BBArt.complete&&BBArt.naturalWidth){const outfit=Math.max(0,BBSkins.findIndex(s=>s[0]===skin)),index=outfit*2+(handle==='julisa'?1:0),cw=BBArt.naturalWidth/4,ch=BBArt.naturalHeight/4,bob=time?Math.sin(time/110)*size*.025:0;ctx.save();ctx.translate(x,y+bob);ctx.drawImage(BBArt,index%4*cw,Math.floor(index/4)*ch,cw,ch,-size*.62,-size*.94,size*1.24,size*1.24);ctx.restore();return;}
  const outfit=BBSkins.find(s=>s[0]===skin)||BBSkins[0],girl=handle==='julisa';ctx.save();ctx.translate(x,y);ctx.scale(size/64,size/64);ctx.lineWidth=2;ctx.lineJoin='round';
  const ellipse=(x,y,rx,ry,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();};

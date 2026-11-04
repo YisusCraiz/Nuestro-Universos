@@ -1,0 +1,1 @@
+insert into public.bb_skins(id,price) values ('five-more-minutes',4) on conflict (id) do nothing;
