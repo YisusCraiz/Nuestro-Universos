@@ -1,4 +1,6 @@
 begin;
+alter table public.app_settings drop constraint app_settings_season_check;
+alter table public.app_settings add constraint app_settings_season_check check (season in ('auto','halloween','september','classic','christmas'));
 insert into public.bb_skins(id,price) values ('christmas-santa',8),('christmas-reindeer',8) on conflict do nothing;
 insert into public.jj_pet_catalog(id,price,skin) values ('christmas-fox',200,'christmas-santa'),('christmas-owl',220,'christmas-reindeer') on conflict do nothing;
 
