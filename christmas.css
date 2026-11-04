@@ -1,0 +1,39 @@
+/* Enabled only by the Christmas theme. */
+html[data-season="christmas"] body {
+  background: radial-gradient(ellipse at top, #234c48, #102b32 58%, #101e2b);
+  color: #fff6df;
+}
+html[data-season="christmas"] body::after {
+  content: "";
+  position: fixed;
+  inset: -90px 0 0;
+  z-index: 200;
+  pointer-events: none;
+  background-image: url("assets/christmas/snow.svg"), radial-gradient(circle,#fff9 1px,transparent 2px);
+  background-size: var(--snow-tile, 220px) 270px, 137px 90px;
+  opacity: var(--snow-opacity, .67);
+  animation: jj-christmas-snow var(--snow-time, 16s) linear infinite;
+}
+html[data-snow="soft"] { --snow-tile:350px; --snow-opacity:.38; --snow-time:25s; }
+html[data-snow="bright"] { --snow-tile:150px; --snow-opacity:.88; --snow-time:12s; }
+html[data-season="christmas"][data-snow="off"] body::after { display:none; }
+@keyframes jj-christmas-snow {
+  from { background-position: 0 0, 25px 48px; }
+  to { background-position: 0 270px, 25px 318px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-season="christmas"] body::after { animation: none; opacity: .35; }
+}
+html[data-season="christmas"] .gate-art { background:linear-gradient(0deg,#152323ed,transparent 70%),url(assets/christmas/couple.webp) center 28%/cover; }
+html[data-season="christmas"] .avatar {color:transparent;background-size:170%;background-position:50% 14%;border:2px solid #eacb86;}
+html[data-season="christmas"] .avatar.jesus {background-image:url(assets/christmas/sprite-1-0.webp)}
+html[data-season="christmas"] .avatar.julisa {background-image:url(assets/christmas/sprite-0-1.webp)}
+html[data-season="christmas"] .hero-photo {object-position:center 25%}
+.winter-arrival {position:fixed;inset:0;z-index:10000;display:grid;align-content:end;justify-items:center;padding:2rem;background:#0b1c25 url(assets/christmas/plaza.webp) center/contain no-repeat;}
+.winter-arrival strong {background:#18352e;color:#fff2cb;padding:.75rem 1.5rem;border:1px solid #eacb86;border-radius:2rem}
+
+.snow-controls {display:none}
+html[data-season="christmas"] .snow-controls {display:inline-flex;align-items:center;gap:.3rem;color:#fff4d9}
+.snow-controls select {max-width:7em;padding:.35em;background:#183933;color:white;border:1px solid #9a865b;border-radius:.5em}
+html[data-season="christmas"] .gate-inner::after {content:"";display:block;margin:14px auto 0;width:min(100%,340px);aspect-ratio:2.4;border-radius:18px;border:1px solid #c7a363;background:url(assets/christmas/plaza.webp) center 25%/cover}
+@media(max-width:650px){html[data-season="christmas"] .app-tools {flex-wrap:wrap}}

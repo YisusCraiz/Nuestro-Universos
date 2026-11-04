@@ -2,6 +2,7 @@
 window.JJ_SEASONS = {
   default: 'halloween',
   designs: {
+    christmas: { image:'assets/christmas/couple.webp', es:'Navidad', en:'Christmas', symbols:'❄ ✦ ❄' },
     halloween: { image:'assets/halloween-couple.png', es:'Halloween', en:'Halloween', symbols:'🎃 👻 🦇 💀 🧟' },
     september: { image:'assets/flowers.png', es:'Flores de septiembre', en:'September flowers', symbols:'🌻 ✦ 🌼' },
     classic: { image:'assets/our-hands.jpg', es:'Nuestro universo', en:'Our universe', symbols:'♡ ✦ ☾' }
