@@ -40,3 +40,26 @@ async function christmasArrival() {
   await new Promise(resolve=>setTimeout(resolve,2000));
   screen.remove();
 }
+
+const snowControl = document.createElement('label');
+snowControl.className = 'snow-controls';
+snowControl.innerHTML = '❄ '+bi('Nieve','Snow')+' <select></select>';
+const snowSelect = snowControl.querySelector('select');
+const snowModes = [['off','Sin nieve','Off'],['soft','Suave','Light'],['normal','Clásica','Classic'],['bright','Brillante','Bright']];
+function refreshSnowLabels() {
+  snowModes.forEach(([value,es,en],index)=>{
+    if(!snowSelect.options[index]) snowSelect.add(new Option('',value));
+    snowSelect.options[index].text = say(es,en);
+  });
+}
+refreshSnowLabels();
+new MutationObserver(refreshSnowLabels).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+let snowMode = 'normal';
+try { snowMode = localStorage.getItem('jj-snow') || snowMode; } catch {}
+snowSelect.value = snowModes.some(([value])=>value===snowMode)?snowMode:'normal';
+document.documentElement.dataset.snow = snowSelect.value;
+snowSelect.onchange = ()=>{
+  document.documentElement.dataset.snow = snowSelect.value;
+  try { localStorage.setItem('jj-snow',snowSelect.value); } catch {}
+};
+document.querySelector('.app-tools')?.append(snowControl);
