@@ -31,13 +31,13 @@ const sectionsProfile=profilePage;profilePage=async function(v){await sectionsPr
   if (!state.demo) {
     const preview = document.createElement('a');
     preview.href = 'dev/yuki-preview.html';
-    preview.textContent = say('Probar el avatar de Yuki', 'Try the Yuki avatar');
+    preview.innerHTML = bi('Probar el avatar de Yuki', 'Try the Yuki avatar');
     const toggle = document.createElement('button');
-    const label = () => yukiHiddenFor === state.profile.id ? 'Mostrar a Yuki en el menú' : 'Ocultar a Yuki del menú';
-    toggle.textContent = label();
+    const label = () => yukiHiddenFor === state.profile.id ? bi('Mostrar a Yuki en el menú', 'Show Yuki in the menu') : bi('Ocultar a Yuki del menú', 'Hide Yuki from the menu');
+    toggle.innerHTML = label();
     toggle.onclick = () => {
       yukiHiddenFor = yukiHiddenFor === state.profile.id ? null : state.profile.id;
-      toggle.textContent = label();
+      toggle.innerHTML = label();
       syncMenuYuki();
     };
     $('#main').append(toggle, preview);
