@@ -72,6 +72,19 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
       if (generalChat) {
         const {data,error} = await db.functions.invoke('yuki-chat',{body:{message:text,language:UniverseI18n.language}});
         if (session !== chatSession || !host.isConnected || !room.open) return;
+        let errorCode;
+        if (error?.context?.json) {
+          try { errorCode = (await error.context.clone().json()).code; } catch {}
+          if (session !== chatSession || !host.isConnected || !room.open) return;
+        }
+        if (errorCode === 'provider_quota') {
+          reply.textContent = uiText('Gemini alcanzó su cuota disponible. Inténtalo más tarde.', 'Gemini has reached its available quota. Try again later.');
+          return;
+        }
+        if (errorCode === 'missing_gemini_key' || errorCode === 'provider_configuration' || errorCode === 'invalid_model') {
+          reply.textContent = uiText('Falta completar la configuración de Gemini.', 'Gemini setup needs to be completed.');
+          return;
+        }
         if (error?.context?.status === 429) {
           reply.textContent = uiText('Has llegado al límite diario de Yuki.', 'You’ve reached Yuki’s daily limit.');
           return;
