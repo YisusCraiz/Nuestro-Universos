@@ -19,3 +19,125 @@
 .winter-comic-page{max-width:950px;margin:auto;padding:18px;display:grid;grid-template-columns:1.15fr 1fr;gap:20px}.winter-comic-art img{width:100%;border-radius:8px;border:2px solid #e9d5ac;display:block}.winter-comic-art h2{font-size:clamp(24px,4vw,34px);margin:16px 0}.winter-narrator{line-height:1.7;background:#2a2533;padding:16px;border-left:3px solid #e3c689}.winter-speech{display:grid;gap:6px;padding:14px 18px;border-radius:18px;background:#f6ebd5;color:#28212d;line-height:1.5}.winter-speech strong{color:#74475f;font-size:13px}.winter-speech:nth-child(odd){margin-left:20px}.winter-reader-footer{display:flex;justify-content:center;gap:16px;align-items:center;padding:16px;flex-wrap:wrap}#winter-reader-status{max-width:700px;margin:0 auto;padding:12px 20px 30px;text-align:center}
 @media(max-width:640px){.winter-comic-page{grid-template-columns:1fr;gap:4px}.winter-reader-bar>span{max-width:42%;font-size:12px}.winter-content{padding:20px}.winter-bridge{gap:5px}.winter-tile{padding:10px 6px}.winter-bridge button{padding:4px;min-width:32px}}
 @media(prefers-reduced-motion:reduce){.winter-charge.charging{animation:none;outline:3px solid #fce1a5}}
+
+/* Keep the illustrated scene separate from the controls so both stay readable. */
+.winter-event {
+ display: grid;
+ grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+ background: radial-gradient(ellipse at 0 0, #352447, #191526 65%);
+ border-color: #ac895b;
+ box-shadow: 0 18px 45px #0005;
+}
+.winter-scene {
+ position: relative;
+ inset: auto;
+ z-index: 0;
+ grid-column: 2;
+ grid-row: 1;
+ min-height: 100%;
+ background-image: linear-gradient(90deg,#191526,transparent 28%),url(assets/winter-event/page-1.webp);
+ background-position: center;
+}
+.winter-stage-2 .winter-scene { background-image: linear-gradient(90deg,#191526,transparent 28%),url(assets/winter-event/page-2.webp); }
+.winter-stage-3 .winter-scene { background-image: linear-gradient(90deg,#191526,transparent 28%),url(assets/winter-event/page-3.webp); }
+.winter-stage-5 .winter-scene { background-image: linear-gradient(90deg,#191526,transparent 28%),url(assets/christmas/plaza.webp); }
+.winter-content { grid-column: 1; grid-row: 1; min-width: 0; }
+.winter-content h2 { margin-top: 0; line-height: 1.15; }
+.winter-content .eyebrow { display:block; margin-bottom: .7em; color:#f3d198; }
+.winter-route {
+ display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px;
+ margin: 0 0 16px; padding: 0; list-style: none;
+}
+.winter-route li {
+ display: flex; align-items: center; justify-content: center; gap: 8px;
+ min-height: 44px; padding: 8px 4px; border-radius: 12px;
+ border: 1px solid #e3bf7f44; background: #221d32; color: #e2d5e9;
+ font-size: clamp(11px,2.2vw,14px);
+}
+.winter-route li > span:first-child {
+ display:grid; place-items:center; width: 22px; height: 22px;
+ border:1px solid #cfa77688; border-radius:50%; color:#f5d8a3;
+}
+.winter-route li[aria-current] { background:#4c3549; border-color:#f2c586; color:#fff1d7; font-weight:bold; }
+.winter-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.winter-players { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.winter-players li { display:grid; gap:5px; background:#30253e; }
+.winter-players li span { font-size:.85rem; color:#e5cbb0; }
+.winter-players li[data-ready=true] { border-color:#82cfba88; }
+.winter-players li[data-ready=true] span { color:#a5e8d7; }
+.winter-meter { margin: 14px 0; }
+.winter-meter > div { display:flex; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.winter-meter progress,.winter-reader-count progress {
+ width:100%; height:8px; accent-color:#efba6f; display:block; border:0; border-radius:8px;
+}
+.winter-turn {
+ display:flex; gap:10px; align-items:center; padding:10px 12px;
+ border:1px solid #ad9ad18a; background:#3b3054; border-radius:12px; color:#f1e8ff;
+}
+.winter-turn[data-mine=true] { background:#543747; color:#ffe4b3; border-color:#e5ba7a; }
+.winter-clue { margin-top:12px; }
+.winter-objects { gap:10px; }
+.winter-objects button {
+ background:radial-gradient(ellipse at top,#54405e,#30273e);
+ border-color:#bd9b7290;
+}
+.winter-objects button:hover,.winter-bridge button:hover { border-color:#ffdb9a; background-color:#584565; }
+.winter-event button:focus-visible,.winter-reader button:focus-visible { outline:3px solid #ffd18d; outline-offset:3px; }
+.winter-event button:disabled { opacity:.65; cursor:default; }
+.winter-bridge {
+ display:grid; grid-template-columns:minmax(0,1fr) 25px minmax(0,1fr) 25px minmax(0,1fr) 25px minmax(0,1fr);
+ gap:3px; counter-reset:tile; margin:16px 0 4px;
+}
+.winter-tile {
+ display:flex; align-items:center; justify-content:center; flex-direction:column;
+ min-width:0; min-height:86px; gap:5px; padding:6px 1px; text-align:center;
+ font-size:clamp(8px,2vw,12px); background:#2f435b; border-color:#91c9da;
+}
+.winter-tile::before { counter-increment:tile; content:counter(tile); font-size:10px; color:#bbdfee; }
+.winter-tile > span[aria-hidden=true] { font-size:22px; }
+.winter-bridge button { min-width:0; width:100%; padding:0; font-size:15px; }
+.winter-wait,#winter-status { color:#ffe3ad; font-size:.92rem; }
+#winter-status:empty,#winter-reader-status:empty { display:none; }
+.winter-charge { position:relative; overflow:hidden; }
+.winter-charge::after {
+ content:''; position:absolute; inset:auto 0 0; height:5px;
+ background:#fff5b0; transform:scaleX(0); transform-origin:left; pointer-events:none;
+}
+.winter-charge.charging::after { animation:winter-fill 2s linear forwards; }
+@keyframes winter-fill { to { transform:scaleX(1); } }
+
+.winter-reader[open] { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; overflow:hidden; }
+.winter-comic-page { width:100%; box-sizing:border-box; margin:0 auto; overflow:auto; align-content:start; }
+.winter-reader-bar { position:relative; }
+.winter-reader-footer {
+ border-top:1px solid #bd9c6255; background:#21192c; padding:10px 14px max(10px,env(safe-area-inset-bottom));
+}
+.winter-reader-count { width:52px; text-align:center; font-variant-numeric:tabular-nums; }
+.winter-reader-count progress { margin-top:5px; height:4px; }
+#winter-next,#winter-finish { color:#261925; background:#f3c384; font-weight:bold; }
+#winter-reader-status { background:#292239; width:100%; max-width:none; box-sizing:border-box; padding:9px 14px; }
+
+@media(max-width:780px) {
+ .winter-event { grid-template-columns:1fr; }
+ .winter-scene {
+  grid-row:1; grid-column:1; min-height:0; height:clamp(128px,36vw,225px);
+  background-position:center 36%;
+  background-image:linear-gradient(0deg,#231a33,transparent 40%),url(assets/winter-event/page-1.webp);
+ }
+ .winter-stage-2 .winter-scene { background-image:linear-gradient(0deg,#231a33,transparent 40%),url(assets/winter-event/page-2.webp); }
+ .winter-stage-3 .winter-scene { background-image:linear-gradient(0deg,#231a33,transparent 40%),url(assets/winter-event/page-3.webp); }
+ .winter-stage-5 .winter-scene { background-image:linear-gradient(0deg,#231a33,transparent 40%),url(assets/christmas/plaza.webp); }
+ .winter-content { grid-row:2; padding:15px 17px 20px; }
+ .winter-route { gap:5px; }
+ .winter-route li { gap:4px; }
+ .winter-route li > span:first-child { width:17px; height:17px; font-size:10px; flex:none; }
+ .winter-event .btn { min-height:44px; }
+}
+@media(max-width:420px) {
+ .winter-reader-footer { gap:8px; }
+ .winter-reader-footer button { padding:7px 9px; font-size:13px; }
+ .winter-reader-count { width:42px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .winter-charge.charging::after { animation:none; transform:scaleX(1); }
+}
