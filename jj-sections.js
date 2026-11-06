@@ -20,7 +20,7 @@ function syncMenuYuki() {
   const host = document.createElement('div');
   yukiHost = host;
   document.getElementById('main').closest('.layout').after(host);
-  import('./dev/yuki-avatar.js?v=yuki-battery-1').then(({mountYuki}) => {
+  import('./dev/yuki-avatar.js?v=yuki-living-2').then(({mountYuki}) => {
     if (host === yukiHost && host.isConnected && state.profile?.id === profile.id &&
         state.profile.handle === 'jesus' && !state.demo) disconnectYuki = mountYuki(host);
   }).catch(() => { /* The rest of the menu remains usable if loading fails. */ });
