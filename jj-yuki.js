@@ -26,7 +26,7 @@
   if(host&&(!show || !host.isConnected || host.dataset.owner!==id)){dispose?.();dispose=null;host.remove();host=null;}
   if(!show||host)return;
   const current=document.createElement('div');current.dataset.owner=id;host=current;document.body.append(current);
-  import('./dev/yuki-avatar.js?v=yuki-anniversary-1').then(({mountYuki})=>{if(host===current&&state.profile?.id===id&&allowed())dispose=mountYuki(current);}).catch(()=>{if(host===current){current.remove();host=null;}});
+  import('./dev/yuki-avatar.js?v=yuki-poses-1').then(({mountYuki})=>{if(host===current&&state.profile?.id===id&&allowed())dispose=mountYuki(current);}).catch(()=>{if(host===current){current.remove();host=null;}});
  }
  window.YukiHub={sync};
  const previousProfile=profilePage;
