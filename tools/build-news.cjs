@@ -1,7 +1,8 @@
 const fs=require('node:fs'),{execFileSync}=require('node:child_process');
-const entries=JSON.parse(fs.readFileSync('news.json','utf8').replace(/^\uFEFF/,''));
+const privateCommits=new Set(["21c4e13d09258ba05f871ad32b74222d1ec3cd13","31aa7d80d48fda610cd1e30be17adc5bc5bef160","0ceb87e0409088262d8b5ec54e2e38bc27dcde70"]);
+const entries=JSON.parse(fs.readFileSync('news.json','utf8').replace(/^\uFEFF/,'')).filter(entry=>!privateCommits.has(entry.commit));
 const commits=execFileSync('git',['log','--reverse','--format=%H','8d2425a8db10f97a033d7a51cca2c1b6fd1d893c..HEAD'],{encoding:'utf8'}).trim().split(/\s+/).filter(Boolean);
-for(const sha of commits){if(entries.some(n=>n.commit===sha))continue;
+for(const sha of commits){if(privateCommits.has(sha)||entries.some(n=>n.commit===sha))continue;
 const message=execFileSync('git',['show','-s','--format=%s',sha],{encoding:'utf8'}).trim();
 // Private preparation must never announce a surprise in the shared news feed.
 if(message.startsWith('[internal]'))continue;
