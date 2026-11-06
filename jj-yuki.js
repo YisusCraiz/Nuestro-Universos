@@ -31,7 +31,7 @@
  window.YukiHub={sync};
  const previousProfile=profilePage;
  profilePage=async function(v){
-  await previousProfile(v);if(v!==state.version||state.demo)return;
+  await previousProfile(v);if(v!==state.version||state.demo||(!owner()&&!sectionAllowed('yuki')))return;
   await loadEvent(true);if(v!==state.version)return;
   const card=document.createElement('section');card.className='game-panel';card.id='yuki-profile-controls';
   const title=document.createElement('h2');title.textContent='✧ '+say('Yuki y el primer aniversario','Yuki and the first anniversary');
