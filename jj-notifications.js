@@ -5,15 +5,31 @@ noticeDock.id='jj-notifications';
 noticeDock.hidden=true;
 noticeDock.innerHTML=`<button type="button" id="jj-notification-button" class="edge-tab" aria-controls="jj-notice-panel" aria-expanded="false"></button>
 <section id="jj-notice-panel" class="edge-panel" aria-labelledby="jj-notice-title" hidden>
- <header><strong id="jj-notice-title"></strong><button type="button" class="edge-close" id="jj-notice-close">✕</button></header>
+ <header><strong id="jj-notice-title"></strong><div class="notice-header-actions">
+  <button type="button" class="edge-close" id="jj-push-toggle" aria-controls="jj-push-settings" aria-expanded="false">⚙</button>
+  <button type="button" class="edge-close" id="jj-notice-close">✕</button>
+ </div></header>
  <div id="jj-inbox" tabindex="0"></div>
+ <section id="jj-push-settings" tabindex="0" hidden></section>
 </section>`;
 document.body.append(noticeDock);
 const noticeButton=noticeDock.querySelector('#jj-notification-button');
 const noticePanel=noticeDock.querySelector('#jj-notice-panel');
 const noticeClose=noticeDock.querySelector('#jj-notice-close');
 const fitInbox=fitEdgePanel(noticePanel);
+const pushToggle=noticeDock.querySelector('#jj-push-toggle');
+const pushSettings=noticeDock.querySelector('#jj-push-settings');
+function showNoticeSettings(show){
+ noticeDock.querySelector('#jj-inbox').hidden=show;
+ pushSettings.hidden=!show;
+ pushToggle.setAttribute('aria-expanded',String(show));
+ const label=show?say('Volver al historial','Back to notification history'):say('Avisos en este teléfono','Notifications on this device');
+ pushToggle.textContent=show?'←':'⚙';
+ pushToggle.title=label;
+ pushToggle.setAttribute('aria-label',label);
+}
 function toggleInbox(open){
+ if(!open)showNoticeSettings(false);
  noticePanel.hidden=!open;
  fitInbox();
  noticeButton.setAttribute('aria-expanded',String(open));
@@ -31,6 +47,7 @@ function paintBell(){
  noticeButton.setAttribute('aria-label',unread?`${title} (${unread})`:title);
  noticeButton.title=title;
  $('#jj-notice-title').textContent=title;
+ showNoticeSettings(!pushSettings.hidden);
  noticeClose.setAttribute('aria-label',say('Cerrar notificaciones','Close notifications'));
 }
 async function activityTick(readThrough=null){
@@ -59,6 +76,7 @@ function noticeTime(value){
 let inboxMarkup='';
 function renderInbox(){
  const box=$('#jj-inbox'),d=JJActivity.data;
+ if(box.hidden)return;
  const markup=state.demo
   ? `<p>${bi('Inicia sesión para ver tus notificaciones.','Sign in to view your notifications.')}</p>`
   : !d

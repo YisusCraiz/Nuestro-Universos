@@ -42,8 +42,20 @@
  width:min(320px,var(--edge-width));
  max-height:min(330px,var(--edge-height),calc(var(--edge-view-height,100dvh) * .58));
 }
-#jj-inbox{padding:8px;overflow:auto;min-height:0;overscroll-behavior:contain;overflow-wrap:anywhere}
-#jj-inbox:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.notice-header-actions{display:flex;flex:none}
+#jj-inbox,#jj-push-settings{
+ flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;
+ overflow-wrap:anywhere;padding:8px;
+}
+#jj-push-settings{padding:10px 12px}
+#jj-push-settings h3{margin:0 0 8px;font-size:1rem}
+#jj-push-settings p{margin:6px 0;font-size:.85rem}
+#jj-push-settings .push-options{gap:2px;margin:8px 0}
+#jj-push-settings .push-options label{min-height:44px;font-size:.85rem}
+#jj-push-settings .push-options input{min-height:18px;flex:none}
+#jj-push-settings .row{flex-wrap:wrap;gap:6px}
+#jj-push-settings .row button{min-height:44px;padding:6px 10px;font-size:.8rem}
+#jj-inbox:focus-visible,#jj-push-settings:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 #jj-inbox p{margin:4px 0}
 #jj-inbox .presence-list{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 8px;font-size:.75rem}
 #jj-inbox .presence-dot{width:7px;height:7px;margin-right:4px}
