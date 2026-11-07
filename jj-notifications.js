@@ -6,7 +6,7 @@ noticeDock.hidden=true;
 noticeDock.innerHTML=`<button type="button" id="jj-notification-button" class="edge-tab" aria-controls="jj-notice-panel" aria-expanded="false"></button>
 <section id="jj-notice-panel" class="edge-panel" aria-labelledby="jj-notice-title" hidden>
  <header><strong id="jj-notice-title"></strong><button type="button" class="edge-close" id="jj-notice-close">✕</button></header>
- <div id="jj-inbox"></div>
+ <div id="jj-inbox" tabindex="0"></div>
 </section>`;
 document.body.append(noticeDock);
 const noticeButton=noticeDock.querySelector('#jj-notification-button');
@@ -47,10 +47,41 @@ async function activityTick(readThrough=null){
  finally{if(generation===JJActivity.generation)JJActivity.busy=false;}
 }
 function leaveActivity(){const session=JJActivity.session;JJActivity.generation++;JJActivity.user=null;JJActivity.session=null;JJActivity.data=null;JJActivity.busy=false;if(session&&db&&!state.demo)rpc('jj_activity',{p_session:session,p_action:'leave'}).catch(()=>{});}
-function renderInbox(){const box=$('#jj-inbox');if(!box)return;const d=JJActivity.data;
- box.innerHTML=state.demo?`<p>${bi('Los avisos compartidos necesitan iniciar sesión en Supabase.','Shared notices require signing in to Supabase.')}</p>`:!d?`<p>${bi('No se pudieron cargar los avisos. Comprueba tu conexión y vuelve a intentarlo.','Could not load notices. Check your connection and try again.')}</p>${jjButton('retry-notices','Reintentar','Retry')}`:`<div class="presence-list">${d.people.map(p=>`<span><i class="presence-dot ${p.online?'online':''}"></i>${esc(p.name)} · ${p.online?bi('En línea','Online'):bi('Sin conexión','Offline')}</span>`).join('')}</div><p class="hint">${bi('Los cierres inesperados se detectan tras unos 60 segundos. Se guardan los avisos para cuando vuelvas; la hora indica cuándo se detectaron.','Unexpected disconnects are detected after about 60 seconds. Notices are saved for your return; times show when changes were detected.')}</p><div class="notice-list">${d.notices.length?d.notices.map(n=>`<article class="notice ${n.read_at?'':'unread'}"><strong>${noticeText(n)}</strong><time data-date="${esc(n.created_at)}" data-date-style="full">${new Date(n.created_at).toLocaleString(UniverseI18n.locale())}</time>${noticeRoute(n)?'<button class="btn secondary" data-notice-route="'+noticeRoute(n)+'">'+bi('Abrir','Open')+'</button>':''}${n.kind==='crown'?`<small>${bi('Período iniciado el','Period starting')} ${jjDate(n.reference)}</small>`:''}</article>`).join(''):`<p>${bi('Todavía no hay notificaciones.','No notifications yet.')}</p>`}</div>${jjButton('read-notices','Marcar como leídas','Mark as read','btn secondary')}`;
+function noticeTime(value){
+ const date=new Date(value);
+ if(!value||!Number.isFinite(date.valueOf()))return '';
+ const locale=UniverseI18n.locale();
+ const hour=date.toLocaleTimeString(locale,{hour:'numeric',minute:'2-digit'});
+ const day=date.toLocaleDateString(locale,{day:'numeric',month:'short'});
+ return `<time datetime="${date.toISOString()}"><b>${esc(hour)}</b><span>${esc(day)}</span></time>`;
+}
+
+let inboxMarkup='';
+function renderInbox(){
+ const box=$('#jj-inbox'),d=JJActivity.data;
+ const markup=state.demo
+  ? `<p>${bi('Inicia sesión para ver tus notificaciones.','Sign in to view your notifications.')}</p>`
+  : !d
+   ? `<p>${JJActivity.error?bi('No se pudieron cargar los avisos.','Could not load notifications.'):bi('Cargando avisos…','Loading notifications…')}</p>${JJActivity.error?jjButton('retry-notices','Reintentar','Retry'):''}`
+   : `<div class="presence-list">${d.people.map(p=>`<span><i class="presence-dot ${p.online?'online':''}" aria-hidden="true"></i>${esc(p.name)} · ${p.online?bi('En línea','Online'):bi('Sin conexión','Offline')}</span>`).join('')}</div>
+    <div class="notice-list">${d.notices.length?d.notices.map(n=>{
+     const route=noticeRoute(n);
+     return `<article class="notice ${n.read_at?'':'unread'}">
+      <strong>${noticeText(n)}</strong>
+      ${noticeTime(n.created_at)}
+      ${route?`<button class="btn secondary" data-notice-route="${route}">${bi('Abrir','Open')}</button>`:''}
+      ${n.kind==='crown'?`<small>${bi('Período iniciado el','Period starting')} ${jjDate(n.reference)}</small>`:''}
+     </article>`;
+    }).join(''):`<p>${bi('Todavía no hay notificaciones.','No notifications yet.')}</p>`}</div>
+    ${d.unread&&d.notices.length?jjButton('read-notices','Marcar como leídas','Mark as read','btn secondary'):''}`;
+ if(markup===inboxMarkup)return;
+ const scroll=box.scrollTop;
+ inboxMarkup=markup;
+ box.innerHTML=markup;
+ box.scrollTop=scroll;
  box.querySelectorAll('[data-notice-route]').forEach(b=>b.onclick=()=>{toggleInbox(false);navigate(b.dataset.noticeRoute);});
- if($('#retry-notices'))$('#retry-notices').onclick=()=>activityTick();if($('#read-notices'))$('#read-notices').onclick=()=>activityTick(d.notices[0]?.id||0);
+ if($('#retry-notices'))$('#retry-notices').onclick=()=>activityTick();
+ if($('#read-notices'))$('#read-notices').onclick=()=>activityTick(d.notices[0].id);
 }
 window.addEventListener('universe-language',()=>{paintBell();if(!noticePanel.hidden)renderInbox();});
 noticeButton.onclick=()=>toggleInbox(noticePanel.hidden);

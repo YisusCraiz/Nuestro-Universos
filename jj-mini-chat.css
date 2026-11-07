@@ -38,8 +38,26 @@
 .edge-panel header strong{min-width:0;overflow-wrap:anywhere}
 .edge-panel header strong::before{content:'⠿';margin-right:8px;color:var(--muted)}
 .edge-close{background:none;color:inherit;border:0;min-width:44px;min-height:44px;cursor:pointer}
-#jj-inbox{padding:12px;overflow:auto;min-height:0;overscroll-behavior:contain;overflow-wrap:anywhere}
-#jj-inbox .notice-list{max-height:none;overflow:visible}
+#jj-notice-panel{
+ width:min(320px,var(--edge-width));
+ max-height:min(330px,var(--edge-height),calc(var(--edge-view-height,100dvh) * .58));
+}
+#jj-inbox{padding:8px;overflow:auto;min-height:0;overscroll-behavior:contain;overflow-wrap:anywhere}
+#jj-inbox:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+#jj-inbox p{margin:4px 0}
+#jj-inbox .presence-list{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0 0 8px;font-size:.75rem}
+#jj-inbox .presence-dot{width:7px;height:7px;margin-right:4px}
+#jj-inbox .notice-list{max-height:none;overflow:visible;gap:5px;margin:0}
+#jj-inbox .notice{
+ grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 8px;
+ padding:6px 8px;font-size:.85rem;line-height:1.25;
+}
+#jj-inbox .notice time{text-align:right;white-space:nowrap;display:grid;gap:2px;font-variant-numeric:tabular-nums}
+#jj-inbox .notice time b{color:var(--text);font-size:.82rem}
+#jj-inbox .notice time span{font-size:.72rem}
+#jj-inbox .notice small,#jj-inbox [data-notice-route]{grid-column:1/-1}
+#jj-inbox [data-notice-route],#read-notices{justify-self:start;padding:6px 10px;font-size:.8rem}
+#read-notices{margin-top:8px}
 .edge-panel.edge-compact{overflow-y:auto}
 .edge-compact header{position:sticky;top:0;z-index:1}
 .edge-compact #mini-chat-messages{flex:0 0 auto;max-height:120px}
