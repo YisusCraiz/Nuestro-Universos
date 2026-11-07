@@ -1,0 +1,62 @@
+#jj-arcade-menu[open]{
+ position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,520px);max-width:none;
+ max-height:calc(100dvh - max(16px,env(safe-area-inset-top)));padding:0;
+ border:1px solid #a7653d;border-radius:22px 22px 0 0;background:#21162c;color:#fff0f5;
+ display:flex;flex-direction:column;overflow:hidden;
+}
+#jj-arcade-menu .arcade-hero{
+ display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex:none;
+ padding:16px 14px 13px;background:radial-gradient(ellipse at right,#764058,transparent 68%),#321d40;
+ border-bottom:1px solid #a7653d;
+}
+.arcade-hero>div>span,.arcade-card-text small{color:#ffd196;font-size:.72rem;letter-spacing:.1em}
+#jj-arcade-menu h2{font-size:clamp(1.45rem,5vw,1.9rem);line-height:1.12;margin:4px 0;padding:0}
+.arcade-hero p{margin:4px 0 0;color:#ead1e8;font-size:.82rem}
+#jj-arcade-menu button{color:inherit;cursor:pointer}
+.arcade-close{width:44px;height:44px;flex:none;border:1px solid #a7653d;border-radius:10px;background:#291931;font-size:1.35rem}
+.arcade-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
+.arcade-body h3{margin:14px 0 6px;color:#ffd196;font-size:.82rem;letter-spacing:.07em;text-transform:uppercase}
+.arcade-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.arcade-quick button{position:relative;isolation:isolate;overflow:hidden;border:1px solid #b97d7b;border-radius:12px;background:#422952;min-height:88px;padding:0}
+.arcade-quick [data-arcade-route="games"]{grid-column:1/-1;min-height:125px;text-align:left;background:radial-gradient(ellipse at 85% 90%,#a9634f,transparent 64%),linear-gradient(135deg,#38203c,#6c3650)}
+.arcade-quick [data-arcade-route="musicas"]{background:#333653}
+.arcade-quick [data-arcade-route="memories"]{background:#57304f}
+.arcade-sprites{position:absolute;inset:0 0 24px;display:flex;justify-content:center;align-items:center;pointer-events:none}
+.arcade-sprites>span{width:54px;aspect-ratio:1;flex:none;background:url(assets/bombitas/characters-v2.png) no-repeat;background-size:400% 400%;filter:drop-shadow(0 4px 4px #140c18b0)}
+.arcade-sprites>span+span{margin-left:-18px}
+[data-arcade-route="games"] .arcade-sprites{inset:0 0 0 47%}
+[data-arcade-route="games"] .arcade-sprites>span{width:clamp(64px,20vw,90px)}
+[data-arcade-route="games"] .arcade-sprites>span+span{margin-left:-28px}
+.arcade-card-text{position:absolute;inset:auto 0 0;padding:5px 3px;background:#21162ce0;font-size:.78rem}
+[data-arcade-route="games"] .arcade-card-text{inset:0 auto 0 10px;width:49%;display:grid;align-content:center;gap:4px;background:none;line-height:1.2}
+.arcade-card-text strong{font-size:clamp(1rem,4.2vw,1.28rem)}
+.arcade-groups details{border-bottom:1px solid #755267}
+.arcade-groups summary{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;min-height:44px;cursor:pointer;list-style:none}
+.arcade-groups summary::-webkit-details-marker{display:none}
+.arcade-groups summary>span:first-child,.arcade-groups summary>span:last-child{color:#ffd196}
+.arcade-links{display:grid;gap:4px;padding:0 0 8px 17px}
+.arcade-links button{display:flex;gap:8px;align-items:center;min-height:44px;text-align:left;padding:5px 8px;border:1px solid #755267;border-radius:8px;background:#35243e}
+#jj-arcade-menu [aria-current="page"]{border-color:#ffd196}
+#jj-arcade-menu [hidden]{display:none!important}
+.christmas-notice-tabs{display:none}
+html[data-season="christmas"] #jj-notifications .christmas-notice-tabs{display:grid;grid-template-columns:1fr 1.3fr;gap:4px;flex:none;padding:4px;background:#3a2545;margin:6px 8px 0;border-radius:11px}
+html[data-season="christmas"] #jj-push-toggle{display:none}
+.christmas-notice-tabs button{min-height:44px;padding:4px;border:0;border-radius:8px;background:none;color:#fff0f5;cursor:pointer;font-size:.83rem}
+.christmas-notice-tabs [aria-pressed="true"]{background:#ffd196;color:#352039}
+html[data-season="christmas"] #jj-notice-panel{background:#24182e;color:#fff0f5;border-color:#bc8561;width:min(380px,var(--edge-width));max-height:min(480px,var(--edge-height))}
+html[data-season="christmas"] #jj-notice-panel header{background:#34223f}
+html[data-season="christmas"] #jj-inbox .notice time b{color:#ffd196}
+html[data-season="christmas"] #jj-inbox .notice time span{color:#e4cde8}
+@media(max-width:760px){
+ html[data-season="christmas"] #jj-notice-panel{
+  right:calc(var(--edge-view-right,0px) + max(12px,var(--edge-safe-right),(var(--edge-view-width,100vw) - 380px)/2));
+  bottom:calc(var(--edge-view-bottom,0px) + var(--edge-safe-bottom));border-radius:18px 18px 0 0;
+ }
+}
+.christmas-notice-icon{display:none}
+html[data-season="christmas"] #jj-inbox .notice strong{display:flex;align-items:center;gap:7px}
+html[data-season="christmas"] #jj-inbox .christmas-notice-icon{
+ display:grid;place-items:center;flex:none;width:27px;height:27px;border-radius:8px;
+ background:#49304f;color:#ffd196;font-size:1rem
+}
+html[data-season="christmas"] #jj-notifications:has(#jj-notice-panel:not([hidden])){z-index:62}

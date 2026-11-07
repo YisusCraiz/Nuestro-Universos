@@ -85,7 +85,7 @@ function renderInbox(){
     <div class="notice-list">${d.notices.length?d.notices.map(n=>{
      const route=noticeRoute(n);
      return `<article class="notice ${n.read_at?'':'unread'}">
-      <strong>${noticeText(n)}</strong>
+      <strong><span class="christmas-notice-icon" aria-hidden="true">${n.kind==='online'?'↪':n.kind==='offline'?'↩':n.kind==='crown'?'♛':'♡'}</span>${noticeText(n)}</strong>
       ${noticeTime(n.created_at)}
       ${route?`<button class="btn secondary" data-notice-route="${route}">${bi('Abrir','Open')}</button>`:''}
       ${n.kind==='crown'?`<small>${bi('Período iniciado el','Period starting')} ${jjDate(n.reference)}</small>`:''}
