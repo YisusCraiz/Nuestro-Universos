@@ -1,10 +1,36 @@
 'use strict';
 const JJActivity={error:false,user:null,session:null,data:null,busy:false,seen:new Set(),initial:true,generation:0};
-const noticeButton=document.createElement('button');noticeButton.id='jj-notification-button';noticeButton.className='notification-bell';noticeButton.hidden=true;document.body.append(noticeButton);
+const noticeDock=document.createElement('aside');
+noticeDock.id='jj-notifications';
+noticeDock.hidden=true;
+noticeDock.innerHTML=`<button type="button" id="jj-notification-button" class="edge-tab" aria-controls="jj-notice-panel" aria-expanded="false"></button>
+<section id="jj-notice-panel" class="edge-panel" aria-labelledby="jj-notice-title" hidden>
+ <header><strong id="jj-notice-title"></strong><button type="button" class="edge-close" id="jj-notice-close">✕</button></header>
+ <div id="jj-inbox"></div>
+</section>`;
+document.body.append(noticeDock);
+const noticeButton=noticeDock.querySelector('#jj-notification-button');
+const noticePanel=noticeDock.querySelector('#jj-notice-panel');
+const noticeClose=noticeDock.querySelector('#jj-notice-close');
+function toggleInbox(open){
+ noticePanel.hidden=!open;
+ noticeButton.setAttribute('aria-expanded',String(open));
+ if(open){renderInbox();activityTick();}
+}
 function noticeRoute(n){return ['music','memories','messages'].includes(n.kind)?n.kind:null;}
 function noticeText(n){if(noticeRoute(n))return bi(esc(noticePlain(n,'es')),esc(noticePlain(n,'en')));return n.kind==='crown'?bi(`${esc(n.name)} ganó una corona 👑`,`${esc(n.name)} won a crown 👑`):n.kind==='online'?bi(`${esc(n.name)} se conectó`,`${esc(n.name)} came online`):bi(`${esc(n.name)} se desconectó`,`${esc(n.name)} went offline`);}
 function noticePlain(n,lang=UniverseI18n.language){const page=noticeRoute(n);if(page){const labels={music:['subió una canción','uploaded a song'],memories:['guardó un recuerdo','saved a memory'],messages:['escribió una cartita','wrote a letter']};return n.name+' '+labels[page][lang==='en'?1:0];}return n.kind==='crown'?say(`${n.name} ganó una corona 👑`,`${n.name} won a crown 👑`):n.kind==='online'?say(`${n.name} se conectó`,`${n.name} came online`):say(`${n.name} se desconectó`,`${n.name} went offline`);}
-function paintBell(){noticeButton.hidden=!state.profile;noticeButton.innerHTML=`🔔 <span>${JJActivity.error?'!':JJActivity.data?.unread||0}</span>`;noticeButton.setAttribute('aria-label',say('Notificaciones','Notifications'));}
+function paintBell(){
+ noticeDock.hidden=!state.profile;
+ if(noticeDock.hidden)toggleInbox(false);
+ const title=say('Notificaciones','Notifications');
+ const unread=JJActivity.data?.unread||0;
+ noticeButton.innerHTML=`<span aria-hidden="true">🔔</span>${JJActivity.error||unread?`<b aria-hidden="true">${JJActivity.error?'!':unread}</b>`:''}`;
+ noticeButton.setAttribute('aria-label',unread?`${title} (${unread})`:title);
+ noticeButton.title=title;
+ $('#jj-notice-title').textContent=title;
+ noticeClose.setAttribute('aria-label',say('Cerrar notificaciones','Close notifications'));
+}
 async function activityTick(readThrough=null){
  if(!state.profile||state.demo||!db||document.hidden)return;
  const user=state.profile.id;
@@ -14,20 +40,23 @@ async function activityTick(readThrough=null){
   const fresh=data.notices.filter(n=>!JJActivity.seen.has(n.id)&&!n.read_at);data.notices.forEach(n=>JJActivity.seen.add(n.id));
   const announce=JJActivity.initial?fresh.filter(n=>n.kind==='crown'):fresh;
   if(announce.length)toast(announce.length===1?noticePlain(announce[0]):say(`Tienes ${announce.length} avisos nuevos. Abre la campana.`,`You have ${announce.length} new notices. Open the bell.`));
-  JJActivity.initial=false;JJActivity.error=false;JJActivity.data=data;paintBell();if($('#jj-inbox'))renderInbox();
- }catch(error){if(generation===JJActivity.generation){JJActivity.error=true;paintBell();if($('#jj-inbox'))renderInbox();}}
+  JJActivity.initial=false;JJActivity.error=false;JJActivity.data=data;paintBell();if(!noticePanel.hidden)renderInbox();
+ }catch(error){if(generation===JJActivity.generation){JJActivity.error=true;paintBell();if(!noticePanel.hidden)renderInbox();}}
  finally{if(generation===JJActivity.generation)JJActivity.busy=false;}
 }
 function leaveActivity(){const session=JJActivity.session;JJActivity.generation++;JJActivity.user=null;JJActivity.session=null;JJActivity.data=null;JJActivity.busy=false;if(session&&db&&!state.demo)rpc('jj_activity',{p_session:session,p_action:'leave'}).catch(()=>{});}
 function renderInbox(){const box=$('#jj-inbox');if(!box)return;const d=JJActivity.data;
  box.innerHTML=state.demo?`<p>${bi('Los avisos compartidos necesitan iniciar sesión en Supabase.','Shared notices require signing in to Supabase.')}</p>`:!d?`<p>${bi('No se pudieron cargar los avisos. Comprueba tu conexión y vuelve a intentarlo.','Could not load notices. Check your connection and try again.')}</p>${jjButton('retry-notices','Reintentar','Retry')}`:`<div class="presence-list">${d.people.map(p=>`<span><i class="presence-dot ${p.online?'online':''}"></i>${esc(p.name)} · ${p.online?bi('En línea','Online'):bi('Sin conexión','Offline')}</span>`).join('')}</div><p class="hint">${bi('Los cierres inesperados se detectan tras unos 60 segundos. Se guardan los avisos para cuando vuelvas; la hora indica cuándo se detectaron.','Unexpected disconnects are detected after about 60 seconds. Notices are saved for your return; times show when changes were detected.')}</p><div class="notice-list">${d.notices.length?d.notices.map(n=>`<article class="notice ${n.read_at?'':'unread'}"><strong>${noticeText(n)}</strong><time data-date="${esc(n.created_at)}" data-date-style="full">${new Date(n.created_at).toLocaleString(UniverseI18n.locale())}</time>${noticeRoute(n)?'<button class="btn secondary" data-notice-route="'+noticeRoute(n)+'">'+bi('Abrir','Open')+'</button>':''}${n.kind==='crown'?`<small>${bi('Período iniciado el','Period starting')} ${jjDate(n.reference)}</small>`:''}</article>`).join(''):`<p>${bi('Todavía no hay notificaciones.','No notifications yet.')}</p>`}</div>${jjButton('read-notices','Marcar como leídas','Mark as read','btn secondary')}`;
- box.querySelectorAll('[data-notice-route]').forEach(b=>b.onclick=()=>{$('#modal').close();navigate(b.dataset.noticeRoute);});
+ box.querySelectorAll('[data-notice-route]').forEach(b=>b.onclick=()=>{toggleInbox(false);navigate(b.dataset.noticeRoute);});
  if($('#retry-notices'))$('#retry-notices').onclick=()=>activityTick();if($('#read-notices'))$('#read-notices').onclick=()=>activityTick(d.notices[0]?.id||0);
 }
-window.addEventListener('universe-language',paintBell);
-noticeButton.onclick=async()=>{modal(`<h2>${bi('Notificaciones','Notifications')}</h2><div id="jj-inbox"></div>`);renderInbox();await activityTick();};
+window.addEventListener('universe-language',()=>{paintBell();if(!noticePanel.hidden)renderInbox();});
+noticeButton.onclick=()=>toggleInbox(noticePanel.hidden);
+noticeClose.onclick=()=>{toggleInbox(false);noticeButton.focus();};
+noticeDock.addEventListener('keydown',e=>{if(e.key==='Escape'&&!noticePanel.hidden){toggleInbox(false);noticeButton.focus();}});
+document.addEventListener('click',e=>{if(!noticePanel.hidden&&!noticeDock.contains(e.target))toggleInbox(false);},true);
 const noticeShell=shell;shell=function(){noticeShell();paintBell();activityTick();};
-const noticeLogout=logout;logout=async()=>{leaveActivity();await noticeLogout();paintBell();if(state.profile)activityTick();};
+const noticeLogout=logout;logout=async()=>{toggleInbox(false);leaveActivity();await noticeLogout();paintBell();if(state.profile)activityTick();};
 setInterval(()=>activityTick(),15000);
 // Hidden/closed tabs expire by lease: avoids false disconnects on reload or tab switches.
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)activityTick();});

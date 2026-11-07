@@ -3,3 +3,6 @@
 .companion-banner{display:flex;align-items:center;gap:clamp(12px,3vw,32px);padding:clamp(14px,3vw,28px);border-radius:22px;background:radial-gradient(ellipse at 10% 5%,#594469,transparent 65%),#221f32;border:1px solid #8f7598;color:#fff3df}
 .companion-banner h2,.companion-banner p{margin:.25em 0}.companion-portrait{flex:0 0 clamp(72px,18vw,128px)}.companion-portrait img{width:100%;aspect-ratio:1;object-fit:contain}.pet-shortcuts,.boutique-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.pet-home .pet-home-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.pet-home-tabs button{display:grid;justify-items:center;gap:4px;white-space:normal;min-height:68px}.pet-home-tabs .pet-menu-icon{font-size:1.35rem;color:#e8bd82}.pet-home-tabs button.active,.boutique-tabs button.active{box-shadow:inset 0 -3px #edc584}.pet-shop .pet-art{background:radial-gradient(ellipse at center,#5f466c66,transparent 72%)}.pet-shop #pet-wallet{display:inline-block;margin-top:.3em;color:#ffdc92}
 @media(max-width:560px){.pet-home .pet-home-tabs{grid-template-columns:1fr 1fr}.pet-shortcuts .btn{flex:1}.companion-banner{align-items:center}}
+
+#pet-home-talk{display:block;width:100%;border:0;padding:0;background:none;cursor:pointer}
+.pet-home-stage .pet-level{pointer-events:none}
