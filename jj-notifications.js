@@ -12,8 +12,10 @@ document.body.append(noticeDock);
 const noticeButton=noticeDock.querySelector('#jj-notification-button');
 const noticePanel=noticeDock.querySelector('#jj-notice-panel');
 const noticeClose=noticeDock.querySelector('#jj-notice-close');
+const fitInbox=fitEdgePanel(noticePanel);
 function toggleInbox(open){
  noticePanel.hidden=!open;
+ fitInbox();
  noticeButton.setAttribute('aria-expanded',String(open));
  if(open){renderInbox();activityTick();}
 }
