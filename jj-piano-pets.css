@@ -13,10 +13,10 @@
 @media(max-width:700px){.piano-select-grid{grid-template-columns:1fr}.piano-modes{gap:10px}.piano-modes button{padding:16px}.piano-modes strong{font-size:1.05rem}.piano-modes span{font-size:.88rem}.piano-people{gap:10px}.piano-person{padding:12px}.piano-person canvas{width:85px;height:110px}#piano-room-panel .room-invite{flex-wrap:wrap}}
 
 /* Keep the companion in the notification corner, with its message opening inward. */
-#jj-pet-dock,.has-jj-player #jj-pet-dock{left:auto;right:calc(54px + env(safe-area-inset-right));bottom:calc(84px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:8px;max-width:min(240px,calc(100vw - 36px))}
+#jj-pet-dock,.has-jj-player #jj-pet-dock{left:auto;right:calc(4px + env(safe-area-inset-right));bottom:calc(120px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-end;gap:8px;max-width:min(240px,calc(100vw - 36px))}
 #jj-pet-dock[hidden]{display:none}
 #jj-pet-dock .pet-bubble{border-radius:18px 18px 3px 18px;max-width:100%;overflow-wrap:anywhere}
-@media(max-width:480px){#jj-pet-dock,.has-jj-player #jj-pet-dock{bottom:calc(76px + env(safe-area-inset-bottom));max-width:min(240px,calc(100vw - 24px))}}
+@media(max-width:480px){#jj-pet-dock,.has-jj-player #jj-pet-dock{max-width:min(240px,calc(100vw - 24px))}}
 .jj-rhythm-active #jj-pet-dock{display:none}
 
 .pet-halloween{animation:halloween-sway 2.2s ease-in-out infinite;transform-origin:50% 90%}.pet-halloween-ghost,.pet-halloween-bat{animation:halloween-float 2.6s ease-in-out infinite}.pet-halloween-pumpkin{animation:halloween-walk 1.4s ease-in-out infinite}@keyframes halloween-float{50%{transform:translateY(-7px) rotate(3deg)}}@keyframes halloween-sway{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}@keyframes halloween-walk{25%{transform:translateY(-4px) rotate(-4deg)}75%{transform:translateY(-4px) rotate(4deg)}}@media(prefers-reduced-motion:reduce){.pet-halloween{animation:none}}

@@ -1,5 +1,33 @@
 [
   {
+    "version": "v74-tablon",
+    "commit": "22a6c55b01cbd80e6e2fae29cc6907db5ab09fed",
+    "date": "2026-11-07",
+    "es": {
+      "title": "Un nuevo tablón y un lugar para tu mascota",
+      "summary": "Abre cada anuncio para ver los detalles. Tu mascota ahora te espera justo encima del chat.",
+      "body": "El tablón muestra un resumen de cada actualización. Toca el título o la flecha para ver la explicación completa y las imágenes disponibles. Puedes tocar de nuevo para plegar la tarjeta.",
+      "points": [
+        "La mascota equipada se anima en su sitio, justo encima de la pestaña del chat. Tócala para ver una de sus 51 frases.",
+        "El chat y la campana se abren desde el borde derecho. Toca fuera de un panel para cerrarlo."
+      ]
+    },
+    "en": {
+      "title": "A new announcement board and a spot for your pet",
+      "summary": "Open each announcement for details. Your pet now waits right above the chat tab.",
+      "body": "The board shows a summary of each update. Tap the title or arrow to see the full explanation and any available images. Tap again to collapse the card.",
+      "points": [
+        "Your equipped pet animates in place right above the chat tab. Tap it to see one of its 51 messages.",
+        "Open chat and notifications from the right edge. Tap outside a panel to close it."
+      ]
+    },
+    "image": {
+      "src": "assets/pets/cat-v1.png",
+      "es": "Mochi lila, una de las mascotas que puedes equipar.",
+      "en": "Lavender Mochi, one of the pets you can equip."
+    }
+  },
+  {
     "version": "35.1",
     "date": "2026-10-21",
     "es": {
@@ -9,6 +37,11 @@
     "en": {
       "title": "The casino comes to life",
       "body": "Slots spin and stop their three reels one by one; the roulette wheel spins to the winning number and horses race along a decorated track. Animations show the confirmed result of your bet. If reduced motion is enabled, the result appears immediately."
+    },
+    "image": {
+      "src": "preview-casino-mobile.png",
+      "es": "Vista del Casino JXJ en móvil.",
+      "en": "The JXJ Casino on mobile."
     }
   },
   {
@@ -21,6 +54,11 @@
     "en": {
       "title": "19 new companions to collect",
       "body": "Meet kittens, puppies, an axolotl, a crimson kitsune and more companions inspired by our references. New pets cost 140–500 JJ. Search by name, filter by family or your collection, and sort by price in Shop → Companions. Choose one to join you in the menus, or choose none. The four original companions keep their prices."
+    },
+    "image": {
+      "src": "preview-mascotas-35-mobile.png",
+      "es": "La tienda de mascotas en móvil, con filtros y catálogo.",
+      "en": "The mobile companion shop with filters and a catalog."
     }
   },
   {
@@ -33,6 +71,11 @@
     "en": {
       "title": "Piano hits now light up",
       "body": "A press accepted as Perfect or Good now lights up the note tile and its key in white. Out-of-window presses create no glow. The instructions explain this cue to make following the rhythm clearer."
+    },
+    "image": {
+      "src": "preview-piano-feedback-mobile.png",
+      "es": "Una pulsación acertada ilumina la tecla del Piano JJ.",
+      "en": "A successful hit lights up a Piano JJ key."
     }
   },
   {
@@ -45,6 +88,11 @@
     "en": {
       "title": "Piano and an adorable companion",
       "body": "Piano JJ joins Games: choose an audio track from Our music, difficulty and length, then follow the notes with D F J K or four touch keys. Finish at rank C or higher to earn JJ; better accuracy, greater difficulty and a new personal best increase rewards within the shared daily limit. Shop has a Companions tab: Lavender Mochi, Sky Fin, Autumn Kitsu and Moon Bunny match our skins and cost 60–120 JJ. Choose a pet or none; your companion follows you through menus with encouragement and sweet things to say to each other."
+    },
+    "image": {
+      "src": "preview-piano-34-mobile.png",
+      "es": "Una partida de Piano JJ en móvil.",
+      "en": "A Piano JJ game on mobile."
     }
   },
   {
@@ -57,6 +105,11 @@
     "en": {
       "title": "Vs, pool and a casino night",
       "body": "Shared games now live in Vs. Minigames award 1 JJ for finishing and 2 extra JJ for beating the current record across both players, with daily limits. Bombitas separates simulation from rendering and predicts your movement for faster feedback. Meet two-player Pool JJ with rules, round goals and JJ wagers, plus the JXJ Casino with slots, roulette, five-card draw poker and horse racing. Each JXJ costs 2 JJ; exchange them back for JJ with a small chance of a bonus."
+    },
+    "image": {
+      "src": "preview-billar-mobile.png",
+      "es": "Vista de Billar JJ en móvil.",
+      "en": "Pool JJ on mobile."
     }
   },
   {
@@ -69,6 +122,11 @@
     "en": {
       "title": "Go back, dress up and shuffle",
       "body": "There is now a Back button to return to the previous screen without signing out. The account exit is clearly labeled Sign out. Shop adds nine Halloween costumes for Jesús and Julissa. Games introduces Playing cards with Crazy eights, Twenty-one duel and High card: rooms, invitations, configurable round goals and JJ wagers sharing the same wallet as the other games."
+    },
+    "image": {
+      "src": "preview-baraja-31-mobile.png",
+      "es": "La baraja inglesa en móvil.",
+      "en": "Playing Cards on mobile."
     }
   },
   {
@@ -81,6 +139,11 @@
     "en": {
       "title": "Smoother rematches and new card-game rules",
       "body": "Bombitas smooths guest movement, responds sooner to controls and reduces screen work. Last Card fixes +2 stacking even on a final card, draws one card per click and lets you choose how many rounds you need to win. Coin wagers are now available: both players confirm their reserved stakes before playing, and the server pays the pot to the match winner. Leaving an active wagered match forfeits your stake."
+    },
+    "image": {
+      "src": "preview-cartas-reglas-30.png",
+      "es": "Configuración de reglas y rondas de Última carta JJ.",
+      "en": "Last Card JJ round and rule settings."
     }
   },
   {
@@ -93,6 +156,11 @@
     "en": {
       "title": "One wardrobe for all our adventures",
       "body": "Shop is near the top of the menu and keeps your Bombitas skins. Buy and equip once for supported games. Meet Last Card JJ, our two-player UNO-style card game, with +4 challenges, UNO calls, scoring and customizable house rules. Bombitas and the card game now offer clearer room creation, joining and shareable invites."
+    },
+    "image": {
+      "src": "preview-tienda-mobile.png",
+      "es": "La tienda de ropa y skins en móvil.",
+      "en": "The mobile clothing and skin shop."
     }
   },
   {
@@ -105,6 +173,11 @@
     "en": {
       "title": "A more organized universe",
       "body": "Games brings together our minigames, puzzles, Truth or dare and Bombitas. Music brings together Our music, Playlists and Music videos. We are adding Comics for Jesús and Julissa’s chapters, profile titles and this bilingual news space. We also improved notification permission checks."
+    },
+    "image": {
+      "src": "preview-universo-mobile.png",
+      "es": "Una vista de la organización de Nuestro Universo en móvil.",
+      "en": "A look at the layout of Nuestro Universo on mobile."
     }
   }
 ]
