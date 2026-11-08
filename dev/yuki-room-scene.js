@@ -99,4 +99,25 @@ export const sceneStyles = `
 @container yuki-room (max-width:255px) {
  .yr .yr-grid {grid-template-columns:minmax(0,1fr);}
 }
+
+.yr .yr-illustrated {width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 4px 4px #21142888);}
+.yr .yr-decor[data-slot="player"] {left:36%;top:39%;width:13%;height:15%;z-index:5;}
+.yr button.yr-decor {pointer-events:auto;padding:0;background:transparent;border:0;cursor:pointer;}
+.yr .yr-disc {display:block;width:67%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#ffe4b2 0 3%,#bd748c 4% 21%,transparent 22%),repeating-radial-gradient(circle,#30223c 0 3px,#56425b 4px 5px);box-shadow:4px 5px 0 #21182c;}
+.yr-records {padding:10px 12px;margin:0 0 10px;border-radius:14px;background:#2e223e;border:1px solid #ba98ca55;}
+.yr-records select {max-width:100%;margin-inline-start:8px;}
+.yr-records p {font-size:12px;margin:3px 0;}
+.yr-record-player {display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;}
+.yr-record-player img {width:48px;height:48px;object-fit:cover;border-radius:7px;}
+.yr-record-player div {grid-column:2;}
+.yr-record-player img[hidden]+div {grid-column:1/-1;}
+.yr-record-player small {display:block;color:#e2bfd8;}
+.yr-record-seek {width:min(100%,340px);display:block;accent-color:#ffcfa1;}
+.yr-record-controls {display:flex;align-items:center;flex-wrap:wrap;gap:5px;}
+.yr-record-controls button {min-width:32px;min-height:32px;border-radius:8px;border:1px solid #bc90bc70;background:#483350;color:#fff2e7;}
+.yr-record-controls button[aria-pressed="true"] {background:#936184;}
+.yr-record-controls input {width:65px;accent-color:#ffcfa1;}
+.yr-wave {display:flex;align-items:center;gap:3px;height:19px;margin-top:4px;opacity:.55;}
+.yr-wave.playing {opacity:1;}
+.yr-wave i {width:3px;border-radius:3px;background:#e4a5c4;}
 `;
