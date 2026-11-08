@@ -1,7 +1,10 @@
 let homeCache=null,homeOwner=null,homePromise=null,homeTime=0;
 export function updateHome(data){homeCache=data;homeOwner=state.profile?.id;homeTime=Date.now();window.dispatchEvent(new CustomEvent('yuki-customized',{detail:{owner:homeOwner,data}}));}
 export async function home(force=false){const id=state.profile?.id;if(!force&&homeOwner===id&&homeCache&&Date.now()-homeTime<60000)return homeCache;if(homePromise?.id===id)return homePromise.promise;const promise=(async()=>{const {data,error}=await db.rpc('yuki_hub');if(error)throw error;if(state.profile?.id===id){homeCache=data;homeOwner=id;homeTime=Date.now();}return data})();homePromise={id,promise};try{return await promise}finally{if(homePromise?.promise===promise)homePromise=null}}
-export async function skin(outfit){return (outfit==='pajamas'?await import('./yuki-pajamas.js?v=1'):await import('./yuki-poses.js?v=poses-1')).yukiPoses;}
+const pajamaColors = new Set(['pajamas-rose','pajamas-mint','pajamas-blue']);
+export async function skin(outfit){
+ if(pajamaColors.has(outfit))return new URL('../assets/yuki-room/'+outfit+'.webp',import.meta.url).href;
+ return (outfit==='pajamas'?await import('./yuki-pajamas.js?v=1'):await import('./yuki-poses.js?v=poses-1')).yukiPoses;}
 const local=[
 ['Hoy cabe una aventura pequeña. ¿Una canción o una partida?','There is room for a tiny adventure today. A song or a game?'],
 ['Un audio con tu voz puede hacer un día mucho más bonito.','A little voice note can make a day much sweeter.'],

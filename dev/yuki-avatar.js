@@ -1,4 +1,4 @@
-import {home,skin,phrase} from './yuki-life.js?v=room-1';
+import {home,skin,phrase} from './yuki-life.js?v=room-2';
 export function mountYuki(host) {
   const viewer = state.profile;
   const labels = new Map();

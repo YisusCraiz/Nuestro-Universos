@@ -25,12 +25,14 @@ export const roomBackdrop = `<svg class="yr-backdrop" viewBox="0 0 960 480" pres
  <path d="M80 211h160l-8 10H90Z" fill="url(#yr-wood)"/>
  <path d="M95 221h116l146 137-199 22Z" fill="#ffd6a4" opacity=".09"/>
  <path d="M107 227h105" stroke="#eac4be" opacity=".32" stroke-width="2"/>
+ <g class="yr-default-bed">
  <path d="M535 285 682 273 837 317l-10 57-282-33Z" fill="#362839" opacity=".35"/>
  <path d="m542 238 130-18 133 36-28 65-245-24Z" fill="#b785a1" stroke="#67415c" stroke-width="4"/>
  <path d="m532 283 259 22-7 28-246-24Z" fill="#633f61"/>
  <path d="m552 242 102-14 104 28-16 31-203-16Z" fill="url(#yr-quilt)"/>
  <path d="m652 230 104 26-15 32-111-12Z" fill="#9f698f"/>
  <path d="m542 268 198 18m-167-49-15 32m51-38-13 42m55-42-17 45m48-38-16 40m48-30-16 33" fill="none" stroke="#ffe0df" stroke-opacity=".43" stroke-width="1.5" stroke-dasharray="3 3"/>
+ </g>
  <path d="M313 234h170l-16 11H300Z" fill="url(#yr-wood)"/>
  <path d="M300 245h167v9H300Z" fill="#745272"/>
  <ellipse cx="406" cy="386" rx="176" ry="39" fill="#6f4f75" opacity=".55"/>
@@ -120,4 +122,16 @@ export const sceneStyles = `
 .yr-wave {display:flex;align-items:center;gap:3px;height:19px;margin-top:4px;opacity:.55;}
 .yr-wave.playing {opacity:1;}
 .yr-wave i {width:3px;border-radius:3px;background:#e4a5c4;}
+
+.yr .yr-preview {display:flex;justify-content:center;align-items:center;overflow:hidden;min-width:0;padding:8px;}
+.yr .yr-preview > .yr-illustrated {width:100%;height:100%;max-height:100%;max-width:100%;flex:0 1 auto;object-fit:contain;}
+.yr .yr-preview > .yr-outfit {height:100%;max-height:128px;width:auto;aspect-ratio:3/4;}
+.yr .yr-card h3 {position:relative;line-height:1.3;margin:8px 0;}
+.yr-poster-art {height:92%;max-width:100%;aspect-ratio:4/5;display:block;overflow:hidden;padding:4px;border:2px solid #e9b982;border-radius:5px;background:radial-gradient(#d2a0a8,#623b62);}
+.yr-poster-art img {display:block;height:100%;width:100%;object-fit:contain;}
+.yr [data-item="jj-poster-stars"] .yr-poster-art,.yr-card:has([data-item="jj-poster-stars"]) .yr-poster-art {border-color:#dabdf6;background:radial-gradient(#a991ce,#292248);}
+.yr .yr-decor[data-slot="bed"] {left:54%;top:42%;width:32%;height:29%;}
+.yr-scene[data-custom-bed] .yr-default-bed {display:none;}
+.yr .yr-decor[data-slot="cabinet"] {left:77%;top:42%;width:16%;height:24%;}
+.yr .yr-decor[data-slot="poster"] .yr-poster-art {margin-inline:auto;}
 `;

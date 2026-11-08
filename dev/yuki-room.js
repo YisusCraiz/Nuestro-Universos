@@ -1,8 +1,10 @@
+import {furnitureArt} from './yuki-room-furniture.js?v=1';
 import {mountRecords,recordDeck,isRecord} from './yuki-room-records.js?v=1';
-import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-1';
+import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-2';
 import {keepsakes} from './yuki-room-art.js?v=3';
-import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=3';
+import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=4';
 const drawings={
+ ...furnitureArt,
  ...keepsakes,
  rug:'<ellipse cx="50" cy="64" rx="47" ry="26" fill="#b49bcc"/><ellipse cx="50" cy="64" rx="40" ry="20" fill="none" stroke="#e8d3f5" stroke-width="2"/><path d="M56 49a16 16 0 1 0 0 30 14 14 0 0 1 0-30" fill="#f9e1a4"/>',
  plant:'<path d="M50 75V29M50 56L29 39M50 49l21-20" stroke="#5b8067" stroke-width="4" fill="none"/><path d="M48 35C18 19 41 5 49 17 63 4 78 25 48 35M30 47C5 32 25 20 30 29 44 18 53 37 30 47M71 38C48 23 64 13 71 22 87 11 98 29 71 38" fill="#86b298"/><path d="M31 68h38l-6 27H37z" fill="#d698a4"/><rect x="28" y="65" width="44" height="8" rx="3" fill="#edb9c2"/>',
@@ -13,12 +15,13 @@ const drawings={
 };
 let artInstance=0;
 const illustrated = {
- 'jj-plush':'plush','jj-globe':'globe','jj-polaroid':'portrait','nu-piano':'piano',
+ 'jj-poster':'jj-original','jj-poster-stars':'jj-original','jj-plush':'plush','jj-globe':'globe','jj-polaroid':'portrait','nu-piano':'piano',
  'winter-bauble':'bauble','winter-wreath':'wreath','winter-sleigh':'sleigh'
 };
 const available = id => !id.startsWith('winter-') || JJ.season==='christmas';
 drawings[recordDeck] = '<path d="M12 40l61-11 16 12v27L27 82 12 70z" fill="#714660" stroke="#f2ba91" stroke-width="3"/><path d="M12 40l61-11 16 12-62 13z" fill="#b67576"/><ellipse cx="46" cy="43" rx="22" ry="9" fill="#2d203d"/><ellipse cx="46" cy="43" rx="7" ry="3" fill="#efb19a"/><path d="M76 39l-9-4-12 9" fill="none" stroke="#fce3ac" stroke-width="3"/><circle cx="73" cy="62" r="4" fill="#ffe0a5"/>';
 function art(id){
+ if(id==='jj-poster'||id==='jj-poster-stars')return '<span class="yr-poster-art"><img alt="" src="assets/yuki-room/jj-original.webp"></span>';
  if(Object.hasOwn(illustrated,id))return '<img class="yr-illustrated" alt="" src="assets/yuki-room/'+illustrated[id]+'.webp">';
  if(isRecord(id))return '<span class="yr-disc" aria-hidden="true"></span>';
  const prefix='yr-item-'+(++artInstance)+'-';
@@ -55,6 +58,7 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  function paintFurniture(){
   const decor={...data.decor};
   if(staged)decor[staged.slot]=staged.id;
+  scene.toggleAttribute('data-custom-bed',!!decor.bed);
   const furniture=root.querySelector('.yr-furniture');
   furniture.replaceChildren(...Object.entries(decor).filter(([,id])=>available(id)&&(Object.hasOwn(drawings,id)||Object.hasOwn(illustrated,id))).map(([slot,id])=>{
    const interactive=id===recordDeck && data.decor?.player===id;
