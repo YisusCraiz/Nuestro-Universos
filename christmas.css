@@ -24,7 +24,7 @@ html[data-season="christmas"][data-snow="off"] body::after { display:none; }
 @media (prefers-reduced-motion: reduce) {
   html[data-season="christmas"] body::after { animation: none; opacity: .35; }
 }
-html[data-season="christmas"] .gate-art { background:linear-gradient(0deg,#152323ed,transparent 70%),url(assets/christmas/couple.webp) center 28%/cover; }
+html[data-season="christmas"] .gate-art { background:linear-gradient(0deg,#141422f2,transparent 90%),url(assets/christmas/pijama-portada.webp) center 49%/cover; }
 html[data-season="christmas"] .avatar {color:transparent;background-size:170%;background-position:50% 14%;border:2px solid #eacb86;}
 html[data-season="christmas"] .avatar.jesus {background-image:url(assets/christmas/sprite-1-0.webp)}
 html[data-season="christmas"] .avatar.julisa {background-image:url(assets/christmas/sprite-0-1.webp)}
