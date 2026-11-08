@@ -1,5 +1,5 @@
 import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-1';
-import {keepsakes} from './yuki-room-art.js?v=2';
+import {keepsakes} from './yuki-room-art.js?v=3';
 import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=2';
 const drawings={
  ...keepsakes,
