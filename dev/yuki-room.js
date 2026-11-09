@@ -1,10 +1,10 @@
-import {dyeControls} from './yuki-room-dye.js?v=1';
+import {dyeControls} from './yuki-room-dye.js?v=2';
 import {extraArt,roomDevices,mountPosterPhotos} from './yuki-room-extras.js?v=1';
 import {furnitureArt} from './yuki-room-furniture.js?v=1';
 import {mountRecords,recordDeck,isRecord} from './yuki-room-records.js?v=1';
-import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-3';
+import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-4';
 import {keepsakes} from './yuki-room-art.js?v=3';
-import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=5';
+import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=6';
 const drawings={
  ...furnitureArt,
  ...keepsakes,
@@ -27,7 +27,7 @@ const privatePoster = id => /^photo-poster-0[1-9]$/.test(id);
 function art(id){
  if(privatePoster(id))return '<span class="yr-poster-art"><img alt="" data-private-poster="'+id+'"></span>';
  if(id==='jj-poster'||id==='jj-poster-stars')return '<span class="yr-poster-art"><img alt="" src="assets/yuki-room/jj-original.webp"></span>';
- if(Object.hasOwn(illustrated,id))return '<img class="yr-illustrated" alt="" src="assets/yuki-room/'+illustrated[id]+'.webp">';
+ if(Object.hasOwn(illustrated,id))return '<img class="yr-illustrated" alt="" src="assets/yuki-room/'+illustrated[id]+'.webp?v=2">';
  if(isRecord(id))return '<span class="yr-disc" aria-hidden="true"></span>';
  const prefix='yr-item-'+(++artInstance)+'-';
  const drawing=(drawings[id]||'').replaceAll('@paint-',prefix);
@@ -95,7 +95,7 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  panel.replaceChildren();confirm.hidden=!pending;
  if(pending){confirm.replaceChildren();const p=document.createElement('p');p.textContent=say('Comprar ','Buy ')+say(pending.es,pending.en)+' · '+pending.price+' JJ · '+say('Saldo después: ','Balance afterwards: ')+(data.coins-pending.price)+' JJ';const yes=document.createElement('button');yes.className='yr-action';yes.textContent=say('Confirmar compra','Confirm purchase');yes.disabled=busy||data.coins<pending.price;yes.onclick=()=>mutate('buy',pending.id);const no=document.createElement('button');no.className='yr-action';no.textContent=say('Cancelar','Cancel');no.disabled=busy;no.onclick=()=>{pending=null;paint()};confirm.append(p,yes,no);}
  if(tab==='room'){const p=document.createElement('p');p.className='yr-note';p.textContent=say('Toca a Yuki para escuchar otra frase. Vístela y coloca tus accesorios desde las pestañas de abajo.','Tap Yuki for another phrase. Dress her and place your accessories using the tabs.');const chat=document.createElement('button');chat.className='yr-action';chat.textContent=say('Conversar con Yuki','Talk to Yuki');chat.onclick=onChat;panel.append(p,chat);return;}
- if(tab==='wardrobe')panel.append(dyeControls(data,mutate,busy));
+ if(tab==='wardrobe')panel.append(dyeControls(data,mutate,busy,skin));
  if(tab==='shop' && data.owned.includes(recordDeck)){
   const heading=document.createElement('p');
   heading.className='yr-note';

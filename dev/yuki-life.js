@@ -1,11 +1,11 @@
-import {recolor} from './yuki-room-dye.js?v=1';
+import {recolor} from './yuki-room-dye.js?v=2';
 let homeCache=null,homeOwner=null,homePromise=null,homeTime=0;
 export function updateHome(data){homeCache=data;homeOwner=state.profile?.id;homeTime=Date.now();window.dispatchEvent(new CustomEvent('yuki-customized',{detail:{owner:homeOwner,data}}));}
 export async function home(force=false){const id=state.profile?.id;if(!force&&homeOwner===id&&homeCache&&Date.now()-homeTime<60000)return homeCache;if(homePromise?.id===id)return homePromise.promise;const promise=(async()=>{const {data,error}=await db.rpc('yuki_hub');if(error)throw error;if(state.profile?.id===id){homeCache=data;homeOwner=id;homeTime=Date.now();}return data})();homePromise={id,promise};try{return await promise}finally{if(homePromise?.promise===promise)homePromise=null}}
 const pajamaColors = new Set(['pajamas-rose','pajamas-mint','pajamas-blue','outfit-casual','outfit-aesthetic','outfit-dress']);
 export async function skin(outfit,palette){
  const url=pajamaColors.has(outfit)
-  ?new URL('../assets/yuki-room/'+outfit+'.webp',import.meta.url).href
+  ?new URL('../assets/yuki-room/'+outfit+'.webp?v=2',import.meta.url).href
   :(outfit==='pajamas'?await import('./yuki-pajamas.js?v=1'):await import('./yuki-poses.js?v=poses-1')).yukiPoses;
  return palette?recolor(url,palette).catch(()=>url):url;
 }

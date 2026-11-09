@@ -1,35 +1,90 @@
-export function dyeControls(data, mutate, busy) {
+export function dyeControls(data, mutate, busy, skin) {
  const section=document.createElement('section');
  section.className='yr-dye';
  const heading=document.createElement('h3');
  heading.textContent=say('Taller de color','Color studio');
- const note=document.createElement('p');
  const outfit=data.outfit;
  const unlocked=data.owned.includes('dye:'+outfit);
+ const note=document.createElement('p');
  note.textContent=outfit==='uniform'
-  ?say('Ponte ropa, un vestido o un pijama para personalizarlo.','Put on an outfit, dress or pajamas to customize it.')
-  :unlocked?say('Este conjunto ya tiene el taller desbloqueado.','The studio is unlocked for this outfit.')
-   :say('Desbloquea el color de este conjunto por 120 JJ. Después puedes cambiar la mezcla cuantas veces quieras.','Unlock colors for this outfit for 120 JJ. Then change the mix whenever you like.');
+  ?say('Equipa un conjunto en el Vestidor para probar colores.','Equip an outfit in the Wardrobe to try colors.')
+  :say('Prueba una combinación y mira cómo queda en Yuki antes de guardar.','Try a combination and see it on Yuki before saving.');
  section.append(heading,note);
  if(outfit==='uniform')return section;
- const saved=data.decor?.['dye:'+outfit]||'a986c6:e3a4b6';
- const fields=saved.split(':').map((color,index)=>{
+
+ const studio=document.createElement('div');
+ studio.className='yr-dye-studio';
+ const preview=document.createElement('div');
+ preview.className='yr-dye-preview';
+ preview.setAttribute('role','img');
+ preview.setAttribute('aria-label',say('Vista previa del conjunto de Yuki','Preview of Yuki’s outfit'));
+ const sprite=document.createElement('div');
+ sprite.className='yr-dye-sprite';
+ preview.append(sprite);
+ const controls=document.createElement('div');
+ controls.className='yr-dye-controls';
+ studio.append(preview,controls);
+ section.append(studio);
+
+ const saved=data.decor?.['dye:'+outfit];
+ const fields=(saved||'a986c6:e3a4b6').split(':').map((color,index)=>{
   const label=document.createElement('label');
-  label.textContent=index?say('Color secundario','Secondary color'):say('Color principal','Primary color');
+  label.textContent=index?say('Secundario','Secondary'):say('Principal','Primary');
   const input=document.createElement('input');
   input.type='color';
   input.value='#'+color;
   input.disabled=busy;
-  label.append(input);
-  section.append(label);
-  return input;
+  const hex=document.createElement('span');
+  hex.className='yr-dye-hex';
+  label.append(input,hex);
+  controls.append(label);
+  return {input,hex};
  });
+ const presets=document.createElement('div');
+ presets.className='yr-dye-presets';
+ const price=document.createElement('p');
+ price.textContent=unlocked?say('Incluye todos los cambios de este conjunto.','All changes for this outfit are included.')
+  :say('120 JJ una sola vez por conjunto.','120 JJ once per outfit.');
  const save=document.createElement('button');
- save.className='yr-action';
+ save.type='button';
+ save.className='yr-action yr-dye-save';
  save.disabled=busy||(!unlocked&&data.coins<120);
- save.textContent=unlocked?say('Guardar mezcla','Save colors'):say('Desbloquear por 120 JJ','Unlock for 120 JJ');
- save.onclick=()=>mutate('dye',[outfit,...fields.map(input=>input.value.slice(1))].join(':'));
- section.append(save);
+ save.textContent=unlocked?say('Guardar mezcla','Save colors'):say('Desbloquear y guardar · 120 JJ','Unlock and save · 120 JJ');
+ if(!unlocked&&data.coins<120)price.textContent+=say(' Te faltan ',' You need ')+(120-data.coins)+' JJ.';
+ const palette=()=>fields.map(({input})=>input.value.slice(1)).join(':');
+ let timer;
+ let revision=0;
+ function update(paintPalette){
+  fields.forEach(({input,hex})=>{hex.textContent=input.value.toUpperCase();});
+  const generation=++revision;
+  clearTimeout(timer);
+  timer=setTimeout(()=>{
+   if(!section.isConnected)return;
+   skin(outfit,paintPalette).then(url=>{
+    if(generation===revision&&section.isConnected)sprite.style.backgroundImage='url("'+url+'")';
+   }).catch(()=>{});
+  },70);
+ }
+ fields.forEach(({input})=>{input.oninput=()=>update(palette());});
+ for(const [es,en,primary,secondary] of [
+  ['Lavanda','Lavender','a986c6','e3a4b6'],['Aurora','Aurora','83c7ad','76a8d4'],
+  ['Frambuesa','Raspberry','a63c74','f2a4a4'],['Medianoche','Midnight','353467','777bca']
+ ]){
+  const button=document.createElement('button');
+  button.type='button';
+  button.disabled=busy;
+  button.textContent=say(es,en);
+  button.style.setProperty('--swatch','linear-gradient(135deg,#'+primary+' 50%,#'+secondary+' 50%)');
+  button.onclick=()=>{
+   fields[0].input.value='#'+primary;
+   fields[1].input.value='#'+secondary;
+   update(palette());
+  };
+  presets.append(button);
+ }
+ save.onclick=()=>mutate('dye',outfit+':'+palette());
+ controls.append(presets,price,save);
+ update(saved);
  return section;
 }
 

@@ -26,18 +26,18 @@
   if(host&&(!show || !host.isConnected || host.dataset.owner!==id)){dispose?.();dispose=null;host.remove();host=null;}
   if(!show||host)return;
   const current=document.createElement('div');current.dataset.owner=id;host=current;document.body.append(current);
-  import('./dev/yuki-avatar.js?v=room-3').then(({mountYuki})=>{if(host===current&&state.profile?.id===id&&allowed())dispose=mountYuki(current);}).catch(()=>{if(host===current){current.remove();host=null;}});
+  import('./dev/yuki-avatar.js?v=room-4').then(({mountYuki})=>{if(host===current&&state.profile?.id===id&&allowed())dispose=mountYuki(current);}).catch(()=>{if(host===current){current.remove();host=null;}});
  }
  function closeRoom(){roomRevision++;roomDispose?.();roomDispose=null;chatDispose?.();chatDispose=null;}
  async function roomChat(){
   if(chatDispose||!allowed())return;
   const id=state.profile.id,version=roomRevision,current=document.createElement('div');document.body.append(current);
   let cleanup;const close=()=>{cleanup?.();current.remove();if(chatDispose===close)chatDispose=null;};chatDispose=close;
-  try{const {mountYuki}=await import('./dev/yuki-avatar.js?v=room-3');if(roomRevision!==version||state.profile?.id!==id||!current.isConnected){close();return;}cleanup=mountYuki(current);current.shadowRoot.querySelector('aside').hidden=true;current.shadowRoot.querySelector('dialog').addEventListener('close',close,{once:true});current.openYuki();}catch{close();}
+  try{const {mountYuki}=await import('./dev/yuki-avatar.js?v=room-4');if(roomRevision!==version||state.profile?.id!==id||!current.isConnected){close();return;}cleanup=mountYuki(current);current.shadowRoot.querySelector('aside').hidden=true;current.shadowRoot.querySelector('dialog').addEventListener('close',close,{once:true});current.openYuki();}catch{close();}
  }
  async function showRoom(target,v,initialTab='room'){
   const version=roomRevision;
-  try{const {mountRoom}=await import('./dev/yuki-room.js?v=room-7');if(v!==state.version||version!==roomRevision)return;const cleanup=await mountRoom(target,{initialTab,onChat:roomChat,preview:!eventState?.unlocked});if(v!==state.version||version!==roomRevision)cleanup();else roomDispose=cleanup;}
+  try{const {mountRoom}=await import('./dev/yuki-room.js?v=room-8');if(v!==state.version||version!==roomRevision)return;const cleanup=await mountRoom(target,{initialTab,onChat:roomChat,preview:!eventState?.unlocked});if(v!==state.version||version!==roomRevision)cleanup();else roomDispose=cleanup;}
   catch{if(v===state.version){target.textContent=say('No se pudo abrir el cuarto. Vuelve a intentarlo.','Could not open the room. Please try again.');}}
  }
  function shopEntry(){

@@ -168,4 +168,17 @@ export const sceneStyles = `
 .yr-dye {margin-bottom:12px;padding:12px;border-radius:14px;background:#332442;border:1px solid #ad7fa855;}
 .yr-dye h3,.yr-dye p {margin:0 0 8px;}
 .yr-dye label {display:inline-flex;align-items:center;gap:6px;margin:0 10px 8px 0;}
+
+.yr .yr-dye {padding:clamp(12px,3cqi,20px);background:linear-gradient(145deg,#453052,#2a2039 68%);border:1px solid #bf8ea777;box-shadow:0 8px 24px #120a2355;}
+.yr-dye-studio {display:grid;grid-template-columns:minmax(74px,1fr) minmax(0,2fr);gap:clamp(9px,2cqi,16px);}
+.yr-dye-preview {min-height:145px;display:grid;place-items:center;border-radius:13px;border:1px solid #ce9bbb55;background:radial-gradient(ellipse,#bc83b471,#634875 65%,#372647);}
+.yr-dye-sprite {width:90%;max-width:112px;aspect-ratio:3/4;background-size:400% 300%;background-repeat:no-repeat;}
+.yr-dye-controls label {margin:0 0 6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;}
+.yr-dye-controls input {inline-size:38px;block-size:30px;padding:2px;border:1px solid #e6b4cb88;border-radius:8px;background:#30233e;}
+.yr-dye-hex {font:11px monospace;color:#f2c6d7;}
+.yr-dye-presets {display:flex;flex-wrap:wrap;gap:5px;margin:7px 0;}
+.yr-dye-presets button {display:inline-flex;align-items:center;gap:5px;border:1px solid #e3abd460;border-radius:20px;padding:5px 8px;color:#fff3ef;background:#564064;font-size:12px;min-height:30px;}
+.yr-dye-presets button::before {content:'';width:14px;height:14px;border-radius:50%;background:var(--swatch);border:1px solid #fce9e5a0;}
+.yr .yr-dye-save {background:#ebb6ca;color:#31213a;font-weight:700;max-width:100%;}
+.yr-dye-controls p {font-size:12px;color:#f3d7ea;}
 `;
