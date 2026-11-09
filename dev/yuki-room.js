@@ -1,8 +1,10 @@
+import {dyeControls} from './yuki-room-dye.js?v=1';
+import {extraArt,roomDevices,mountPosterPhotos} from './yuki-room-extras.js?v=1';
 import {furnitureArt} from './yuki-room-furniture.js?v=1';
 import {mountRecords,recordDeck,isRecord} from './yuki-room-records.js?v=1';
-import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-2';
+import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-3';
 import {keepsakes} from './yuki-room-art.js?v=3';
-import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=4';
+import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=5';
 const drawings={
  ...furnitureArt,
  ...keepsakes,
@@ -15,12 +17,15 @@ const drawings={
 };
 let artInstance=0;
 const illustrated = {
+ ...extraArt,
  'jj-poster':'jj-original','jj-poster-stars':'jj-original','jj-plush':'plush','jj-globe':'globe','jj-polaroid':'portrait','nu-piano':'piano',
  'winter-bauble':'bauble','winter-wreath':'wreath','winter-sleigh':'sleigh'
 };
 const available = id => !id.startsWith('winter-') || JJ.season==='christmas';
 drawings[recordDeck] = '<path d="M12 40l61-11 16 12v27L27 82 12 70z" fill="#714660" stroke="#f2ba91" stroke-width="3"/><path d="M12 40l61-11 16 12-62 13z" fill="#b67576"/><ellipse cx="46" cy="43" rx="22" ry="9" fill="#2d203d"/><ellipse cx="46" cy="43" rx="7" ry="3" fill="#efb19a"/><path d="M76 39l-9-4-12 9" fill="none" stroke="#fce3ac" stroke-width="3"/><circle cx="73" cy="62" r="4" fill="#ffe0a5"/>';
+const privatePoster = id => /^photo-poster-0[1-9]$/.test(id);
 function art(id){
+ if(privatePoster(id))return '<span class="yr-poster-art"><img alt="" data-private-poster="'+id+'"></span>';
  if(id==='jj-poster'||id==='jj-poster-stars')return '<span class="yr-poster-art"><img alt="" src="assets/yuki-room/jj-original.webp"></span>';
  if(Object.hasOwn(illustrated,id))return '<img class="yr-illustrated" alt="" src="assets/yuki-room/'+illustrated[id]+'.webp">';
  if(isRecord(id))return '<span class="yr-disc" aria-hidden="true"></span>';
@@ -35,6 +40,8 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  target.innerHTML='<style>'+styles+sceneStyles+'</style><section class="yr"><header class="yr-header"><div><small>YUKI · '+say('TU PEQUEÑO HOGAR','YOUR LITTLE HOME')+'</small><h1>'+say('El cuarto de Yuki','Yuki’s room')+'</h1></div><span class="yr-balance"></span></header><p class="yr-note">'+(preview?say('Preparación privada. El evento real sigue intacto. Las compras de esta tienda sí usan tus JJ.','Private preparation. The real event stays unchanged. Shop purchases still use your JJ.'):say('Ropa y decoración guardadas para tu perfil.','Outfits and decoration saved to your profile.'))+'</p><div class="yr-stage"><div class="yr-scene">'+roomBackdrop+'<span class="yr-room-title">'+say('Un rincón para quedarse','A place to stay')+'</span><div class="yr-furniture"></div><p class="yr-preview-label" role="status" hidden></p><button class="yr-actor" aria-label="'+say('Escuchar a Yuki','Hear from Yuki')+'"><span class="yr-pose"></span></button></div></div><p class="yr-bubble" aria-live="polite"></p><div class="yr-tabs" role="tablist"></div><div class="yr-confirm" hidden></div><div class="yr-panel"></div><p class="yr-status" role="status"></p></section>';
  const root=target.querySelector('.yr'),actor=root.querySelector('.yr-actor'),pose=root.querySelector('.yr-pose'),scene=root.querySelector('.yr-scene'),status=root.querySelector('.yr-status'),panel=root.querySelector('.yr-panel'),confirm=root.querySelector('.yr-confirm');
  const records=mountRecords(root,current);
+ const devices=roomDevices(records,current);
+ const posters=mountPosterPhotos(root,current);
  const media=matchMedia('(prefers-reduced-motion: reduce)');
  function speak(){if(current()&&!document.hidden)root.querySelector('.yr-bubble').textContent=phrase();}
  function stop(){clearTimeout(moveTimer);travel?.cancel();travel=null;delete actor.dataset.walking;}
@@ -55,31 +62,40 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
    moveTimer=setTimeout(move,1800);
   };
  }
+ const posterSlots=['poster','poster2'];
+ const posterSlot=()=>posterSlots.find(slot=>!data.decor?.[slot])||'poster2';
  function paintFurniture(){
   const decor={...data.decor};
-  if(staged)decor[staged.slot]=staged.id;
+  if(staged)decor[staged.slot==='poster'?posterSlot():staged.slot]=staged.id;
   scene.toggleAttribute('data-custom-bed',!!decor.bed);
   const furniture=root.querySelector('.yr-furniture');
-  furniture.replaceChildren(...Object.entries(decor).filter(([,id])=>available(id)&&(Object.hasOwn(drawings,id)||Object.hasOwn(illustrated,id))).map(([slot,id])=>{
-   const interactive=id===recordDeck && data.decor?.player===id;
+  furniture.replaceChildren(...Object.entries(decor).filter(([,id])=>available(id)&&(Object.hasOwn(drawings,id)||Object.hasOwn(illustrated,id)||privatePoster(id))).map(([slot,id])=>{
+   const active=data.decor?.[slot]===id;
+   const interactive=active && [recordDeck,'room-tv','nu-arcade'].includes(id);
    const item=document.createElement(interactive?'button':'div');
-   if(interactive){item.type='button';item.setAttribute('aria-label',say('Abrir tocadiscos','Open record player'));item.onclick=()=>records.open(data);}
+   if(interactive){
+    item.type='button';
+    const [es,en,open]=id===recordDeck?['Abrir tocadiscos','Open record player',()=>records.open(data)]:id==='room-tv'?['Ver videoclips','Watch music videos',devices.tv]:['Jugar en el mini arcade','Play the mini arcade',devices.arcade];
+    item.setAttribute('aria-label',say(es,en));item.title=say(es,en);item.onclick=open;
+   }
    item.className='yr-decor';item.dataset.slot=slot;item.dataset.item=id;
    item.toggleAttribute('data-preview',staged?.id===id);
    item.innerHTML=art(id);
    return item;
   }));
+  posters.fill();
   const label=root.querySelector('.yr-preview-label');
   label.hidden=!staged;
   label.textContent=staged?say('Vista previa · ','Preview · ')+say(staged.es,staged.en):'';
  }
  function resume(){stop();if(!document.hidden&&!media.matches)moveTimer=setTimeout(move,800);}
  actor.onclick=speak;document.addEventListener('visibilitychange',resume);media.addEventListener('change',resume);phraseTimer=setInterval(speak,22000);speak();resume();
- function paint(){if(!current()||!data)return;const gen=++generation;root.querySelector('.yr-balance').textContent=data.coins+' JJ';paintFurniture();records.sync(data);skin(data.outfit).then(url=>{if(current()&&gen===generation)pose.style.backgroundImage='url("'+url+'")'});
+ function paint(){if(!current()||!data)return;const gen=++generation;root.querySelector('.yr-balance').textContent=data.coins+' JJ';paintFurniture();records.sync(data);skin(data.outfit,data.decor?.['dye:'+data.outfit]).then(url=>{if(current()&&gen===generation)pose.style.backgroundImage='url("'+url+'")'});
  const tabs=[['room','Habitación','Room'],['wardrobe','Vestidor','Wardrobe'],['decor','Decorar','Decorate'],['shop','Tienda','Shop']];root.querySelector('.yr-tabs').replaceChildren(...tabs.map(([id,es,en])=>{const b=document.createElement('button');b.textContent=say(es,en);b.setAttribute('role','tab');b.setAttribute('aria-selected',String(tab===id));b.disabled=busy;b.onclick=()=>{tab=id;pending=null;staged=null;paint()};return b}));
  panel.replaceChildren();confirm.hidden=!pending;
  if(pending){confirm.replaceChildren();const p=document.createElement('p');p.textContent=say('Comprar ','Buy ')+say(pending.es,pending.en)+' · '+pending.price+' JJ · '+say('Saldo después: ','Balance afterwards: ')+(data.coins-pending.price)+' JJ';const yes=document.createElement('button');yes.className='yr-action';yes.textContent=say('Confirmar compra','Confirm purchase');yes.disabled=busy||data.coins<pending.price;yes.onclick=()=>mutate('buy',pending.id);const no=document.createElement('button');no.className='yr-action';no.textContent=say('Cancelar','Cancel');no.disabled=busy;no.onclick=()=>{pending=null;paint()};confirm.append(p,yes,no);}
  if(tab==='room'){const p=document.createElement('p');p.className='yr-note';p.textContent=say('Toca a Yuki para escuchar otra frase. Vístela y coloca tus accesorios desde las pestañas de abajo.','Tap Yuki for another phrase. Dress her and place your accessories using the tabs.');const chat=document.createElement('button');chat.className='yr-action';chat.textContent=say('Conversar con Yuki','Talk to Yuki');chat.onclick=onChat;panel.append(p,chat);return;}
+ if(tab==='wardrobe')panel.append(dyeControls(data,mutate,busy));
  if(tab==='shop' && data.owned.includes(recordDeck)){
   const heading=document.createElement('p');
   heading.className='yr-note';
@@ -89,8 +105,9 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  const list=[...data.catalog.filter(c=>!isRecord(c.id)),...(data.owned.includes(recordDeck)?records.catalog():[])].filter(c=>available(c.id)&&(tab==='shop'||(data.owned.includes(c.id)&&(tab==='wardrobe'?c.kind==='outfit':c.kind==='decor'))));
  if(!list.length){const p=document.createElement('p');p.className='yr-empty';p.textContent=say('Todavía no tienes decoraciones. Encontrarás las primeras en Tienda.','No decorations yet. Find your first ones in Shop.');panel.append(p);return;}
  const grid=document.createElement('div');grid.className='yr-grid';panel.append(grid);
- list.forEach(c=>{const owned=data.owned.includes(c.id),equipped=c.kind==='outfit'?data.outfit===c.id:data.decor?.[c.slot]===c.id;const card=document.createElement('article');card.className='yr-card';const pic=document.createElement('div');pic.className='yr-preview';if(c.kind!=='outfit')pic.innerHTML=art(c.id);else{const doll=document.createElement('div');doll.className='yr-outfit';pic.append(doll);skin(c.id).then(url=>{if(current()&&gen===generation)doll.style.backgroundImage='url("'+url+'")'});}const h=document.createElement('h3');h.textContent=say(c.es,c.en);const p=document.createElement('p');p.textContent=owned?say('En tu colección','In your collection'):c.price+' JJ';const b=document.createElement('button');b.className='yr-action';b.dataset.item=c.id;b.textContent=!owned?say('Comprar','Buy'):equipped?(c.kind==='decor'?say('Retirar','Remove'):say('En uso','Equipped')):say('Usar','Use');b.disabled=busy||(equipped&&c.kind==='outfit')||(owned&&c.kind==='record');
- if(owned&&c.kind==='record')b.textContent=say('En tu colección','In your collection');b.onclick=()=>{if(!owned){pending=c;paint();confirm.scrollIntoView({block:'nearest',behavior:'smooth'})}else mutate(equipped?'remove':'equip',c.id)};card.append(pic,h,p,b);
+ list.forEach(c=>{const owned=data.owned.includes(c.id),equipped=c.kind==='outfit'?data.outfit===c.id:(data.decor?.[c.slot]===c.id||(c.slot==='poster'&&data.decor?.poster2===c.id));const card=document.createElement('article');card.className='yr-card';const pic=document.createElement('div');pic.className='yr-preview';if(c.kind!=='outfit')pic.innerHTML=art(c.id);else{const doll=document.createElement('div');doll.className='yr-outfit';pic.append(doll);skin(c.id,data.decor?.['dye:'+c.id]).then(url=>{if(current()&&gen===generation)doll.style.backgroundImage='url("'+url+'")'});}const h=document.createElement('h3');h.textContent=say(c.es,c.en);const p=document.createElement('p');p.textContent=owned?say('En tu colección','In your collection'):c.price+' JJ';const b=document.createElement('button');b.className='yr-action';b.dataset.item=c.id;b.textContent=!owned?say('Comprar','Buy'):equipped?(c.kind==='decor'?say('Retirar','Remove'):say('En uso','Equipped')):say('Usar','Use');b.disabled=busy||(equipped&&c.kind==='outfit')||(owned&&c.kind==='record');
+ if(owned&&c.kind==='record')b.textContent=say('En tu colección','In your collection');b.onclick=()=>{if(!owned){pending=c;paint();confirm.scrollIntoView({block:'nearest',behavior:'smooth'})}else if(c.slot==='poster'&&!equipped&&posterSlots.every(slot=>data.decor?.[slot]))status.textContent=say('Ya tienes dos pósteres. Retira uno en Decorar para colocar este.','Two posters are already up. Remove one in Decorate to place this one.');
+ else mutate(equipped?'remove':'equip',c.id)};card.append(pic,h,p,b);
  if(c.kind==='decor'&&!equipped){
   const previewButton=document.createElement('button');
   previewButton.className='yr-action';
@@ -108,9 +125,10 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
   card.append(previewButton);
  }
  grid.append(card)});
+ posters.fill();
  }
  async function mutate(action,id){if(busy||!current())return;busy=true;paint();try{const {data:result,error}=await db.rpc('yuki_hub',{p_action:action,p_item:id});if(error)throw error;if(!current())return;data=result;pending=null;staged=null;updateHome(data);window.dispatchEvent(new CustomEvent('jj-wallet-update',{detail:{owner,coins:data.coins}}));if(typeof JJ!=='undefined')JJ.dashboard=null;status.textContent=action==='buy'?say('Compra guardada. Ya puedes usarla desde tu colección.','Purchase saved. You can now use it from your collection.'):say('Guardado.','Saved.');}catch(e){if(current())status.textContent=String(e.message).includes('INSUFFICIENT')?say('No tienes suficientes monedas JJ.','Not enough JJ coins.'):say('No se confirmó. Reintenta; el mismo artículo no se cobra dos veces.','Not confirmed. Retry; the same item is not charged twice.');}finally{busy=false;paint();}}
- function cleanup(){alive=false;records.stop();stop();clearInterval(phraseTimer);document.removeEventListener('visibilitychange',resume);media.removeEventListener('change',resume);}
- try{data=await home(true);paint();records.load().then(paint).catch(()=>{if(current())status.textContent=say('No se pudieron cargar los vinilos.','Could not load records.');});}catch{if(current()){status.textContent=say('No se pudo cargar. Vuelve a abrir este apartado para reintentar.','Could not load. Reopen this section to retry.');}}
+ function cleanup(){alive=false;devices.close();records.stop();stop();clearInterval(phraseTimer);document.removeEventListener('visibilitychange',resume);media.removeEventListener('change',resume);}
+ try{data=await home(true);paint();posters.load();records.load().then(paint).catch(()=>{if(current())status.textContent=say('No se pudieron cargar los vinilos.','Could not load records.');});}catch{if(current()){status.textContent=say('No se pudo cargar. Vuelve a abrir este apartado para reintentar.','Could not load. Reopen this section to retry.');}}
  return cleanup;
 }

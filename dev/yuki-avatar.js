@@ -1,4 +1,4 @@
-import {home,skin,phrase} from './yuki-life.js?v=room-2';
+import {home,skin,phrase} from './yuki-life.js?v=room-3';
 export function mountYuki(host) {
   const viewer = state.profile;
   const labels = new Map();
@@ -489,9 +489,9 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
   observer.observe(document.documentElement);
   const pose=document.createElement('span');pose.className='yuki-pose';pose.setAttribute('aria-hidden','true');avatar.append(pose);
   let outfitRequest=0;
-  async function dress(outfit){const request=++outfitRequest;try{const url=await skin(outfit);const preload=new Image();preload.src=url;await preload.decode();if(destroyed||!host.isConnected||request!==outfitRequest)return;pose.style.backgroundImage='url("'+url+'")';box.classList.add('sprite-ready');fit();}catch{/* Keep the currently loaded transparent avatar. */}}
-  home().then(data=>{if(!destroyed)dress(data.outfit)}).catch(()=>dress('uniform'));
-  const customized=e=>{if(e.detail?.owner===viewer.id)dress(e.detail.data.outfit)};
+  async function dress(outfit,palette){const request=++outfitRequest;try{const url=await skin(outfit,palette);const preload=new Image();preload.src=url;await preload.decode();if(destroyed||!host.isConnected||request!==outfitRequest)return;pose.style.backgroundImage='url("'+url+'")';box.classList.add('sprite-ready');fit();}catch{/* Keep the currently loaded transparent avatar. */}}
+  home().then(data=>{if(!destroyed)dress(data.outfit,data.decor?.['dye:'+data.outfit])}).catch(()=>dress('uniform'));
+  const customized=e=>{if(e.detail?.owner===viewer.id)dress(e.detail.data.outfit,e.detail.data.decor?.['dye:'+e.detail.data.outfit])};
   window.addEventListener('yuki-customized',customized);
   host.openYuki=()=>root.querySelector('#open-room').click();
   return () => { destroyed=true;window.removeEventListener('yuki-customized',customized); historyRequest++; clearTimeout(idleTimer); stopTravel(); reducedMotion.removeEventListener('change',motionChanged); document.removeEventListener('visibilitychange',visibilityChanged); host.removeEventListener('pointerdown',wake,true); energyRequest++; clearInterval(energyTimer); document.removeEventListener('visibilitychange',checkEnergy); window.removeEventListener('universe-language', updateLanguage); observer.disconnect(); menuObserver.disconnect(); };

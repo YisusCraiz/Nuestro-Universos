@@ -134,4 +134,38 @@ export const sceneStyles = `
 .yr-scene[data-custom-bed] .yr-default-bed {display:none;}
 .yr .yr-decor[data-slot="cabinet"] {left:77%;top:42%;width:16%;height:24%;}
 .yr .yr-decor[data-slot="poster"] .yr-poster-art {margin-inline:auto;}
+
+.yr .yr-decor[data-slot="wall"] {left:8%;top:14%;width:15%;height:28%;}
+.yr .yr-decor[data-slot="poster"],.yr .yr-decor[data-slot="poster2"] {top:12%;width:17%;height:24%;}
+.yr .yr-decor[data-slot="poster"] {left:32%;}
+.yr .yr-decor[data-slot="poster2"] {left:51%;}
+.yr .yr-decor[data-slot="poster2"] .yr-poster-art {margin-inline:auto;}
+.yr .yr-decor[data-slot="bed"] {left:56%;top:43%;width:32%;height:29%;}
+.yr .yr-decor[data-slot="plush"] {left:64%;bottom:40%;width:17%;height:20%;z-index:2;}
+.yr .yr-decor[data-slot="pillow"] {left:74%;bottom:34%;width:11%;height:13%;z-index:3;}
+.yr .yr-decor[data-slot="sofa"] {left:7%;bottom:11%;width:31%;height:25%;}
+.yr .yr-decor[data-slot="tv"] {left:21%;top:40%;width:19%;height:23%;z-index:4;}
+.yr .yr-decor[data-slot="instrument"] {left:42%;bottom:14%;width:18%;height:23%;}
+.yr .yr-decor[data-slot="display"] {left:75%;top:21%;width:17%;height:17%;}
+.yr .yr-decor[data-slot="shelf"] {left:2%;top:41%;width:17%;height:26%;}
+.yr .yr-decor[data-slot="cabinet"] {left:84%;top:53%;width:15%;height:22%;}
+.yr .yr-decor[data-slot="light"] {left:87%;top:37%;width:11%;height:19%;}
+.yr .yr-decor[data-slot="plant"] {left:3%;bottom:15%;width:10%;height:16%;}
+.yr .yr-decor[data-slot="player"] {left:39%;top:40%;width:12%;height:12%;}
+.yr .yr-decor[data-slot="frame"] {left:50%;bottom:47%;width:8%;height:14%;}
+.yr button.yr-decor:focus-visible {outline:2px solid #ffdb9f;}
+.yr-device {width:min(92vw,620px);max-height:85dvh;padding:18px;color:#fff2e7;background:#30223e;border:1px solid #be8ab0;border-radius:18px;}
+.yr-device::backdrop {background:#17101bc9;}
+.yr-device header {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.yr-device video {display:block;width:100%;max-height:54dvh;margin-top:12px;}
+.yr-device video[hidden] {display:none;}
+.yr-device select {max-width:100%;}
+.yr-device button {padding:8px;border-radius:10px;border:1px solid #ad7fa8;background:#493350;color:#fff2e7;}
+.yr-arcade-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:300px;}
+.yr-arcade-grid button {aspect-ratio:1;font-size:24px;}
+.yr-arcade-grid button[aria-pressed="true"] {background:#9c5e8d;color:#ffe8a9;}
+
+.yr-dye {margin-bottom:12px;padding:12px;border-radius:14px;background:#332442;border:1px solid #ad7fa855;}
+.yr-dye h3,.yr-dye p {margin:0 0 8px;}
+.yr-dye label {display:inline-flex;align-items:center;gap:6px;margin:0 10px 8px 0;}
 `;
