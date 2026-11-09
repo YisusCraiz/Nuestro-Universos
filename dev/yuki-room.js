@@ -1,10 +1,11 @@
+import {mountLayout} from './yuki-room-layout.js?v=1';
 import {dyeControls} from './yuki-room-dye.js?v=2';
 import {extraArt,roomDevices,mountPosterPhotos} from './yuki-room-extras.js?v=1';
 import {furnitureArt} from './yuki-room-furniture.js?v=1';
 import {mountRecords,recordDeck,isRecord} from './yuki-room-records.js?v=1';
 import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-4';
 import {keepsakes} from './yuki-room-art.js?v=3';
-import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=7';
+import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=8';
 const drawings={
  ...furnitureArt,
  ...keepsakes,
@@ -41,6 +42,12 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  const root=target.querySelector('.yr'),actor=root.querySelector('.yr-actor'),pose=root.querySelector('.yr-pose'),scene=root.querySelector('.yr-scene'),status=root.querySelector('.yr-status'),panel=root.querySelector('.yr-panel'),confirm=root.querySelector('.yr-confirm');
  const records=mountRecords(root,current);
  const devices=roomDevices(records,current);
+ const layout=mountLayout(scene,{
+  current,status,canStart:()=>!busy&&!pending,
+  read:()=>data?.decor?.layout||{},
+  saved:value=>{data.decor={...data.decor,layout:value};updateHome(data);},
+  repaint:()=>{staged=null;paint();layout.begin();}
+ });
  const posters=mountPosterPhotos(root,current);
  const media=matchMedia('(prefers-reduced-motion: reduce)');
  function speak(){if(current()&&!document.hidden)root.querySelector('.yr-bubble').textContent=phrase();}
@@ -65,13 +72,14 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  const posterSlots=['poster','poster2'];
  const posterSlot=()=>posterSlots.find(slot=>!data.decor?.[slot])||'poster2';
  function paintFurniture(){
+  if(layout.dragging())return;
   const decor={...data.decor};
   if(staged)decor[staged.slot==='poster'?posterSlot():staged.slot]=staged.id;
   scene.toggleAttribute('data-custom-bed',!!decor.bed);
   scene.toggleAttribute('data-custom-window',decor.wall==='window');
   scene.toggleAttribute('data-custom-rug',!!decor.rug);
   const furniture=root.querySelector('.yr-furniture');
-  furniture.replaceChildren(...Object.entries(decor).filter(([,id])=>available(id)&&(Object.hasOwn(drawings,id)||Object.hasOwn(illustrated,id)||privatePoster(id))).map(([slot,id])=>{
+  furniture.replaceChildren(...Object.entries(decor).filter(([,id])=>typeof id==='string'&&available(id)&&(Object.hasOwn(drawings,id)||Object.hasOwn(illustrated,id)||privatePoster(id))).map(([slot,id])=>{
    const active=data.decor?.[slot]===id;
    const interactive=active && [recordDeck,'room-tv','nu-arcade'].includes(id);
    const item=document.createElement(interactive?'button':'div');
@@ -86,6 +94,9 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
    }
    item.toggleAttribute('data-preview',staged?.id===id);
    item.innerHTML=art(id);
+   const entry=data.catalog.find(product=>product.id===id);
+   if(entry)item.dataset.name=say(entry.es,entry.en);
+   layout.apply(item);
    return item;
   }));
   posters.fill();
@@ -95,8 +106,8 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  }
  function resume(){stop();if(!document.hidden&&!media.matches)moveTimer=setTimeout(move,800);}
  actor.onclick=speak;document.addEventListener('visibilitychange',resume);media.addEventListener('change',resume);phraseTimer=setInterval(speak,22000);speak();resume();
- function paint(){if(!current()||!data)return;const gen=++generation;root.querySelector('.yr-balance').textContent=data.coins+' JJ';paintFurniture();records.sync(data);skin(data.outfit,data.decor?.['dye:'+data.outfit]).then(url=>{if(current()&&gen===generation)pose.style.backgroundImage='url("'+url+'")'});
- const tabs=[['room','Habitación','Room'],['wardrobe','Vestidor','Wardrobe'],['decor','Decorar','Decorate'],['shop','Tienda','Shop']];root.querySelector('.yr-tabs').replaceChildren(...tabs.map(([id,es,en])=>{const b=document.createElement('button');b.textContent=say(es,en);b.setAttribute('role','tab');b.setAttribute('aria-selected',String(tab===id));b.disabled=busy;b.onclick=()=>{tab=id;pending=null;staged=null;paint()};return b}));
+ function paint(){if(!current()||!data)return;const gen=++generation;root.querySelector('.yr-balance').textContent=data.coins+' JJ';paintFurniture();layout.refresh();records.sync(data);skin(data.outfit,data.decor?.['dye:'+data.outfit]).then(url=>{if(current()&&gen===generation)pose.style.backgroundImage='url("'+url+'")'});
+ const tabs=[['room','Habitación','Room'],['wardrobe','Vestidor','Wardrobe'],['decor','Decorar','Decorate'],['shop','Tienda','Shop']];root.querySelector('.yr-tabs').replaceChildren(...tabs.map(([id,es,en])=>{const b=document.createElement('button');b.textContent=say(es,en);b.setAttribute('role','tab');b.setAttribute('aria-selected',String(tab===id));b.disabled=busy||layout.editing();b.onclick=()=>{tab=id;pending=null;staged=null;paint()};return b}));
  panel.replaceChildren();confirm.hidden=!pending;
  if(pending){confirm.replaceChildren();const p=document.createElement('p');p.textContent=say('Comprar ','Buy ')+say(pending.es,pending.en)+' · '+pending.price+' JJ · '+say('Saldo después: ','Balance afterwards: ')+(data.coins-pending.price)+' JJ';const yes=document.createElement('button');yes.className='yr-action';yes.textContent=say('Confirmar compra','Confirm purchase');yes.disabled=busy||data.coins<pending.price;yes.onclick=()=>mutate('buy',pending.id);const no=document.createElement('button');no.className='yr-action';no.textContent=say('Cancelar','Cancel');no.disabled=busy;no.onclick=()=>{pending=null;paint()};confirm.append(p,yes,no);}
  if(tab==='room'){const p=document.createElement('p');p.className='yr-note';p.textContent=say('Toca a Yuki para escuchar otra frase. Vístela y coloca tus accesorios desde las pestañas de abajo.','Tap Yuki for another phrase. Dress her and place your accessories using the tabs.');const chat=document.createElement('button');chat.className='yr-action';chat.textContent=say('Conversar con Yuki','Talk to Yuki');chat.onclick=onChat;panel.append(p,chat);return;}
@@ -132,7 +143,7 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  grid.append(card)});
  posters.fill();
  }
- async function mutate(action,id){if(busy||!current())return;busy=true;paint();try{const {data:result,error}=await db.rpc('yuki_hub',{p_action:action,p_item:id});if(error)throw error;if(!current())return;data=result;pending=null;staged=null;updateHome(data);window.dispatchEvent(new CustomEvent('jj-wallet-update',{detail:{owner,coins:data.coins}}));if(typeof JJ!=='undefined')JJ.dashboard=null;status.textContent=action==='buy'?say('Compra guardada. Ya puedes usarla desde tu colección.','Purchase saved. You can now use it from your collection.'):say('Guardado.','Saved.');}catch(e){if(current())status.textContent=String(e.message).includes('INSUFFICIENT')?say('No tienes suficientes monedas JJ.','Not enough JJ coins.'):say('No se confirmó. Reintenta; el mismo artículo no se cobra dos veces.','Not confirmed. Retry; the same item is not charged twice.');}finally{busy=false;paint();}}
+ async function mutate(action,id){if(busy||layout.editing()||!current())return;busy=true;paint();try{const {data:result,error}=await db.rpc('yuki_hub',{p_action:action,p_item:id});if(error)throw error;if(!current())return;data=result;pending=null;staged=null;updateHome(data);window.dispatchEvent(new CustomEvent('jj-wallet-update',{detail:{owner,coins:data.coins}}));if(typeof JJ!=='undefined')JJ.dashboard=null;status.textContent=action==='buy'?say('Compra guardada. Ya puedes usarla desde tu colección.','Purchase saved. You can now use it from your collection.'):say('Guardado.','Saved.');}catch(e){if(current())status.textContent=String(e.message).includes('INSUFFICIENT')?say('No tienes suficientes monedas JJ.','Not enough JJ coins.'):say('No se confirmó. Reintenta; el mismo artículo no se cobra dos veces.','Not confirmed. Retry; the same item is not charged twice.');}finally{busy=false;paint();}}
  function cleanup(){alive=false;devices.close();records.stop();stop();clearInterval(phraseTimer);document.removeEventListener('visibilitychange',resume);media.removeEventListener('change',resume);}
  try{data=await home(true);paint();posters.load();records.load().then(paint).catch(()=>{if(current())status.textContent=say('No se pudieron cargar los vinilos.','Could not load records.');});}catch{if(current()){status.textContent=say('No se pudo cargar. Vuelve a abrir este apartado para reintentar.','Could not load. Reopen this section to retry.');}}
  return cleanup;

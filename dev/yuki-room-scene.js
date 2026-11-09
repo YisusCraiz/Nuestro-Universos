@@ -201,4 +201,18 @@ export const sceneStyles = `
  .yr .yr-decor[data-slot="sofa"] {--h:19%;}
  .yr .yr-decor[data-slot="tv"],.yr .yr-decor[data-slot="shelf"] {--h:21%;}
 }
+
+.yr:has([data-layout-editing]) :is(.yr-panel,.yr-confirm) {display:none;}
+.yr-layout {margin:9px 0 0;}
+.yr-layout > div {display:flex;gap:6px;flex-wrap:wrap;}
+.yr .yr-layout button {font-size:12px;min-height:36px;padding:6px 11px;}
+.yr-layout p {margin:6px 0;font-size:12px;color:#f4d9ed;}
+.yr-scene[data-layout-editing] .yr-decor:not([data-preview]) {pointer-events:auto;touch-action:none;cursor:grab;outline:1px dashed #ffdfae85;outline-offset:1px;}
+.yr-scene[data-layout-editing] .yr-decor[data-dragging] {z-index:11;cursor:grabbing;outline:2px solid #ffdfae;}
+.yr-scene[data-layout-editing] .yr-actor {pointer-events:none;}
+.yr-layout-guide {position:absolute;inset:0;z-index:1;pointer-events:none;background:#ffd4a742;}
+.yr-layout-guide[data-zone="wall"] {clip-path:polygon(5% 8%,94% 8%,94% 58%,5% 58%);}
+.yr-layout-guide[data-zone="floor"] {clip-path:polygon(5% 81%,20% 66%,71% 66%,95% 90%,95% 97%,5% 97%);}
+.yr-layout-guide[data-zone="shelf"] {clip-path:inset(44% 48% 44% 30% round 5px);}
+.yr-layout-guide[data-zone="bed"] {clip-path:inset(55% 15% 22% 55% round 8px);}
 `;
