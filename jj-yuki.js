@@ -37,7 +37,7 @@
  }
  async function showRoom(target,v,initialTab='room'){
   const version=roomRevision;
-  try{const {mountRoom}=await import('./dev/yuki-room.js?v=room-8');if(v!==state.version||version!==roomRevision)return;const cleanup=await mountRoom(target,{initialTab,onChat:roomChat,preview:!eventState?.unlocked});if(v!==state.version||version!==roomRevision)cleanup();else roomDispose=cleanup;}
+  try{const {mountRoom}=await import('./dev/yuki-room.js?v=room-9');if(v!==state.version||version!==roomRevision)return;const cleanup=await mountRoom(target,{initialTab,onChat:roomChat,preview:!eventState?.unlocked});if(v!==state.version||version!==roomRevision)cleanup();else roomDispose=cleanup;}
   catch{if(v===state.version){target.textContent=say('No se pudo abrir el cuarto. Vuelve a intentarlo.','Could not open the room. Please try again.');}}
  }
  function shopEntry(){

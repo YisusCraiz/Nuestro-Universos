@@ -17,12 +17,14 @@ export const roomBackdrop = `<svg class="yr-backdrop" viewBox="0 0 960 480" pres
  <path d="M0 386l178-91h507l275 128" fill="none" stroke="#d7a8ae" stroke-width="7"/>
  <path d="M0 407q458-75 960 21M0 453q470-62 960-3M0 479q480-46 960-11M244 297 91 480m247-184-72 184m165-185-1 185m92-185 78 185m17-185 188 185" fill="none" stroke="#513849" stroke-opacity=".43" stroke-width="2"/>
  <ellipse cx="331" cy="330" rx="410" ry="232" fill="url(#yr-sun)"/>
+ <g class="yr-default-window">
  <path d="M100 209v-65a67 67 0 0 1 134 0v65Z" fill="#5d486e" stroke="#765776" stroke-width="18"/>
  <path d="M98 205v-65a65 65 0 0 1 130 0v65Z" fill="url(#yr-glass)" stroke="#efc5c9" stroke-width="7"/>
  <path d="M162 79v124M99 150h128" stroke="#efc5c9" stroke-width="4"/>
  <path d="M143 109a17 17 0 1 0 5 30 15 15 0 0 1-5-30" fill="#fff0b7"/>
  <path d="M195 111h8m-4-4v8m3 65h9m-4.5-4.5v9m-81-13h6m-3-3v6" stroke="#fff1c3" stroke-width="2"/>
  <path d="M80 211h160l-8 10H90Z" fill="url(#yr-wood)"/>
+ </g>
  <path d="M95 221h116l146 137-199 22Z" fill="#ffd6a4" opacity=".09"/>
  <path d="M107 227h105" stroke="#eac4be" opacity=".32" stroke-width="2"/>
  <g class="yr-default-bed">
@@ -35,8 +37,10 @@ export const roomBackdrop = `<svg class="yr-backdrop" viewBox="0 0 960 480" pres
  </g>
  <path d="M313 234h170l-16 11H300Z" fill="url(#yr-wood)"/>
  <path d="M300 245h167v9H300Z" fill="#745272"/>
+ <g class="yr-default-rug">
  <ellipse cx="406" cy="386" rx="176" ry="39" fill="#6f4f75" opacity=".55"/>
  <ellipse cx="406" cy="384" rx="161" ry="31" fill="none" stroke="#dfabb7" stroke-opacity=".65" stroke-width="2"/>
+ </g>
  <path d="M718 43q95 69 239 41" fill="none" stroke="#513951" stroke-width="3"/>
  <g fill="#ffdd9f"><circle cx="737" cy="56" r="4"/><circle cx="777" cy="76" r="4"/><circle cx="825" cy="91" r="4"/><circle cx="877" cy="94" r="4"/><circle cx="932" cy="89" r="4"/></g>
  </svg>`;
@@ -64,17 +68,6 @@ export const sceneStyles = `
 .yr .yr-scene::after {content:none;}
 .yr-backdrop {display:block; position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
 .yr-room-title {z-index:6; background:#291e37e8; border:1px solid #f4cad066; border-radius:30px; padding:7px 12px;}
-.yr .yr-decor {filter:drop-shadow(0 5px 4px #32203363);}
-.yr .yr-decor[data-slot="wall"] {width:15%; height:34%; left:12%; top:13%;}
-.yr .yr-decor[data-slot="shelf"] {width:15%; height:37%; left:0; top:41%;}
-.yr .yr-decor[data-slot="light"] {width:13%; height:31%; left:85%; right:auto; top:42%;}
-.yr .yr-decor[data-slot="plant"] {width:11%; height:27%; left:10%; bottom:10%;}
-.yr .yr-decor[data-slot="rug"] {width:42%; height:28%; left:22%; bottom:7%; transform:scaleY(.72);}
-.yr .yr-decor[data-slot="poster"] {width:22%; height:34%; left:37%; top:10%;}
-.yr .yr-decor[data-slot="frame"] {width:11%; height:21%; left:34%; bottom:49%;}
-.yr .yr-decor[data-slot="plush"] {width:22%; height:30%; left:57%; bottom:41%; z-index:2;}
-.yr .yr-decor[data-slot="pillow"] {width:15%; height:22%; left:68%; bottom:34%;}
-.yr .yr-decor[data-preview] {filter:drop-shadow(0 0 6px #fff0ad);}
 .yr-decor[data-item="jj-lamp"]::before {content:''; position:absolute; inset:-25%; background:radial-gradient(#ffcd9970,transparent 64%); z-index:-1;}
 .yr .yr-actor {bottom:12%; width:clamp(56px,13cqi,112px); height:auto; aspect-ratio:94/126; transform-origin:center bottom;}
 .yr .yr-pose {position:absolute; inset:0;}
@@ -90,20 +83,13 @@ export const sceneStyles = `
  .yr .yr-scene {height:clamp(274px,88cqi,390px);}
  .yr .yr-grid {grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;}
  .yr .yr-card {padding:8px;}
- .yr .yr-decor[data-slot="poster"] {width:28%; height:28%; left:33%; top:9%;}
- .yr .yr-decor[data-slot="frame"] {width:15%; left:33%; bottom:49%;}
- .yr .yr-decor[data-slot="plush"] {width:25%; left:55%; bottom:40%;}
- .yr .yr-decor[data-slot="pillow"] {width:18%; left:67%; bottom:32%;}
- .yr .yr-decor[data-slot="light"] {width:15%; left:84%;}
- .yr .yr-decor[data-slot="plant"] {width:16%; left:6%;}
  .yr-room-title {top:10px; left:10px; font-size:9px;}
 }
 @container yuki-room (max-width:255px) {
  .yr .yr-grid {grid-template-columns:minmax(0,1fr);}
 }
 
-.yr .yr-illustrated {width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 4px 4px #21142888);}
-.yr .yr-decor[data-slot="player"] {left:36%;top:39%;width:13%;height:15%;z-index:5;}
+.yr .yr-illustrated {width:100%;height:100%;object-fit:contain;display:block;}
 .yr button.yr-decor {pointer-events:auto;padding:0;background:transparent;border:0;cursor:pointer;}
 .yr .yr-disc {display:block;width:67%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#ffe4b2 0 3%,#bd748c 4% 21%,transparent 22%),repeating-radial-gradient(circle,#30223c 0 3px,#56425b 4px 5px);box-shadow:4px 5px 0 #21182c;}
 .yr-records {padding:10px 12px;margin:0 0 10px;border-radius:14px;background:#2e223e;border:1px solid #ba98ca55;}
@@ -130,29 +116,8 @@ export const sceneStyles = `
 .yr-poster-art {height:92%;max-width:100%;aspect-ratio:4/5;display:block;overflow:hidden;padding:4px;border:2px solid #e9b982;border-radius:5px;background:radial-gradient(#d2a0a8,#623b62);}
 .yr-poster-art img {display:block;height:100%;width:100%;object-fit:contain;}
 .yr [data-item="jj-poster-stars"] .yr-poster-art,.yr-card:has([data-item="jj-poster-stars"]) .yr-poster-art {border-color:#dabdf6;background:radial-gradient(#a991ce,#292248);}
-.yr .yr-decor[data-slot="bed"] {left:54%;top:42%;width:32%;height:29%;}
 .yr-scene[data-custom-bed] .yr-default-bed {display:none;}
-.yr .yr-decor[data-slot="cabinet"] {left:77%;top:42%;width:16%;height:24%;}
-.yr .yr-decor[data-slot="poster"] .yr-poster-art {margin-inline:auto;}
 
-.yr .yr-decor[data-slot="wall"] {left:8%;top:14%;width:15%;height:28%;}
-.yr .yr-decor[data-slot="poster"],.yr .yr-decor[data-slot="poster2"] {top:12%;width:17%;height:24%;}
-.yr .yr-decor[data-slot="poster"] {left:32%;}
-.yr .yr-decor[data-slot="poster2"] {left:51%;}
-.yr .yr-decor[data-slot="poster2"] .yr-poster-art {margin-inline:auto;}
-.yr .yr-decor[data-slot="bed"] {left:56%;top:43%;width:32%;height:29%;}
-.yr .yr-decor[data-slot="plush"] {left:64%;bottom:40%;width:17%;height:20%;z-index:2;}
-.yr .yr-decor[data-slot="pillow"] {left:74%;bottom:34%;width:11%;height:13%;z-index:3;}
-.yr .yr-decor[data-slot="sofa"] {left:7%;bottom:11%;width:31%;height:25%;}
-.yr .yr-decor[data-slot="tv"] {left:21%;top:40%;width:19%;height:23%;z-index:4;}
-.yr .yr-decor[data-slot="instrument"] {left:42%;bottom:14%;width:18%;height:23%;}
-.yr .yr-decor[data-slot="display"] {left:75%;top:21%;width:17%;height:17%;}
-.yr .yr-decor[data-slot="shelf"] {left:2%;top:41%;width:17%;height:26%;}
-.yr .yr-decor[data-slot="cabinet"] {left:84%;top:53%;width:15%;height:22%;}
-.yr .yr-decor[data-slot="light"] {left:87%;top:37%;width:11%;height:19%;}
-.yr .yr-decor[data-slot="plant"] {left:3%;bottom:15%;width:10%;height:16%;}
-.yr .yr-decor[data-slot="player"] {left:39%;top:40%;width:12%;height:12%;}
-.yr .yr-decor[data-slot="frame"] {left:50%;bottom:47%;width:8%;height:14%;}
 .yr button.yr-decor:focus-visible {outline:2px solid #ffdb9f;}
 .yr-device {width:min(92vw,620px);max-height:85dvh;padding:18px;color:#fff2e7;background:#30223e;border:1px solid #be8ab0;border-radius:18px;}
 .yr-device::backdrop {background:#17101bc9;}
@@ -181,4 +146,59 @@ export const sceneStyles = `
 .yr-dye-presets button::before {content:'';width:14px;height:14px;border-radius:50%;background:var(--swatch);border:1px solid #fce9e5a0;}
 .yr .yr-dye-save {background:#ebb6ca;color:#31213a;font-weight:700;max-width:100%;}
 .yr-dye-controls p {font-size:12px;color:#f3d7ea;}
+
+/* Each slot is centered over its contact point in the painted room. */
+.yr .yr-decor {
+ position:absolute;
+ left:var(--x);top:var(--y);width:var(--w);height:var(--h);
+ transform:translate(-50%,-100%);
+ display:grid;place-items:end center;
+ isolation:isolate;
+ z-index:var(--layer,2);
+}
+.yr .yr-decor > :is(img,svg,.yr-poster-art) {
+ max-width:100%;max-height:100%;min-height:0;
+ filter:saturate(.86) brightness(var(--light,.95)) drop-shadow(1px 2px 2px #24162869);
+}
+.yr .yr-decor > img {object-position:center bottom;}
+.yr .yr-decor[data-preview] > :is(img,svg,.yr-poster-art) {
+ filter:saturate(.88) brightness(1.02) drop-shadow(0 0 3px #ffe4b9aa);
+}
+.yr .yr-decor[data-surface="floor"]::after {
+ content:'';position:absolute;z-index:-1;bottom:0;left:12%;width:76%;height:13%;
+ background:radial-gradient(ellipse,#2e173d70,transparent 70%);
+}
+.yr .yr-decor[data-slot="wall"] {--x:79%;--y:27%;--w:16%;--h:20%;--light:.88;}
+.yr .yr-decor[data-item="window"] {--x:17%;--y:47%;--w:20%;--h:34%;--light:1;}
+.yr .yr-decor[data-item="stars"] {--x:79%;--y:23%;--w:29%;--h:19%;}
+.yr-scene[data-custom-window] .yr-default-window,
+.yr-scene[data-custom-rug] .yr-default-rug {display:none;}
+.yr .yr-decor[data-slot="poster"] {--x:37%;--y:39%;--w:16%;--h:25%;}
+.yr .yr-decor[data-slot="poster2"] {--x:55%;--y:39%;--w:16%;--h:25%;}
+.yr .yr-decor[data-slot="display"] {--x:84%;--y:44%;--w:15%;--h:14%;--light:.88;}
+.yr .yr-decor[data-slot="frame"] {--x:46%;--y:49%;--w:9%;--h:13%;}
+.yr .yr-decor[data-slot="player"] {--x:36%;--y:51%;--w:11%;--h:14%;--layer:6;}
+.yr .yr-decor[data-slot="shelf"] {--x:13%;--y:76%;--w:17%;--h:28%;--layer:3;}
+.yr .yr-decor[data-item="shelf-cloud"] {--x:15%;--y:62%;--w:16%;--h:16%;}
+.yr .yr-decor[data-item="nu-arcade"] {--x:13%;--y:76%;--w:13%;--h:23%;--layer:5;}
+.yr .yr-decor[data-slot="tv"] {--x:29%;--y:72%;--w:17%;--h:22%;--layer:4;}
+.yr .yr-decor[data-slot="bed"] {--x:71%;--y:77%;--w:32%;--h:34%;--light:.89;--layer:2;}
+.yr .yr-decor[data-slot="plush"] {--x:71%;--y:61%;--w:16%;--h:18%;--layer:3;}
+.yr .yr-decor[data-slot="pillow"] {--x:78%;--y:65%;--w:11%;--h:12%;--layer:4;}
+.yr-scene[data-custom-bed] .yr-decor[data-slot="plush"] {--x:66%;--y:70%;--w:13%;--h:15%;}
+.yr-scene[data-custom-bed] .yr-decor[data-slot="pillow"] {--x:75%;--y:69%;}
+.yr .yr-decor[data-slot="light"] {--x:92%;--y:85%;--w:10%;--h:25%;--light:.91;--layer:5;}
+.yr .yr-decor[data-slot="cabinet"] {--x:87%;--y:86%;--w:15%;--h:19%;--light:.89;--layer:4;}
+.yr .yr-decor[data-slot="instrument"] {--x:52%;--y:79%;--w:16%;--h:22%;--layer:4;}
+.yr .yr-decor[data-slot="sofa"] {--x:24%;--y:88%;--w:28%;--h:24%;--layer:6;}
+.yr .yr-decor[data-slot="plant"] {--x:7%;--y:88%;--w:10%;--h:16%;--layer:7;}
+.yr .yr-decor[data-slot="rug"] {--x:43%;--y:91%;--w:36%;--h:19%;--layer:1;transform:translate(-50%,-100%) scaleY(.73);}
+.yr .yr-actor {z-index:8;}
+.yr .yr-room-title,.yr .yr-preview-label {z-index:9;}
+@container yuki-room (max-width:525px) {
+ .yr .yr-decor[data-slot="bed"] {--h:29%;}
+ .yr .yr-decor[data-slot="poster"],.yr .yr-decor[data-slot="poster2"] {--w:17%;}
+ .yr .yr-decor[data-slot="sofa"] {--h:19%;}
+ .yr .yr-decor[data-slot="tv"],.yr .yr-decor[data-slot="shelf"] {--h:21%;}
+}
 `;

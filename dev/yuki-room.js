@@ -4,7 +4,7 @@ import {furnitureArt} from './yuki-room-furniture.js?v=1';
 import {mountRecords,recordDeck,isRecord} from './yuki-room-records.js?v=1';
 import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-4';
 import {keepsakes} from './yuki-room-art.js?v=3';
-import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=6';
+import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=7';
 const drawings={
  ...furnitureArt,
  ...keepsakes,
@@ -68,6 +68,8 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
   const decor={...data.decor};
   if(staged)decor[staged.slot==='poster'?posterSlot():staged.slot]=staged.id;
   scene.toggleAttribute('data-custom-bed',!!decor.bed);
+  scene.toggleAttribute('data-custom-window',decor.wall==='window');
+  scene.toggleAttribute('data-custom-rug',!!decor.rug);
   const furniture=root.querySelector('.yr-furniture');
   furniture.replaceChildren(...Object.entries(decor).filter(([,id])=>available(id)&&(Object.hasOwn(drawings,id)||Object.hasOwn(illustrated,id)||privatePoster(id))).map(([slot,id])=>{
    const active=data.decor?.[slot]===id;
@@ -79,6 +81,9 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
     item.setAttribute('aria-label',say(es,en));item.title=say(es,en);item.onclick=open;
    }
    item.className='yr-decor';item.dataset.slot=slot;item.dataset.item=id;
+   if(['bed','sofa','tv','instrument','cabinet','light','plant','shelf'].includes(slot)&&id!=='shelf-cloud'){
+    item.dataset.surface='floor';
+   }
    item.toggleAttribute('data-preview',staged?.id===id);
    item.innerHTML=art(id);
    return item;
