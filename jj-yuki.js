@@ -94,6 +94,7 @@
   let step=preview?0:data.step, letters='', busy=false, sparks=0;
   const rehearsal=preview||(owner()&&!data.visible&&!data.unlocked);
   target.innerHTML=`<style>.yuki-event{max-width:760px;margin:20px auto;padding:clamp(24px,6vw,54px);border:1px solid #d0b5f440;border-radius:32px;background:radial-gradient(ellipse at top,#58417590,transparent 65%),#171326;color:#f4edf9;text-align:center;box-shadow:0 22px 80px #0003}.yuki-event h1{font-size:clamp(30px,6vw,48px);line-height:1.1}.yuki-event p{line-height:1.8;color:#d4c5df}.yuki-lights{display:flex;justify-content:center;gap:24px;margin:30px 0;font-size:34px}.yuki-lights span{color:#766084;transition:color .3s,text-shadow .3s}.yuki-lights .lit{color:#ffe0a2;text-shadow:0 0 24px #ffc978}.yuki-event button{margin:8px;min-height:48px}.yuki-event .choices{display:grid;gap:10px}.yuki-event .choices button{padding:16px;border-radius:18px}.yuki-event .letters button{font-size:23px;width:58px}.yuki-event output{display:block;font-size:30px;letter-spacing:.3em;min-height:48px}.yuki-event small{color:#d4b5eb}</style><section class="yuki-event"><small></small><h1></h1><div class="yuki-lights" aria-label="${say('Luces encendidas','Lights lit')}"><span>✦</span><span>✦</span><span>✦</span></div><div class="event-content"></div><p class="event-status" role="status"></p></section>`;
+  target.insertAdjacentHTML('afterbegin', '<style>.yuki-comic-gift{margin:16px 0}.yuki-comic-reader{width:min(94vw,690px);max-height:90dvh;overflow:auto;padding:12px;color:#f4edf9;background:#20182e;border:1px solid #b98bbd;border-radius:16px}.yuki-comic-reader::backdrop{background:#10091bda}.yuki-comic-reader nav{position:sticky;top:0;display:flex;gap:5px;flex-wrap:wrap;background:#20182e;padding:5px;z-index:1}.yuki-comic-reader nav button{padding:6px 8px;min-height:36px}.yuki-comic-reader img{display:block;width:100%;height:auto;margin:auto}.yuki-comic-reader img[hidden]{display:none}</style>');
   const root=target.querySelector('.yuki-event'),content=root.querySelector('.event-content'),status=root.querySelector('.event-status');
   const button=(text,fn)=>{const b=document.createElement('button');b.className='btn secondary';b.textContent=text;b.onclick=fn;return b;};
   async function advance(answer){
@@ -173,6 +174,9 @@
     p.textContent=say('¡Yatta! Soy Yuki, su nueva cómplice. Feliz primer mes, Julie y Yisus. Tengo un cuarto, un montón de curiosidad y una regla: los chistes malos también cuentan como recuerdos.','Yatta! I’m Yuki, your new accomplice. Happy first month, Julie and Yisus. I have a room, a lot of curiosity, and one rule: bad jokes count as memories, too.');
     const audio=document.createElement('section');
     content.append(audio);
+    import('./dev/yuki-anniversary-comic.js?v=1').then(({anniversaryComic})=>{
+     if(audio.isConnected)audio.after(anniversaryComic());
+    }).catch(()=>{});
     welcomeModule().then(({addWelcomeAudio})=>addWelcomeAudio(audio)).catch(()=>{});
     choices(
      button(rehearsal?say('Volver a Perfiles','Back to Profiles'):say('Visitar el cuarto de Yuki','Visit Yuki’s room'),()=>{
