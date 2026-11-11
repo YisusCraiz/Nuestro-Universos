@@ -1,6 +1,6 @@
 'use strict';
 (() => {
- const welcomeModule=()=>import('./dev/yuki-welcome.js?v=1');
+ const welcomeModule=()=>import('./dev/yuki-welcome.js?v=2');
  const entry=['yuki','✧','Primer aniversario'];menus.push(entry);
  let eventState=null,viewerId=null,loading=null,host=null,dispose=null,revision=0,roomDispose=null,chatDispose=null,roomRevision=0,nextTab=null;
  const visibleKey=()=>`nuestro-universo.yuki.visible.${state.profile?.id}`;

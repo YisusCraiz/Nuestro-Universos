@@ -1,4 +1,5 @@
 const bucket = () => db.storage.from('yuki-welcome');
+const welcome = async () => (await rpc('yuki_welcome')) || rpc('yuki_welcome_recording');
 const formats = {
  mp3:'audio/mpeg', m4a:'audio/mp4', wav:'audio/wav',
  ogg:'audio/ogg', webm:'audio/webm', aac:'audio/aac'
@@ -30,7 +31,7 @@ export function welcomeEditor() {
  form.append(title,fileLabel,subtitleLabel,save,status);
  let previous;
  save.disabled=true;
- rpc('yuki_welcome').then(data=>{
+ welcome().then(data=>{
   previous=data;
   if(data){
    subtitle.value=data.subtitle_en;
@@ -68,8 +69,8 @@ export function welcomeEditor() {
 
 export async function addWelcomeAudio(container) {
  try{
-  const data=await rpc('yuki_welcome');
-  if(!data?.path||!container.isConnected)return;
+  const data=await welcome();
+  if(!(data?.path||data?.embedded)||!container.isConnected)return;
   const area=document.createElement('div');
   const button=document.createElement('button');
   button.className='btn secondary';
@@ -83,10 +84,18 @@ export async function addWelcomeAudio(container) {
   button.onclick=async()=>{
    button.disabled=true;
    try{
-    const {data:signed,error}=await bucket().createSignedUrl(data.path,900);
-    if(error)throw error;
+    let source;
+    if(data.embedded){
+     const recording=await rpc('yuki_welcome_recording',{p_include_audio:true});
+     if(!recording?.audio)throw Error('Missing recording');
+     source='data:audio/mp4;base64,'+recording.audio.replace(/\s/g,'');
+    }else{
+     const {data:signed,error}=await bucket().createSignedUrl(data.path,900);
+     if(error)throw error;
+     source=signed.signedUrl;
+    }
     if(!container.isConnected)return;
-    audio.src=signed.signedUrl;
+    audio.src=source;
     audio.hidden=false;
     button.hidden=true;
     await audio.play().catch(()=>{});
