@@ -11,4 +11,100 @@ profilePage=async function(v){await spotifyProfilePage(v);if(v!==state.version)r
 const spotifyLogout=logout;logout=async function(){const owner=state.profile?.id;sessionStorage.removeItem(JJSpotify.tokenPrefix+owner);sessionStorage.removeItem(JJSpotify.pendingKey);return spotifyLogout();};
 $('#modal').addEventListener('close',()=>document.querySelectorAll('#modal .spotify-embed').forEach(el=>el.remove()));
 // This picker lives inside the publication/playlist form, so selecting music never discards the draft.
-async function mountMusicPicker(root,onSelect){root.innerHTML=`<h3>${bi('Elegir una canción','Choose a song')}</h3><label>${bi('Buscar en Nuestra música','Search Our music')}<input class="local-search" type="search" maxlength="120"></label><div class="local-results"></div><label>${bi('Buscar en Spotify','Search Spotify')}<input class="spotify-search" type="search" maxlength="120" placeholder="${say('Canción o artista','Song or artist')}"></label><button type="button" class="btn secondary spotify-find">${bi('Buscar en Spotify','Search Spotify')}</button><p class="spotify-error" role="status"></p><div class="spotify-results"></div><label>${bi('O pega el enlace de una canción de Spotify','Or paste a Spotify song link')}<input class="spotify-link" type="url" placeholder="https://open.spotify.com/track/…"></label><button type="button" class="text-button spotify-add-link">${bi('Añadir enlace','Add link')}</button>`;let songs=[];try{songs=await allSongs();}catch{$('.local-results',root).textContent=say('No se pudo cargar Nuestra música. Cierra y vuelve a abrir.','Could not load Our music. Close and reopen.');}if(!root.isConnected)return;const render=()=>{const q=$('.local-search',root).value.toLocaleLowerCase();const rows=songs.filter(s=>s.title.toLocaleLowerCase().includes(q));$('.local-results',root).innerHTML=rows.map((s,i)=>`<button type="button" class="music-choice" data-local-index="${i}" translate="no">♫ ${esc(s.title)}</button>`).join('')||`<p>${bi('No hay canciones que coincidan.','No matching songs.')}</p>`;root.querySelectorAll('[data-local-index]').forEach(b=>b.onclick=()=>{const s=rows[+b.dataset.localIndex];onSelect({source:'local',id:s.id,title:s.title});});};render();$('.local-search',root).oninput=render;let request=0;$('.spotify-find',root).onclick=async()=>{const q=$('.spotify-search',root).value.trim();if(!q)return;const run=++request;$('.spotify-error',root).textContent=say('Buscando…','Searching…');try{const data=await spotifyRequest('search?type=track&limit=10&q='+encodeURIComponent(q));if(!root.isConnected||run!==request)return;const tracks=(data.tracks?.items||[]).filter(t=>t&&/^[A-Za-z0-9]{22}$/.test(t.id));$('.spotify-results',root).innerHTML=tracks.map((t,i)=>`<div class="spotify-result"><span translate="no">${esc(t.name)} · ${esc(t.artists?.map(a=>a.name).join(', ')||'')}</span><a href="https://open.spotify.com/track/${t.id}" target="_blank" rel="noopener noreferrer">Spotify ↗</a><button type="button" class="btn secondary" data-spotify-index="${i}">${bi('Elegir','Choose')}</button></div>`).join('');$('.spotify-error',root).textContent=tracks.length?'':say('Sin resultados. Prueba otro nombre.','No results. Try another name.');root.querySelectorAll('[data-spotify-index]').forEach(b=>b.onclick=()=>{const t=tracks[+b.dataset.spotifyIndex];onSelect({source:'spotify',id:t.id,title:(t.name+' · '+t.artists.map(a=>a.name).join(', ')).slice(0,300)});});}catch(e){if(root.isConnected&&run===request)$('.spotify-error',root).textContent=e.message;}};$('.spotify-add-link',root).onclick=()=>{const id=spotifyTrackId($('.spotify-link',root).value.trim());if(!id){$('.spotify-error',root).textContent=say('Pega el enlace completo de una canción: open.spotify.com/track/…','Paste a full song link: open.spotify.com/track/…');return;}onSelect({source:'spotify',id,title:'Spotify · '+id});};}
+async function mountMusicPicker(root,onSelect,{songs,onConnect,initial='local'}={}){
+  root.classList.add('music-picker');
+  root.innerHTML=`
+    <div class="music-sources" role="group" aria-label="${say('Origen de las canciones','Song source')}">
+      <button type="button" data-music-source="local">${bi('♫ Nuestra música','♫ Our music')}</button>
+      <button type="button" data-music-source="spotify">Spotify</button>
+    </div>
+    <section data-music-panel="local">
+      <label>${bi('Buscar en Nuestra música','Search Our music')}<input class="local-search" type="search" maxlength="120"></label>
+      <div class="local-results"></div>
+    </section>
+    <section data-music-panel="spotify">
+      <div class="spotify-account-action"></div>
+      <div class="spotify-search-area">
+        <label>${bi('Canción o artista','Song or artist')}<input class="spotify-search" type="search" maxlength="120"></label>
+        <button type="button" class="btn secondary spotify-find">${bi('Buscar en Spotify','Search Spotify')}</button>
+        <div class="spotify-results"></div>
+      </div>
+      <label>${bi('Enlace de una canción de Spotify','Spotify song link')}<input class="spotify-link" type="text" inputmode="url" placeholder="https://open.spotify.com/track/…"></label>
+      <button type="button" class="text-button spotify-add-link">${bi('+ Añadir enlace','+ Add link')}</button>
+      <p class="spotify-error" role="status"></p>
+    </section>`;
+  const find=selector=>$(selector,root);
+  const status=find('.spotify-error');
+  function showSource(source){
+    for(const panel of root.querySelectorAll('[data-music-panel]'))panel.hidden=panel.dataset.musicPanel!==source;
+    for(const button of root.querySelectorAll('[data-music-source]'))button.setAttribute('aria-pressed',String(button.dataset.musicSource===source));
+  }
+  for(const button of root.querySelectorAll('[data-music-source]'))button.onclick=()=>showSource(button.dataset.musicSource);
+  showSource(initial);
+
+  function showConnection(){
+    const connected=!!spotifyStored();
+    find('.spotify-search-area').hidden=!connected;
+    const action=find('.spotify-account-action');
+    action.innerHTML=connected?`<p class="hint">${bi('Spotify conectado','Spotify connected')}</p>`:onConnect?
+      `<button type="button" class="btn spotify-connect-picker">${bi('Conectar a Spotify','Connect to Spotify')}</button>`:
+      `<p class="hint">${bi('Conecta Spotify en Perfiles para buscar canciones.','Connect Spotify in Profiles to search for songs.')}</p>`;
+    const connect=find('.spotify-connect-picker');
+    if(connect)connect.onclick=async()=>{
+      connect.disabled=true;
+      try{await onConnect();}
+      catch{status.textContent=say('No se pudo abrir Spotify. Inténtalo de nuevo.','Could not open Spotify. Try again.');}
+      finally{connect.disabled=false;}
+    };
+  }
+  showConnection();
+
+  const search=find('.spotify-search');
+  let request=0;
+  find('.spotify-find').onclick=async()=>{
+    const q=search.value.trim();
+    if(!q)return;
+    const run=++request;
+    find('.spotify-results').replaceChildren();
+    status.textContent=say('Buscando…','Searching…');
+    try{
+      const data=await spotifyRequest('search?type=track&limit=10&q='+encodeURIComponent(q));
+      if(!root.isConnected||run!==request)return;
+      const tracks=(data.tracks?.items||[]).filter(t=>t&&/^[A-Za-z0-9]{22}$/.test(t.id));
+      find('.spotify-results').innerHTML=tracks.map((t,i)=>`<button type="button" class="music-choice" data-spotify-index="${i}"><span translate="no">${esc(t.name)} · ${esc((t.artists||[]).map(a=>a.name).join(', '))}</span><span aria-hidden="true">＋</span></button>`).join('');
+      status.textContent=tracks.length?'':say('Sin resultados. Prueba otro nombre.','No results. Try another name.');
+      for(const button of root.querySelectorAll('[data-spotify-index]'))button.onclick=()=>{
+        const t=tracks[+button.dataset.spotifyIndex];
+        const artist=(t.artists||[]).map(a=>a.name).join(', ');
+        onSelect({source:'spotify',id:t.id,title:(artist?t.name+' · '+artist:t.name).slice(0,300)});
+      };
+    }catch(e){if(root.isConnected&&run===request){showConnection();status.textContent=e.message;}}
+  };
+  search.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();find('.spotify-find').click();}};
+  const link=find('.spotify-link');
+  find('.spotify-add-link').onclick=()=>{
+    const id=spotifyTrackId(link.value.trim());
+    if(!id){status.textContent=say('Pega un enlace de canción de Spotify.','Paste a Spotify track link.');return;}
+    onSelect({source:'spotify',id,title:'Spotify · '+id});
+    status.textContent='';
+    link.value='';
+  };
+  link.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();find('.spotify-add-link').click();}};
+
+  try{songs??=await allSongs();}
+  catch{find('.local-results').textContent=say('No se pudo cargar Nuestra música. Cierra y vuelve a abrir.','Could not load Our music. Close and reopen.');return;}
+  if(!root.isConnected)return;
+  const local=find('.local-search');
+  function renderLocal(){
+    const q=local.value.trim().toLocaleLowerCase();
+    const rows=songs.filter(s=>s.title.toLocaleLowerCase().includes(q));
+    find('.local-results').innerHTML=rows.map((s,i)=>`<button type="button" class="music-choice" data-local-index="${i}"><span translate="no">${esc(s.title)}</span><span aria-hidden="true">＋</span></button>`).join('')||`<p>${bi('No hay canciones que coincidan.','No matching songs.')}</p>`;
+    for(const button of root.querySelectorAll('[data-local-index]'))button.onclick=()=>{
+      const s=rows[+button.dataset.localIndex];
+      onSelect({source:'local',id:s.id,title:s.title});
+    };
+  }
+  local.oninput=renderLocal;
+  local.onkeydown=e=>{if(e.key==='Enter')e.preventDefault();};
+  renderLocal();
+}
