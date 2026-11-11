@@ -92,7 +92,6 @@ begin
  insert into public.yuki_phrase_cache(owner_id,language,day) values(auth.uid(),p_language,today) on conflict do nothing;
  select * into c from public.yuki_phrase_cache where owner_id=auth.uid() and language=p_language for update;
  if c.generated_at>now()-interval '6 hours' or c.last_attempt>now()-interval '5 minutes' or (c.day=today and c.attempts>=2) then return jsonb_build_object('generate',false,'phrases',c.phrases); end if;
- if not public.yuki_reserve_chat_turn() then return jsonb_build_object('generate',false,'phrases',c.phrases); end if;
  update public.yuki_phrase_cache set day=today,attempts=case when c.day=today then c.attempts+1 else 1 end,last_attempt=now() where owner_id=auth.uid() and language=p_language;
  return jsonb_build_object('generate',true,'phrases',c.phrases);
 end $function$

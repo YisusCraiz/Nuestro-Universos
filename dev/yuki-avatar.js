@@ -251,6 +251,8 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
     const caption = root.querySelector('#energy-text');
     if (!energyData) {
       caption.textContent = uiText('Energía sin conexión', 'Energy unavailable');
+      root.querySelector('#settings-energy').textContent = uiText('No se pudo consultar el cupo.', 'Could not check the allowance.');
+      root.querySelector('#energy-fill').style.width = '0%';
       return;
     }
     const {remaining, limit} = energyData;
@@ -258,7 +260,7 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
     energy.dataset.level = percent > 20 ? 'high' : remaining > 0 ? 'low' : 'empty';
     root.querySelector('#energy-fill').style.width = percent + '%';
     caption.textContent = percent + '%';
-    root.querySelector('#settings-energy').textContent = remaining + ' / ' + limit + ' · ' + uiText('intentos disponibles','attempts available');
+    root.querySelector('#settings-energy').textContent = remaining + ' / ' + limit + ' · ' + uiText('turnos de chat disponibles','chat turns available');
     energy.title = uiText('Cupo diario de Yuki. Se recarga a medianoche de Reynosa.', 'Yuki’s daily allowance. Refills at midnight in Reynosa.');
     energy.setAttribute('aria-label', uiText('Energía de Yuki', 'Yuki energy') + ' ' + percent + '%');
     fit();
@@ -320,10 +322,19 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
       const {data,error}=await db.functions.invoke('yuki-chat',{body:{message:text,language:UniverseI18n.language,requestId}});
       if(error || !data?.reply){
         let code;try{code=(await error.context.clone().json()).code}catch{}
-        throw Error(code==='provider_quota'||code==='daily_limit'?'quota':'send');
+        throw Error(code || 'send');
       }
       if(host.isConnected && session===chatSession){messageField.value='';await loadHistory();}
-    }catch(error){if(host.isConnected && session===chatSession)chatStatus.textContent=error.message==='quota'?uiText('Se alcanzó el cupo disponible. Tu mensaje sigue aquí para reintentarlo más tarde.','The available allowance was reached. Your message is still here to try later.'):uiText('No se confirmó la respuesta. Tu texto sigue aquí; el historial se conserva.','The reply could not be confirmed. Your text is still here; history is preserved.');}
+    }catch(error){
+      if(host.isConnected && session===chatSession){
+        const notices={
+          daily_limit:uiText('Usaste los 50 turnos de hoy. Se recargan a medianoche en Reynosa. Tu mensaje sigue aquí.','You used today’s 50 chat turns. They reset at midnight in Reynosa. Your message is still here.'),
+          provider_quota:uiText('Gemini alcanzó su propio límite. Tu cupo de Yuki aparece en Energía. Puedes volver a intentar más tarde.','Gemini reached its own limit. Your Yuki allowance is shown under Energy. You can try again later.'),
+          quota_unavailable:uiText('No pude consultar tu cupo. Tu mensaje sigue aquí.','I could not check your allowance. Your message is still here.')
+        };
+        chatStatus.textContent=Object.hasOwn(notices,error.message)?notices[error.message]:uiText('No se confirmó la respuesta. Tu texto sigue aquí y el historial se conserva.','The reply could not be confirmed. Your text and history are still here.');
+      }
+    }
     finally{sending=false;chatForm.querySelector('button').disabled=false;if(host.isConnected)refreshEnergy();}
   };
   const draft = root.querySelector('#draft');
