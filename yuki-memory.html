@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yuki · Memoria privada</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#171322;color:#f9f1ff}
+body{max-width:780px;margin:0 auto;padding:20px}h1{color:#f5d5ff}p{line-height:1.5}
+.panel{background:#292039;border:1px solid #58456a;border-radius:18px;padding:20px;margin:16px 0}
+textarea,select,button{font:inherit;border-radius:10px;padding:11px}textarea,select{background:#171322;color:white;border:1px solid #77678c;box-sizing:border-box;width:100%}
+textarea{min-height:100px;resize:vertical}button{background:#9d79d7;color:#161021;border:0;cursor:pointer;margin:4px 5px 4px 0}
+button.secondary{background:#423650;color:white}button.danger{background:#a94564;color:white}
+button:disabled{opacity:.5;cursor:wait}label{display:block;margin:12px 0 6px}
+small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;overflow-wrap:anywhere}
+.status{font-weight:bold}#notice{min-height:1.5em}a{color:#e2b9ff}
+</style>
+<script src="config.js"></script><script src="assets/supabase.js"></script></head>
+<body><a href="./">← Nuestro Universo</a><h1>✧ Memoria de Yuki</h1>
+<p>Los recuerdos no se sincronizan automáticamente desde ChatGPT. Pega únicamente el recuerdo que deseas proponer. <strong>Solo se guardará tras tu aprobación individual.</strong></p>
+<p class="muted">Esta página requiere tu sesión de Supabase. Nadie más puede consultar tus propuestas. La conexión con Gemini se activará después de completar las pruebas de privacidad.</p>
+<section class="panel"><h2>Nuevo recuerdo pendiente</h2>
+<label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
+<label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
+<button id="propose">Guardar para revisar</button></section>
+<section class="panel"><h2>Mis propuestas</h2><p id="notice" role="status" aria-live="polite"></p><div id="items"></div></section>
+<script>
+(async()=>{
+ const notice=document.getElementById('notice'),items=document.getElementById('items');
+ const say=(s)=>notice.textContent=s;
+ const config=window.UNIVERSE_CONFIG;
+ if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo iniciar Supabase.');return;}
+ const db=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
+ const {data:{user},error:authError}=await db.auth.getUser();
+ if(authError||!user){say('Inicia sesión en Nuestro Universo antes de abrir esta página.');document.getElementById('propose').disabled=true;return;}
+ async function load(){
+  const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(100);
+  if(error){say('No se pudo cargar la memoria. Puede que la tabla todavía no esté instalada.');return;}
+  say('Tus recuerdos solo están disponibles para tu cuenta.');
+  items.replaceChildren();
+  if(!data.length){items.textContent='Todavía no hay propuestas.';return;}
+  for(const entry of data){
+   const card=document.createElement('article'),heading=document.createElement('p'),edit=document.createElement('textarea'),level=document.createElement('select');
+   heading.className='status';heading.textContent=entry.status==='pending'?'Pendiente de aprobación':entry.status==='approved'?'Aprobado':'Rechazado';
+   edit.value=entry.memory_text;edit.maxLength=4000;
+   for(const [value,label] of [['private','Solo yo'],['shared','Compartido (sin acceso de Julie aún)'],['surprise','Sorpresa protegida']]){
+    const opt=document.createElement('option');opt.value=value;opt.textContent=label;level.append(opt);
+   }
+   level.value=entry.visibility;
+   card.append(heading,edit,level);
+   const actions=document.createElement('div');
+   const action=(title,kind,fn)=>{const b=document.createElement('button');b.textContent=title;b.className=kind||'';b.onclick=async()=>{b.disabled=true;try{await fn();await load()}catch(e){say('No se pudo guardar: '+e.message)}finally{b.disabled=false}};actions.append(b)};
+   const update=async(status)=>{const text=edit.value.trim();if(!text)throw Error('El texto no puede estar vacío.');
+    const {error}=await db.from('yuki_memory_proposals').update({memory_text:text,visibility:level.value,status,approved_at:status==='approved'?new Date().toISOString():null}).eq('id',entry.id).eq('owner_id',user.id);
+    if(error)throw error;
+   };
+   action('Guardar cambios','secondary',()=>update('pending'));
+   action('Aprobar','',()=>update('approved'));
+   action('Rechazar','secondary',()=>update('rejected'));
+   action('Eliminar','danger',async()=>{if(!confirm('¿Eliminar este recuerdo?'))return;const {error}=await db.from('yuki_memory_proposals').delete().eq('id',entry.id).eq('owner_id',user.id);if(error)throw error});
+   card.append(actions);items.append(card);
+  }
+ }
+ document.getElementById('propose').onclick=async()=>{
+  const btn=document.getElementById('propose'),text=document.getElementById('memory').value.trim();
+  if(!text){say('Escribe un recuerdo primero.');return;}
+  btn.disabled=true;
+  const {error}=await db.from('yuki_memory_proposals').insert({owner_id:user.id,memory_text:text,visibility:document.getElementById('visibility').value,status:'pending'});
+  btn.disabled=false;
+  if(error){say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
+  document.getElementById('memory').value='';await load();
+ };
+ await load();
+})();
+</script></body></html>
