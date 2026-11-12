@@ -13,13 +13,17 @@ async function scenario(name,handle,expected){
  const user={id:'user-1'};
  let proposalsQueried=0;
  let authListener=null;
+ const inserted=[];
  const db={
   auth:{getUser:async()=>({data:{user:handle===null?null:user},error:null}),onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
    if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle},error:null})})})};
    if(table==='yuki_memory_proposals'){
     proposalsQueried++;
-    return {select:()=>({eq:()=>({order:()=>({limit:async()=>({data:[],error:null})})})})};
+    return {
+     select:()=>({eq:()=>({order:()=>({limit:async()=>({data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null})})})}),
+     insert:async row=>{inserted.push(row);return {error:null};}
+    };
    }
    throw Error('Unexpected table '+table);
   }
@@ -33,7 +37,16 @@ async function scenario(name,handle,expected){
  assert.equal(window.document.getElementById('propose').disabled,handle!=='jesus',name+': proposal access');
  if(handle==='jesus'){
   assert.equal(typeof authListener,'function','auth listener registered');
-  window.document.getElementById('memory').value='PRIVATE DRAFT';
+  const draft=window.document.getElementById('memory');
+  draft.value='A memory awaiting individual approval';
+  window.document.getElementById('propose').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(inserted.length,1,'one proposal inserted');
+  assert.equal(inserted[0].status,'pending','new memories are pending, never approved');
+  assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
+  assert.equal(inserted[0].visibility,'private','default memory is private');
+  assert.equal(draft.value,'','draft cleared after successful submission');
+  draft.value='PRIVATE DRAFT';
   authListener('SIGNED_OUT',null);
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
   assert.equal(window.document.getElementById('propose').disabled,true,'submission disabled on sign-out');
