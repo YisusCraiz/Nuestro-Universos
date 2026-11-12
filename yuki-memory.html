@@ -5,10 +5,10 @@
 :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#171322;color:#f9f1ff}
 body{max-width:780px;margin:0 auto;padding:20px}h1{color:#f5d5ff}p{line-height:1.5}
 .panel{background:#292039;border:1px solid #58456a;border-radius:18px;padding:20px;margin:16px 0}
-textarea,select,button{font:inherit;border-radius:10px;padding:11px}textarea,select{background:#171322;color:white;border:1px solid #77678c;box-sizing:border-box;width:100%}
+textarea,select,button,input{font:inherit;border-radius:10px;padding:11px}textarea,select,input{background:#171322;color:white;border:1px solid #77678c;box-sizing:border-box;width:100%}
 textarea{min-height:100px;resize:vertical}button{background:#9d79d7;color:#161021;border:0;cursor:pointer;margin:4px 5px 4px 0}
 button.secondary{background:#423650;color:white}button.danger{background:#a94564;color:white}
-button:disabled{opacity:.5;cursor:wait}button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f0baff;outline-offset:2px}@media(max-width:520px){body{padding:12px}.panel{padding:14px}button{min-height:44px}article textarea{min-height:125px}}label{display:block;margin:12px 0 6px}
+button:disabled{opacity:.5;cursor:wait}button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #f0baff;outline-offset:2px}@media(max-width:520px){body{padding:12px}.panel{padding:14px}button{min-height:44px}article textarea{min-height:125px}}label{display:block;margin:12px 0 6px}
 small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats span{padding:8px 12px;background:#3a2d4d;border-radius:12px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.toolbar select{max-width:240px}article{border-top:1px solid #574769;padding:15px 0;overflow-wrap:anywhere}
 .status{font-weight:bold}#notice{min-height:1.5em}a{color:#e2b9ff}
 </style>
@@ -18,12 +18,15 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
 <p class="muted">Esta página requiere tu sesión de Supabase y verifica el perfil de Yisus. Nadie más puede consultar tus propuestas. La conexión con Gemini se activará después de completar las pruebas de privacidad.</p>
 <section class="panel"><h2>Nuevo recuerdo pendiente</h2>
 <label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
-<label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
+<small id="memory-count">0 / 4000 caracteres</small><label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
 <button id="propose">Guardar para revisar</button></section>
-<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><div class="toolbar"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><p id="notice" role="status" aria-live="polite"></p><div id="items"></div></section>
+<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><div class="toolbar"><label for="search">Buscar</label><input id="search" type="search" placeholder="Buscar en mis recuerdos" autocomplete="off" aria-label="Buscar recuerdos"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><p id="notice" role="status" aria-live="polite"></p><div id="items"></div></section>
 <script>
 (async()=>{
- const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter');
+ const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter'),search=document.getElementById('search');
+ const memoryInput=document.getElementById('memory');
+ memoryInput.addEventListener('input',()=>{document.getElementById('memory-count').textContent=memoryInput.value.length+' / 4000 caracteres';});
+ search.addEventListener('input',()=>render(cached));
  let cached=[];
  let sessionActive=true;
  const requireSession=async()=>{
@@ -56,7 +59,8 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   for(const [key,label] of [['pending','Pendientes'],['approved','Aprobados'],['rejected','Rechazados']]){
    const count=document.createElement('span');count.textContent=label+': '+data.filter(x=>x.status===key).length;stats.append(count);
   }
-  const shown=data.filter(x=>filter.value==='all'||x.status===filter.value);
+  const query=search.value.trim().toLocaleLowerCase();
+  const shown=data.filter(x=>(filter.value==='all'||x.status===filter.value)&&(!query||x.memory_text.toLocaleLowerCase().includes(query)));
   if(!shown.length){items.textContent=data.length?'No hay recuerdos con ese estado.':'Todavía no hay propuestas.';return;}
   for(const entry of shown){
    const card=document.createElement('article'),heading=document.createElement('p'),edit=document.createElement('textarea'),level=document.createElement('select');
@@ -89,7 +93,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   const {error}=await db.from('yuki_memory_proposals').insert({owner_id:user.id,memory_text:text,visibility:document.getElementById('visibility').value,status:'pending'});
   btn.disabled=false;
   if(error){say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
-  document.getElementById('memory').value='';await load();
+  memoryInput.value='';memoryInput.dispatchEvent(new Event('input'));await load();
  };
  db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){sessionActive=false;document.getElementById('propose').disabled=true;items.replaceChildren();stats.replaceChildren();cached=[];say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
  await load();
