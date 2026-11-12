@@ -12,8 +12,9 @@ async function scenario(name,handle,expected){
  window.UNIVERSE_CONFIG={supabaseUrl:'https://example.supabase.co',supabasePublishableKey:'public-test-key'};
  const user={id:'user-1'};
  let proposalsQueried=0;
+ let authListener=null;
  const db={
-  auth:{getUser:async()=>({data:{user:handle===null?null:user},error:null}),onAuthStateChange:()=>{}},
+  auth:{getUser:async()=>({data:{user:handle===null?null:user},error:null}),onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
    if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle},error:null})})})};
    if(table==='yuki_memory_proposals'){
@@ -30,6 +31,14 @@ async function scenario(name,handle,expected){
  assert.ok(notice.includes(expected),name+': unexpected notice '+notice);
  assert.equal(proposalsQueried,handle==='jesus'?1:0,name+': unauthorized memory query');
  assert.equal(window.document.getElementById('propose').disabled,handle!=='jesus',name+': proposal access');
+ if(handle==='jesus'){
+  assert.equal(typeof authListener,'function','auth listener registered');
+  window.document.getElementById('memory').value='PRIVATE DRAFT';
+  authListener('SIGNED_OUT',null);
+  assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
+  assert.equal(window.document.getElementById('propose').disabled,true,'submission disabled on sign-out');
+  assert.equal(window.document.getElementById('items').children.length,0,'items cleared on sign-out');
+ }
  assert.deepEqual(errors.map(e=>e.message),[],name+': browser script errors');
  window.close();
  console.log('PASS',name);
