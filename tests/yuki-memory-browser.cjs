@@ -15,6 +15,7 @@ async function scenario(name,handle,expected){
  let authListener=null;
  const inserted=[];
  const mutations=[];
+ let mutationRows=true;
  const db={
   auth:{getUser:async()=>({data:{user:handle===null?null:user},error:null}),onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
@@ -24,7 +25,7 @@ async function scenario(name,handle,expected){
     return {
      select:()=>({eq:()=>({order:()=>({limit:async()=>({data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null})})})}),
      insert:async row=>{inserted.push(row);return {error:null};},
-     update:row=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'update',row});return {data:[{id:'proposal-0'}],error:null};}})})}),
+     update:row=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'update',row});return {data:mutationRows?[{id:'proposal-0'}]:[],error:null};}})})}),
      delete:()=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'delete'});return {data:[{id:'proposal-0'}],error:null};}})})})
     };
    }
@@ -72,6 +73,11 @@ async function scenario(name,handle,expected){
   buttons.find(x=>x.textContent==='Eliminar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.at(-1)?.type,'delete','delete action requires confirmation');
+  mutationRows=false;
+  buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Rechazar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(window.document.getElementById('notice').textContent.includes('no se actualizó'),'zero-row update reports error');
   draft.value='PRIVATE DRAFT';
   authListener('SIGNED_OUT',null);
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
