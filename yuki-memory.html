@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
 <title>Yuki · Memoria privada</title>
 <style>
 :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#171322;color:#f9f1ff}
@@ -39,6 +39,8 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  };
  filter.onchange=()=>render(cached);
  const say=(s)=>notice.textContent=s;
+ // Do not retain sensitive draft text in session history when leaving the panel.
+ const clearSensitive=()=>{items.replaceChildren();stats.replaceChildren();cached=[];memoryInput.value='';more.hidden=true;};
  const config=window.UNIVERSE_CONFIG;
  if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo iniciar Supabase.');return;}
  const db=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
