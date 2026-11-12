@@ -29,7 +29,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  const requireSession=async()=>{
   if(!sessionActive)throw Error('La sesión cambió. Vuelve a iniciar sesión.');
   const {data:{user:currentUser},error}=await db.auth.getUser();
-  if(error||!currentUser||currentUser.id!==user.id){sessionActive=false;items.replaceChildren();stats.replaceChildren();cached=[];throw Error('La sesión ya no corresponde a Yisus.');}
+  if(!sessionActive||error||!currentUser||currentUser.id!==user.id){sessionActive=false;document.getElementById('propose').disabled=true;items.replaceChildren();stats.replaceChildren();cached=[];throw Error('La sesión ya no corresponde a Yisus.');}
  };
  filter.onchange=()=>render(cached);
  const say=(s)=>notice.textContent=s;
@@ -44,6 +44,8 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   await requireSession();
   const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(100);
   if(!sessionActive)return;
+  const {data:{user:latestUser},error:latestError}=await db.auth.getUser();
+  if(latestError||latestUser?.id!==user.id||!sessionActive){sessionActive=false;items.replaceChildren();stats.replaceChildren();cached=[];say('La sesión cambió mientras se cargaban los recuerdos.');return;}
   if(error){items.replaceChildren();stats.replaceChildren();cached=[];say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return;}
   say('Tus recuerdos solo están disponibles para tu cuenta.');
   cached=data;
@@ -83,7 +85,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   const btn=document.getElementById('propose'),text=document.getElementById('memory').value.trim();
   if(!text){say('Escribe un recuerdo primero.');return;}
   btn.disabled=true;
-  try{await requireSession();}catch(e){say(e.message);return;}
+  try{await requireSession();}catch(e){say(e.message);btn.disabled=false;return;}
   const {error}=await db.from('yuki_memory_proposals').insert({owner_id:user.id,memory_text:text,visibility:document.getElementById('visibility').value,status:'pending'});
   btn.disabled=false;
   if(error){say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
