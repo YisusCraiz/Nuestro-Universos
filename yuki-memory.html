@@ -25,6 +25,12 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
 (async()=>{
  const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter');
  let cached=[];
+ let sessionActive=true;
+ const requireSession=async()=>{
+  if(!sessionActive)throw Error('La sesión cambió. Vuelve a iniciar sesión.');
+  const {data:{user:currentUser},error}=await db.auth.getUser();
+  if(error||!currentUser||currentUser.id!==user.id){sessionActive=false;items.replaceChildren();stats.replaceChildren();cached=[];throw Error('La sesión ya no corresponde a Yisus.');}
+ };
  filter.onchange=()=>render(cached);
  const say=(s)=>notice.textContent=s;
  const config=window.UNIVERSE_CONFIG;
@@ -35,7 +41,9 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',user.id).single();
  if(profileError||profile?.handle!=='jesus'){say('Este panel de importación está reservado para Yisus.');document.getElementById('propose').disabled=true;return;}
  async function load(){
+  await requireSession();
   const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(100);
+  if(!sessionActive)return;
   if(error){items.replaceChildren();stats.replaceChildren();cached=[];say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return;}
   say('Tus recuerdos solo están disponibles para tu cuenta.');
   cached=data;
@@ -59,7 +67,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
    level.value=entry.visibility;
    card.append(heading,edit,level);
    const actions=document.createElement('div');
-   const action=(title,kind,fn)=>{const b=document.createElement('button');b.textContent=title;b.className=kind||'';b.onclick=async()=>{b.disabled=true;try{await fn();await load()}catch(e){say('No se pudo guardar: '+e.message)}finally{b.disabled=false}};actions.append(b)};
+   const action=(title,kind,fn)=>{const b=document.createElement('button');b.textContent=title;b.className=kind||'';b.onclick=async()=>{b.disabled=true;try{await requireSession();await fn();if(sessionActive)await load()}catch(e){say('No se pudo guardar: '+e.message)}finally{b.disabled=false}};actions.append(b)};
    const update=async(status)=>{const text=edit.value.trim();if(!text)throw Error('El texto no puede estar vacío.');
     const {error}=await db.from('yuki_memory_proposals').update({memory_text:text,visibility:level.value,status}).eq('id',entry.id).eq('owner_id',user.id);
     if(error)throw error;
@@ -75,12 +83,13 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   const btn=document.getElementById('propose'),text=document.getElementById('memory').value.trim();
   if(!text){say('Escribe un recuerdo primero.');return;}
   btn.disabled=true;
+  try{await requireSession();}catch(e){say(e.message);return;}
   const {error}=await db.from('yuki_memory_proposals').insert({owner_id:user.id,memory_text:text,visibility:document.getElementById('visibility').value,status:'pending'});
   btn.disabled=false;
   if(error){say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
   document.getElementById('memory').value='';await load();
  };
- db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){document.getElementById('propose').disabled=true;items.replaceChildren();stats.replaceChildren();cached=[];say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
+ db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){sessionActive=false;document.getElementById('propose').disabled=true;items.replaceChildren();stats.replaceChildren();cached=[];say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
  await load();
 })();
 </script></body></html>
