@@ -52,7 +52,7 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
     if(error)throw error;
    };
    action('Guardar cambios','secondary',()=>update('pending'));
-   action('Aprobar','',()=>update('approved'));
+   action('Aprobar','',async()=>{if(!confirm('¿Aprobar individualmente este recuerdo? Solo se guardará en tu cuenta; Gemini y Julie aún no tendrán acceso.'))return;await update('approved')});
    action('Rechazar','secondary',()=>update('rejected'));
    action('Eliminar','danger',async()=>{if(!confirm('¿Eliminar este recuerdo?'))return;const {error}=await db.from('yuki_memory_proposals').delete().eq('id',entry.id).eq('owner_id',user.id);if(error)throw error});
    card.append(actions);items.append(card);
@@ -67,6 +67,7 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
   if(error){say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
   document.getElementById('memory').value='';await load();
  };
+ db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){document.getElementById('propose').disabled=true;items.replaceChildren();say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
  await load();
 })();
 </script></body></html>
