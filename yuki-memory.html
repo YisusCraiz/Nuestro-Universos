@@ -9,7 +9,7 @@ textarea,select,button{font:inherit;border-radius:10px;padding:11px}textarea,sel
 textarea{min-height:100px;resize:vertical}button{background:#9d79d7;color:#161021;border:0;cursor:pointer;margin:4px 5px 4px 0}
 button.secondary{background:#423650;color:white}button.danger{background:#a94564;color:white}
 button:disabled{opacity:.5;cursor:wait}label{display:block;margin:12px 0 6px}
-small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;overflow-wrap:anywhere}
+small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats span{padding:8px 12px;background:#3a2d4d;border-radius:12px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.toolbar select{max-width:240px}article{border-top:1px solid #574769;padding:15px 0;overflow-wrap:anywhere}
 .status{font-weight:bold}#notice{min-height:1.5em}a{color:#e2b9ff}
 </style>
 <script src="config.js"></script><script src="assets/supabase.js"></script></head>
@@ -20,10 +20,12 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
 <label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
 <label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
 <button id="propose">Guardar para revisar</button></section>
-<section class="panel"><h2>Mis propuestas</h2><p id="notice" role="status" aria-live="polite"></p><div id="items"></div></section>
+<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><div class="toolbar"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><p id="notice" role="status" aria-live="polite"></p><div id="items"></div></section>
 <script>
 (async()=>{
- const notice=document.getElementById('notice'),items=document.getElementById('items');
+ const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter');
+ let cached=[];
+ filter.onchange=()=>render(cached);
  const say=(s)=>notice.textContent=s;
  const config=window.UNIVERSE_CONFIG;
  if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo iniciar Supabase.');return;}
@@ -36,9 +38,17 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
   const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(100);
   if(error){say('No se pudo cargar la memoria. Puede que la tabla todavía no esté instalada.');return;}
   say('Tus recuerdos solo están disponibles para tu cuenta.');
-  items.replaceChildren();
-  if(!data.length){items.textContent='Todavía no hay propuestas.';return;}
-  for(const entry of data){
+  cached=data;
+  render(data);
+ }
+ function render(data){
+  items.replaceChildren();stats.replaceChildren();
+  for(const [key,label] of [['pending','Pendientes'],['approved','Aprobados'],['rejected','Rechazados']]){
+   const count=document.createElement('span');count.textContent=label+': '+data.filter(x=>x.status===key).length;stats.append(count);
+  }
+  const shown=data.filter(x=>filter.value==='all'||x.status===filter.value);
+  if(!shown.length){items.textContent=data.length?'No hay recuerdos con ese estado.':'Todavía no hay propuestas.';return;}
+  for(const entry of shown){
    const card=document.createElement('article'),heading=document.createElement('p'),edit=document.createElement('textarea'),level=document.createElement('select');
    heading.className='status';heading.textContent=entry.status==='pending'?'Pendiente de aprobación':entry.status==='approved'?'Aprobado':'Rechazado';
    if(entry.status==='approved'&&entry.approved_at){const stamp=document.createElement('small');stamp.textContent=' · '+new Date(entry.approved_at).toLocaleString();heading.append(stamp);}
@@ -70,7 +80,7 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
   if(error){say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
   document.getElementById('memory').value='';await load();
  };
- db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){document.getElementById('propose').disabled=true;items.replaceChildren();say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
+ db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){document.getElementById('propose').disabled=true;items.replaceChildren();stats.replaceChildren();cached=[];say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
  await load();
 })();
 </script></body></html>
