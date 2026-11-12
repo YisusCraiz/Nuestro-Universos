@@ -87,7 +87,12 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
     const {error}=await db.from('yuki_memory_proposals').update({memory_text:text,visibility:level.value,status}).eq('id',entry.id).eq('owner_id',user.id);
     if(error)throw error;
    };
-   action('Guardar cambios','secondary',()=>update('pending'));
+   action('Guardar cambios','secondary',async()=>{
+    const changed=edit.value.trim()!==entry.memory_text||level.value!==entry.visibility;
+    if(!changed){say('No hay cambios que guardar.');return;}
+    if(entry.status==='approved'&&!confirm('Modificar un recuerdo aprobado revocará su aprobación hasta que lo revises otra vez. ¿Continuar?'))return;
+    await update(entry.status);
+   });
    action('Aprobar','',async()=>{if(!confirm('¿Aprobar individualmente este recuerdo? Solo se guardará en tu cuenta; Gemini y Julie aún no tendrán acceso.'))return;await update('approved')});
    action('Rechazar','secondary',()=>update('rejected'));
    action('Eliminar','danger',async()=>{if(!confirm('¿Eliminar este recuerdo?'))return;const {error}=await db.from('yuki_memory_proposals').delete().eq('id',entry.id).eq('owner_id',user.id);if(error)throw error});
