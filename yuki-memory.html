@@ -29,6 +29,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  search.addEventListener('input',()=>render(cached));
  let cached=[];
  let pageSize=100;
+ let loadRevision=0;
  const more=document.getElementById('more');
  more.onclick=async()=>{pageSize+=100;more.disabled=true;try{await load();}catch(e){say(e.message);}finally{more.disabled=false;}};
  let sessionActive=true;
@@ -40,7 +41,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  filter.onchange=()=>render(cached);
  const say=(s)=>notice.textContent=s;
  // Do not retain sensitive draft text in session history when leaving the panel.
- const clearSensitive=()=>{items.replaceChildren();stats.replaceChildren();cached=[];memoryInput.value='';more.hidden=true;};
+ const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();cached=[];memoryInput.value='';more.hidden=true;};
  const config=window.UNIVERSE_CONFIG;
  if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo iniciar Supabase.');return;}
  const db=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
@@ -49,12 +50,14 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',user.id).single();
  if(profileError||profile?.handle!=='jesus'){say('Este panel de importación está reservado para Yisus.');document.getElementById('propose').disabled=true;return;}
  async function load(){
+  const revision=++loadRevision;
   await requireSession();
   const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(pageSize+1);
-  if(!sessionActive)return;
+  if(!sessionActive||revision!==loadRevision)return;
   const {data:{user:latestUser},error:latestError}=await db.auth.getUser();
+  if(revision!==loadRevision)return;
   if(latestError||latestUser?.id!==user.id||!sessionActive){sessionActive=false;items.replaceChildren();stats.replaceChildren();cached=[];more.hidden=true;say('La sesión cambió mientras se cargaban los recuerdos.');return;}
-  if(error){items.replaceChildren();stats.replaceChildren();cached=[];more.hidden=true;say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return;}
+  if(error||!Array.isArray(data)){items.replaceChildren();stats.replaceChildren();cached=[];more.hidden=true;say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return;}
   say('Tus recuerdos solo están disponibles para tu cuenta.');
   more.hidden=data.length<=pageSize;
   cached=data.slice(0,pageSize);
