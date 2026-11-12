@@ -50,8 +50,17 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
   assert.equal(draft.value,'','draft cleared after successful submission');
-  window.confirm=()=>false;
+  const editable=window.document.querySelector('#items article textarea');
+  editable.value='Unsaved modification';
+  window.confirm=()=>true;
   let buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Aprobar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,0,'unsaved edits must block approval');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Primero guarda los cambios'),'unsaved edit warning shown');
+  editable.value='A memory awaiting individual approval';
+  window.confirm=()=>false;
+  buttons=[...window.document.querySelectorAll('#items article button')];
   assert.equal(buttons.length,4,'four review actions available');
   buttons.find(x=>x.textContent==='Aprobar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
