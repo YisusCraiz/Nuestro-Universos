@@ -32,5 +32,10 @@ jobs:
           for (const required of ["db.auth.getUser()", "profile?.handle!=='jesus'", ".eq('owner_id',user.id)", "db.auth.onAuthStateChange", "confirm("]) {
             assert.ok(html.includes(required), 'Missing required privacy or consent control: '+required);
           }
+          assert.ok(!html.includes('\\\\n const {data:profile'), 'Escaped newline corrupted script');
+          assert.ok(html.includes("new Date(entry.approved_at)"), 'Approval timestamp not displayed');
+          assert.ok(html.includes("await requireSession()"), 'Auth must be checked before mutations');
+          assert.ok(html.includes("clearSensitive()"), 'Sensitive UI data not cleared on sign-out');
+          assert.ok(html.includes("memory_text.toLocaleLowerCase()"), 'Client-side memory search missing');
           console.log('PASS: panel syntax and privacy/consent control presence');
           NODE
