@@ -26,7 +26,7 @@ async function scenario(name,handle,expected){
      select:()=>({eq:()=>({order:()=>({limit:async()=>({data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null})})})}),
      insert:async row=>{inserted.push(row);return {error:null};},
      update:row=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'update',row});return {data:mutationRows?[{id:'proposal-0'}]:[],error:null};}})})}),
-     delete:()=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'delete'});return {data:[{id:'proposal-0'}],error:null};}})})})
+     delete:()=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'delete'});return {data:mutationRows?[{id:'proposal-0'}]:[],error:null};}})})})
     };
    }
    throw Error('Unexpected table '+table);
