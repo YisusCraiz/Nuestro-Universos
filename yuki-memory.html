@@ -14,7 +14,7 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
 </style>
 <script src="config.js"></script><script src="assets/supabase.js"></script></head>
 <body><a href="./">← Nuestro Universo</a><h1>✧ Memoria de Yuki</h1>
-<p>Los recuerdos no se sincronizan automáticamente desde ChatGPT. Pega únicamente el recuerdo que deseas proponer. <strong>Solo se guardará tras tu aprobación individual.</strong></p>
+<p>Los recuerdos no se sincronizan automáticamente desde ChatGPT. Pega únicamente el recuerdo que deseas proponer. <strong>Se guardará como propuesta pendiente y no se utilizará hasta que la apruebes individualmente.</strong></p>
 <p class="muted">Esta página requiere tu sesión de Supabase y verifica el perfil de Yisus. Nadie más puede consultar tus propuestas. La conexión con Gemini se activará después de completar las pruebas de privacidad.</p>
 <section class="panel"><h2>Nuevo recuerdo pendiente</h2>
 <label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
@@ -29,7 +29,9 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
  if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo iniciar Supabase.');return;}
  const db=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
  const {data:{user},error:authError}=await db.auth.getUser();
- if(authError||!user){say('Inicia sesión en Nuestro Universo antes de abrir esta página.');document.getElementById('propose').disabled=true;return;}\n const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',user.id).single();\n if(profileError||profile?.handle!=='jesus'){say('Este panel de importación está reservado para Yisus.');document.getElementById('propose').disabled=true;return;}
+ if(authError||!user){say('Inicia sesión en Nuestro Universo antes de abrir esta página.');document.getElementById('propose').disabled=true;return;}
+ const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',user.id).single();
+ if(profileError||profile?.handle!=='jesus'){say('Este panel de importación está reservado para Yisus.');document.getElementById('propose').disabled=true;return;}
  async function load(){
   const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(100);
   if(error){say('No se pudo cargar la memoria. Puede que la tabla todavía no esté instalada.');return;}
