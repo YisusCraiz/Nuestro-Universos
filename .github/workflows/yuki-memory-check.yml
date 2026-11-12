@@ -18,6 +18,10 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Install isolated DOM test dependency
+        run: npm install --no-save --ignore-scripts --no-audit --no-fund jsdom@26.1.0
+      - name: Run account access browser-DOM smoke tests
+        run: node tests/yuki-memory-browser.cjs
       - name: Check embedded JavaScript syntax and critical privacy controls
         shell: bash
         run: |
