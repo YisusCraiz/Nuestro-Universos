@@ -78,6 +78,10 @@ async function scenario(name,handle,expected){
   buttons.find(x=>x.textContent==='Rechazar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.ok(window.document.getElementById('notice').textContent.includes('no se actualizó'),'zero-row update reports error');
+  buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Eliminar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se eliminó ningún recuerdo'),'zero-row delete reports error');
   draft.value='PRIVATE DRAFT';
   authListener('SIGNED_OUT',null);
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
