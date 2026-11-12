@@ -14,6 +14,7 @@ async function scenario(name,handle,expected){
  let proposalsQueried=0;
  let authListener=null;
  const inserted=[];
+ const mutations=[];
  const db={
   auth:{getUser:async()=>({data:{user:handle===null?null:user},error:null}),onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
@@ -22,7 +23,9 @@ async function scenario(name,handle,expected){
     proposalsQueried++;
     return {
      select:()=>({eq:()=>({order:()=>({limit:async()=>({data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null})})})}),
-     insert:async row=>{inserted.push(row);return {error:null};}
+     insert:async row=>{inserted.push(row);return {error:null};},
+     update:row=>({eq:()=>({eq:async()=>{mutations.push({type:'update',row});return {error:null};}})}),
+     delete:()=>({eq:()=>({eq:async()=>{mutations.push({type:'delete'});return {error:null};}})})
     };
    }
    throw Error('Unexpected table '+table);
@@ -46,6 +49,20 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
   assert.equal(draft.value,'','draft cleared after successful submission');
+  window.confirm=()=>true;
+  let buttons=[...window.document.querySelectorAll('#items article button')];
+  assert.equal(buttons.length,4,'four review actions available');
+  buttons.find(x=>x.textContent==='Aprobar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.at(-1)?.row?.status,'approved','approval requires explicit action');
+  buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Rechazar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.at(-1)?.row?.status,'rejected','rejection updates proposal status');
+  buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Eliminar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.at(-1)?.type,'delete','delete action requires confirmation');
   draft.value='PRIVATE DRAFT';
   authListener('SIGNED_OUT',null);
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
