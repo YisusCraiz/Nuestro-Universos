@@ -29,3 +29,11 @@ Propuesta en rama, **no desplegada**. No se ha ejecutado SQL ni se ha conectado 
 - Integrar una exportación manual desde ChatGPT; una sincronización automática solo sería posible mediante una fuente/API explícitamente disponible y autorizada.
 
 **Esta rama no debe fusionarse hasta completar las pruebas de seguridad.**
+
+## Verificación realizada (12 noviembre 2026)
+- Se comprobó que existen perfiles `jesus` y `julisa` en la base productiva configurada en `config.js`.
+- Se simuló una sesión autenticada con el UUID del perfil `jesus`, se insertó una propuesta temporal y se cambió a la identidad de `julisa` en la misma transacción.
+- La consulta de `julisa` sobre el recuerdo temporal devolvió **0 filas**. La transacción se revirtió con `ROLLBACK`, sin persistir datos de prueba.
+- Se confirmó que RLS está activado y existen cuatro políticas para SELECT, INSERT, UPDATE y DELETE por propietario.
+- Esta prueba SQL **no sustituye** las pruebas E2E con sesión real en navegador ni demuestra aún que Gemini respete las reglas.
+- La interfaz de importación exige sesión de Supabase y perfil `jesus`; la verdadera barrera de acceso a los datos es RLS, no la verificación del navegador.
