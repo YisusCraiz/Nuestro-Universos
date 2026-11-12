@@ -33,7 +33,7 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
  const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',user.id).single();
  if(profileError||profile?.handle!=='jesus'){say('Este panel de importación está reservado para Yisus.');document.getElementById('propose').disabled=true;return;}
  async function load(){
-  const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(100);
+  const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(100);
   if(error){say('No se pudo cargar la memoria. Puede que la tabla todavía no esté instalada.');return;}
   say('Tus recuerdos solo están disponibles para tu cuenta.');
   items.replaceChildren();
@@ -41,6 +41,7 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
   for(const entry of data){
    const card=document.createElement('article'),heading=document.createElement('p'),edit=document.createElement('textarea'),level=document.createElement('select');
    heading.className='status';heading.textContent=entry.status==='pending'?'Pendiente de aprobación':entry.status==='approved'?'Aprobado':'Rechazado';
+   if(entry.status==='approved'&&entry.approved_at){const stamp=document.createElement('small');stamp.textContent=' · '+new Date(entry.approved_at).toLocaleString();heading.append(stamp);}
    edit.value=entry.memory_text;edit.maxLength=4000;
    for(const [value,label] of [['private','Solo yo'],['shared','Compartido (sin acceso de Julie aún)'],['surprise','Sorpresa protegida']]){
     const opt=document.createElement('option');opt.value=value;opt.textContent=label;level.append(opt);
@@ -50,7 +51,7 @@ small,.muted{color:#c9bdd7}article{border-top:1px solid #574769;padding:15px 0;o
    const actions=document.createElement('div');
    const action=(title,kind,fn)=>{const b=document.createElement('button');b.textContent=title;b.className=kind||'';b.onclick=async()=>{b.disabled=true;try{await fn();await load()}catch(e){say('No se pudo guardar: '+e.message)}finally{b.disabled=false}};actions.append(b)};
    const update=async(status)=>{const text=edit.value.trim();if(!text)throw Error('El texto no puede estar vacío.');
-    const {error}=await db.from('yuki_memory_proposals').update({memory_text:text,visibility:level.value,status,approved_at:status==='approved'?new Date().toISOString():null}).eq('id',entry.id).eq('owner_id',user.id);
+    const {error}=await db.from('yuki_memory_proposals').update({memory_text:text,visibility:level.value,status}).eq('id',entry.id).eq('owner_id',user.id);
     if(error)throw error;
    };
    action('Guardar cambios','secondary',()=>update('pending'));
