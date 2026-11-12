@@ -245,6 +245,95 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
   const messages = root.querySelector('#chat-log');
   messages.dataset.empty = uiText('Tu espacio para hablar, recordar y descubrir juntos.','Your space to talk, remember and explore together.');
   messageField.placeholder = uiText('¿Qué tienes en mente?','What’s on your mind?');
+  const questions = document.createElement('details');
+  questions.innerHTML = `<summary>${uiText('Preguntas para Julie', 'Questions for Julie')}</summary>
+    <p>${uiText('Julie decide si quiere responder y qué puede transmitir Yuki.', 'Julie decides whether to answer and what Yuki can pass along.')}</p>
+    <form><label>${uiText('Pregunta personal para Julie', 'Personal question for Julie')}
+      <textarea required maxlength="500" rows="2"></textarea></label>
+      <button>${uiText('Pedir permiso a Julie', 'Ask Julie for permission')}</button>
+    </form>
+    <button type="button" data-refresh>${uiText('Actualizar preguntas', 'Refresh questions')}</button>
+    <p role="status"></p><ul></ul>`;
+  chatForm.after(questions);
+  const questionForm = questions.querySelector('form');
+  const questionStatus = questions.querySelector('[role=status]');
+  const questionList = questions.querySelector('ul');
+  questionForm.hidden = viewer.handle !== 'jesus';
+  let questionRevision = 0;
+
+  async function loadQuestions() {
+    const revision = ++questionRevision;
+    const {data,error} = await db.from('yuki_personal_questions')
+      .select('id,recipient_id,question,decided_at,approved_reply')
+      .order('created_at',{ascending:false}).limit(100);
+    if (revision !== questionRevision || !host.isConnected) return;
+    if (error) {
+      questionStatus.textContent = uiText('No se pudieron cargar las preguntas.', 'Could not load the questions.');
+      return;
+    }
+    questionStatus.textContent = data.length ? '' : uiText('Todavía no hay preguntas.', 'No questions yet.');
+    questionList.replaceChildren(...data.map(row => {
+      const item = document.createElement('li');
+      const question = document.createElement('p');
+      question.textContent = row.question;
+      item.append(question);
+      if (row.decided_at) {
+        const answer = document.createElement('p');
+        answer.textContent = row.approved_reply
+          ? uiText('Yuki · Julie autorizó esta respuesta: ', 'Yuki · Julie approved this reply: ') + row.approved_reply
+          : uiText('Julie prefirió no responder.', 'Julie chose not to answer.');
+        item.append(answer);
+      } else if (row.recipient_id === viewer.id) {
+        const form = document.createElement('form');
+        form.innerHTML = `<label>${uiText('Escribe lo que Yuki puede transmitir', 'Write what Yuki can pass along')}
+          <textarea required maxlength="500" rows="2"></textarea></label>
+          <button>${uiText('Aprobar y responder', 'Approve and reply')}</button>
+          <button type="button">${uiText('No responder', 'Decline')}</button>`;
+        const field = form.querySelector('textarea');
+        const [accept, decline] = form.querySelectorAll('button');
+        const decide = async reply => {
+          accept.disabled = decline.disabled = true;
+          const {error} = await db.rpc('yuki_decide_personal_question',{p_id:row.id,p_reply:reply});
+          if (error) {
+            accept.disabled = decline.disabled = false;
+            questionStatus.textContent = uiText('No se pudo registrar tu decisión.', 'Could not record your decision.');
+          } else await loadQuestions();
+        };
+        form.onsubmit = event => {
+          event.preventDefault();
+          if (field.value.trim()) decide(field.value.trim());
+        };
+        decline.onclick = () => decide(null);
+        item.append(form);
+      } else {
+        const pending = document.createElement('p');
+        pending.textContent = uiText('Esperando la decisión de Julie.', 'Waiting for Julie’s decision.');
+        item.append(pending);
+      }
+      return item;
+    }));
+  }
+  questions.querySelector('[data-refresh]').onclick = loadQuestions;
+  questions.ontoggle = () => { if (questions.open) loadQuestions(); };
+  questionForm.onsubmit = async event => {
+    event.preventDefault();
+    const field = questionForm.querySelector('textarea');
+    const button = questionForm.querySelector('button');
+    const question = field.value.trim();
+    if (!question || button.disabled) return;
+    button.disabled = true;
+    try {
+      const {error} = await db.rpc('yuki_ask_julie',{p_question:question});
+      if (error) throw error;
+      if (field.value.trim() === question) field.value = '';
+      await loadQuestions();
+    } catch {
+      questionStatus.textContent = uiText('No se pudo enviar la pregunta.', 'Could not send the question.');
+    } finally {
+      button.disabled = false;
+    }
+  };
+
   const energy = root.querySelector('#energy');
   let energyData = null, energyRequest = 0;
   function paintEnergy() {
@@ -371,10 +460,10 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
       if (after) query = query.or('approved_at.lt.' + after.approved_at +
         ',and(approved_at.eq.' + after.approved_at + ',id.lt.' + after.id + ')');
       const [{data,error},{data:topics}]=await Promise.all([
-        query,db.from('yuki_memory_topics').select('memory_id,topic').eq('owner_id',viewer.id)
+        query,db.from('yuki_memory_topics').select('memory_id,topic,reply_for_julie').eq('owner_id',viewer.id)
       ]);
       if (error) throw error;
-      const topicByMemory=new Map((topics||[]).map(row=>[row.memory_id,row.topic]));
+      const topicByMemory=new Map((topics||[]).map(row=>[row.memory_id,row]));
       if (request !== revision || !host.isConnected) return;
       const list = root.querySelector('#approved');
       if (!after) list.replaceChildren();
@@ -386,10 +475,31 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
         const scope = document.createElement('small');
         scope.className = 'memory-scope';
         scope.textContent = row.visibility === 'shared' ? uiText('Compartido','Shared') : uiText('Solo tú','Only you');
-        const topic=topicByMemory.get(row.id);
+        const topicPermission=topicByMemory.get(row.id);
+        const topic=topicPermission?.topic;
         if(topic)scope.textContent=uiText('Solo tú · Tema autorizado: ','Only you · Allowed topic: ')+topic;
         item.append(scope,row.body);
         if(topic){
+          if (viewer.handle === 'jesus') {
+            const form = document.createElement('form');
+            form.innerHTML = `<label>${uiText('Respuesta que Yuki puede darle a Julie', 'Reply Yuki may give Julie')}
+              <textarea maxlength="450" rows="2"></textarea></label>
+              <small>${uiText('Guarda en blanco para retirar la respuesta.', 'Save it blank to withdraw the reply.')}</small>
+              <button>${uiText('Guardar respuesta', 'Save reply')}</button><small role="status"></small>`;
+            const reply = form.querySelector('textarea');
+            const save = form.querySelector('button');
+            const notice = form.querySelector('[role=status]');
+            reply.value = topicPermission.reply_for_julie || '';
+            form.onsubmit = async event => {
+              event.preventDefault();
+              if (save.disabled) return;
+              save.disabled = true;
+              const {error} = await db.rpc('yuki_set_topic_reply',{p_memory:row.id,p_reply:reply.value.trim()});
+              notice.textContent = error ? uiText('No se pudo guardar.', 'Could not save.') : uiText('Guardado.', 'Saved.');
+              save.disabled = false;
+            };
+            item.append(form);
+          }
           const revoke=document.createElement('button');
           revoke.type='button';
           revoke.textContent=uiText('Quitar permiso del tema','Revoke topic permission');
@@ -492,7 +602,7 @@ size.onclick=()=>{panel.hidden=true;avatar.setAttribute('aria-expanded','false')
   }
   const menuObserver = new MutationObserver(refreshActivities);
   menuObserver.observe(document.body, {subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:['hidden','data-nav']});
-  root.querySelector('#open-room').onclick = () => { stopTravel(); clearTimeout(idleTimer); room.showModal(); refreshActivities(); loadMemories(); loadHistory(); refreshEnergy(); };
+  root.querySelector('#open-room').onclick = () => { stopTravel(); clearTimeout(idleTimer); room.showModal(); refreshActivities(); loadMemories(); loadHistory(); if (questions.open) loadQuestions(); refreshEnergy(); };
   room.addEventListener('close', () => {
     chatSession++;
     revision++;

@@ -27,14 +27,14 @@
   if(host&&(!show || !host.isConnected || host.dataset.owner!==id)){dispose?.();dispose=null;host.remove();host=null;}
   if(!show||host)return;
   const current=document.createElement('div');current.dataset.owner=id;host=current;document.body.append(current);
-  import('./dev/yuki-avatar.js?v=room-6').then(({mountYuki})=>{if(host===current&&state.profile?.id===id&&allowed())dispose=mountYuki(current);}).catch(()=>{if(host===current){current.remove();host=null;}});
+  import('./dev/yuki-avatar.js?v=room-7').then(({mountYuki})=>{if(host===current&&state.profile?.id===id&&allowed())dispose=mountYuki(current);}).catch(()=>{if(host===current){current.remove();host=null;}});
  }
  function closeRoom(){roomRevision++;roomDispose?.();roomDispose=null;chatDispose?.();chatDispose=null;}
  async function roomChat(){
   if(chatDispose||!allowed())return;
   const id=state.profile.id,version=roomRevision,current=document.createElement('div');document.body.append(current);
   let cleanup;const close=()=>{cleanup?.();current.remove();if(chatDispose===close)chatDispose=null;};chatDispose=close;
-  try{const {mountYuki}=await import('./dev/yuki-avatar.js?v=room-6');if(roomRevision!==version||state.profile?.id!==id||!current.isConnected){close();return;}cleanup=mountYuki(current);current.shadowRoot.querySelector('aside').hidden=true;current.shadowRoot.querySelector('dialog').addEventListener('close',close,{once:true});current.openYuki();}catch{close();}
+  try{const {mountYuki}=await import('./dev/yuki-avatar.js?v=room-7');if(roomRevision!==version||state.profile?.id!==id||!current.isConnected){close();return;}cleanup=mountYuki(current);current.shadowRoot.querySelector('aside').hidden=true;current.shadowRoot.querySelector('dialog').addEventListener('close',close,{once:true});current.openYuki();}catch{close();}
  }
  async function showRoom(target,v,initialTab='room'){
   const version=roomRevision;
