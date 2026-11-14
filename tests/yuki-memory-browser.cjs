@@ -52,6 +52,16 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
   assert.ok(window.document.getElementById('load-info').textContent.includes('1 recuerdos cargados'),'loaded count is explicitly shown');
+  const cancelledEdit=window.document.querySelector('#items article textarea');
+  cancelledEdit.value='Unsaved content must survive cancelled approval';
+  const priorCancelledQueries=proposalsQueried;
+  window.confirm=()=>false;
+  const cancelledReject=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Rechazar');
+  cancelledReject.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(cancelledEdit.value,'Unsaved content must survive cancelled approval','cancelled rejection leaves local edits intact');
+  assert.equal(proposalsQueried,priorCancelledQueries,'cancelled action does not reload memories');
+  window.confirm=()=>true;
   const refresh=window.document.getElementById('refresh');
   const refreshEdit=window.document.querySelector('#items article textarea');
   refreshEdit.value='Unsubmitted edit stays here';
