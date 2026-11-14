@@ -181,7 +181,7 @@ async function scenario(name,handle,expected){
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Eliminar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
-  assert.ok(window.document.getElementById('notice').textContent.includes('No se eliminó ningún recuerdo'),'zero-row delete reports error');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'zero-row delete refreshes the current version');
   draft.value='PRIVATE DRAFT';
   switchedUser=true;
   buttons=[...window.document.querySelectorAll('#items article button')];
