@@ -60,7 +60,7 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.length,beforeStaleSave+1,'stale save attempted a guarded update');
   assert.equal(inserted[0].memory_text,'A newer edit from another device','stale save preserves concurrent text');
-  assert.ok(window.document.getElementById('notice').textContent.includes('no se actualizó'),'stale save reports conflict');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'stale save reports conflict');
   inserted[0].memory_text='A memory awaiting individual approval';
 
   assert.equal(draft.value,'','draft cleared after successful submission');
@@ -118,7 +118,7 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.length,beforeDeleteConflict+1,'stale delete attempted a guarded operation');
   assert.equal(inserted[0].visibility,'shared','concurrent privacy edit survives stale delete');
-  assert.ok(window.document.getElementById('notice').textContent.includes('No se eliminó'),'stale delete reports conflict');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'stale delete reports conflict');
   inserted[0].visibility='private';
 
   // A stale pending card must not approve text changed on another device.
@@ -131,7 +131,7 @@ async function scenario(name,handle,expected){
   assert.equal(mutations.length,beforeStaleApprove+1,'stale approval attempted one guarded update');
   assert.equal(inserted[0].status,'pending','stale approval cannot approve changed text');
   assert.equal(inserted[0].memory_text,'Updated from another device','concurrent text remains intact');
-  assert.ok(window.document.getElementById('notice').textContent.includes('No se aprobó'),'stale approval reports conflict');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'stale approval reports conflict');
   inserted[0].memory_text='A memory awaiting individual approval';
 
   // A stale approved card must not undo a concurrent status change.
@@ -149,7 +149,7 @@ async function scenario(name,handle,expected){
   assert.equal(mutations.length,beforePrivacyConflict+1,'stale revocation attempts guarded update');
   assert.equal(inserted[0].status,'approved','stale revocation cannot overwrite changed visibility');
   assert.equal(inserted[0].visibility,'shared','concurrent visibility change remains intact');
-  assert.ok(window.document.getElementById('notice').textContent.includes('No se pudo revocar'),'visibility conflict is reported');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'visibility conflict is reported');
   inserted[0].visibility='private';
   // The stale card is reloaded after the failed update.
   const currentRevoke=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Revocar aprobación');
@@ -161,7 +161,7 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.length,beforeStale+1,'stale revoke attempted exactly one guarded update');
   assert.equal(inserted[0].status,'rejected','stale revocation did not overwrite concurrent rejection');
-  assert.ok(window.document.getElementById('notice').textContent.includes('No se pudo revocar'),'stale revoke reports conflict');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'stale revoke reports conflict');
   // The stale update refreshes the panel to the rejected state.
 
   buttons=[...window.document.querySelectorAll('#items article button')];
@@ -177,7 +177,7 @@ async function scenario(name,handle,expected){
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Rechazar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
-  assert.ok(window.document.getElementById('notice').textContent.includes('no se actualizó'),'zero-row update reports error');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'zero-row update reports error');
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Eliminar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
