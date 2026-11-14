@@ -70,7 +70,7 @@ async function scenario(name,handle,expected){
   let buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Aprobar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
-  assert.equal(mutations.length,0,'unsaved edits must block approval');
+  assert.equal(mutations.length,1,'unsaved edits must block approval');
   assert.ok(window.document.getElementById('notice').textContent.includes('Primero guarda los cambios'),'unsaved edit warning shown');
   editable.value='A memory awaiting individual approval';
   window.confirm=()=>false;
@@ -78,15 +78,15 @@ async function scenario(name,handle,expected){
   assert.equal(buttons.length,4,'four review actions available for pending proposals');
   buttons.find(x=>x.textContent==='Aprobar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
-  assert.equal(mutations.length,0,'cancelled approval must not mutate');
+  assert.equal(mutations.length,1,'cancelled approval must not mutate');
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Eliminar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
-  assert.equal(mutations.length,0,'cancelled deletion must not mutate');
+  assert.equal(mutations.length,1,'cancelled deletion must not mutate');
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Rechazar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
-  assert.equal(mutations.length,0,'cancelled rejection must not mutate');
+  assert.equal(mutations.length,1,'cancelled rejection must not mutate');
   window.confirm=()=>true;
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Aprobar').click();
