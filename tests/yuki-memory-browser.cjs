@@ -97,6 +97,19 @@ async function scenario(name,handle,expected){
   assert.deepEqual(Object.keys(mutations.at(-1).row),['status'],'revocation must not overwrite memory text or visibility');
   assert.equal(inserted[0].memory_text,'A memory awaiting individual approval','unsaved text is not persisted during revocation');
   assert.equal(inserted[0].status,'pending','revocation persisted pending status');
+  // A stale pending card must not approve text changed on another device.
+  const staleApprove=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Aprobar');
+  assert.ok(staleApprove,'pending card offers approval');
+  inserted[0].memory_text='Updated from another device';
+  const beforeStaleApprove=mutations.length;
+  staleApprove.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,beforeStaleApprove+1,'stale approval attempted one guarded update');
+  assert.equal(inserted[0].status,'pending','stale approval cannot approve changed text');
+  assert.equal(inserted[0].memory_text,'Updated from another device','concurrent text remains intact');
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se aprobó'),'stale approval reports conflict');
+  inserted[0].memory_text='A memory awaiting individual approval';
+
   // A stale approved card must not undo a concurrent status change.
   const reloadButton=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Aprobar');
   assert.ok(reloadButton,'pending card shows approve action after revocation');
