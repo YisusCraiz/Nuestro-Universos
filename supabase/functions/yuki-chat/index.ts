@@ -37,6 +37,19 @@ Deno.serve(async req => {
       admin.rpc('yuki_topic_reply_for_julie',{p_viewer:uid,p_message:payload.message})
     ]);
     if (memories.error || activities.error || history.error || profile.error) return json({},503);
+    // Opt-in rollout: only Yisus may use his individually approved proposals as Gemini context.
+    // Keep disabled until the owner reviews AI processing consent and live access tests pass.
+    let reviewedMemories: string[] = [];
+    if (Deno.env.get('YUKI_REVIEWED_MEMORY_AI_ENABLED') === 'true' && profile.data.handle === 'jesus') {
+      const reviewed = await db.from('yuki_memory_proposals')
+        .select('memory_text')
+        .eq('owner_id',uid)
+        .eq('status','approved')
+        .order('approved_at',{ascending:false})
+        .limit(20);
+      if (reviewed.error) return json({code:'reviewed_memory_unavailable'},503);
+      reviewedMemories = (reviewed.data ?? []).map(row=>row.memory_text).filter((value):value is string=>typeof value==='string');
+    }
     const saved = await db.from('yuki_chat_turns').insert({id:payload.requestId,message:payload.message.trim()});
     if(saved.error) return json({code:'save_failed'},saved.error.code==='23505'?409:503);
     const saveReply = async (reply:string,suggestion:string|null=null) => {
@@ -62,7 +75,7 @@ Deno.serve(async req => {
       body:JSON.stringify({
         systemInstruction:{parts:[{text:instructions}]},
         contents:[{role:'user',parts:[{text:JSON.stringify({
-          message:payload.message,speaker:profile.data.handle==='jesus'?'Jesús':'Julie',recentConversation:history.data.reverse(),approvedMemories:memories.data,visibleActivities:activities.data,followCurrentTopic:topicMatch.data===true
+          message:payload.message,speaker:profile.data.handle==='jesus'?'Jesús':'Julie',recentConversation:history.data.reverse(),approvedMemories:memories.data,reviewedMemories,visibleActivities:activities.data,followCurrentTopic:topicMatch.data===true
         })}]}],
         generationConfig:{maxOutputTokens:900}
       }),
