@@ -184,6 +184,7 @@ async function scenario(name,handle,expected){
   // The stale update refreshes the panel to the rejected state.
   let rejectedButtons=[...window.document.querySelectorAll('#items article button')];
   assert.ok(!rejectedButtons.some(x=>x.textContent==='Aprobar'),'rejected memory cannot be approved directly');
+  assert.ok(!rejectedButtons.some(x=>x.textContent==='Rechazar'),'rejected memory cannot be redundantly rejected');
   const restore=rejectedButtons.find(x=>x.textContent==='Volver a pendiente');
   assert.ok(restore,'rejected memory offers a return to review');
   restore.click();
