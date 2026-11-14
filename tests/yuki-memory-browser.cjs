@@ -118,9 +118,22 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].status,'approved','re-approval persisted');
   const staleRevoke=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Revocar aprobación');
   assert.ok(staleRevoke,'approved card offers revocation');
+  inserted[0].visibility='shared'; // Concurrent privacy edit.
+  const beforePrivacyConflict=mutations.length;
+  staleRevoke.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,beforePrivacyConflict+1,'stale revocation attempts guarded update');
+  assert.equal(inserted[0].status,'approved','stale revocation cannot overwrite changed visibility');
+  assert.equal(inserted[0].visibility,'shared','concurrent visibility change remains intact');
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se pudo revocar'),'visibility conflict is reported');
+  inserted[0].visibility='private';
+  // The stale card is reloaded after the failed update.
+  const currentRevoke=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Revocar aprobación');
+  assert.ok(currentRevoke,'reloaded approved card still has revoke action');
+
   inserted[0].status='rejected'; // Concurrent edit after card render.
   const beforeStale=mutations.length;
-  staleRevoke.click();
+  currentRevoke.click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.length,beforeStale+1,'stale revoke attempted exactly one guarded update');
   assert.equal(inserted[0].status,'rejected','stale revocation did not overwrite concurrent rejection');
