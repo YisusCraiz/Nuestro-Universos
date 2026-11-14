@@ -182,6 +182,15 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].status,'rejected','stale revocation did not overwrite concurrent rejection');
   assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'stale revoke reports conflict');
   // The stale update refreshes the panel to the rejected state.
+  let rejectedButtons=[...window.document.querySelectorAll('#items article button')];
+  assert.ok(!rejectedButtons.some(x=>x.textContent==='Aprobar'),'rejected memory cannot be approved directly');
+  const restore=rejectedButtons.find(x=>x.textContent==='Volver a pendiente');
+  assert.ok(restore,'rejected memory offers a return to review');
+  restore.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(inserted[0].status,'pending','restoring rejected memory does not approve it');
+  assert.deepEqual(Object.keys(mutations.at(-1).row),['status'],'restoring only changes status');
+  assert.ok([...window.document.querySelectorAll('#items article button')].some(x=>x.textContent==='Aprobar'),'restored pending memory can be reviewed');
 
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Rechazar').click();
