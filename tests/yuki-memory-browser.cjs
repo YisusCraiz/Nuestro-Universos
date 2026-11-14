@@ -266,6 +266,7 @@ async function scenario(name,handle,expected){
   assert.ok(proposalsQueried>queriesBeforeMore,'confirmed pagination loads more memories');
   assert.ok(window.document.getElementById('load-info').textContent.includes('102 recuerdos'),'pagination displays loaded count');
   inserted.splice(1);
+  window.document.getElementById('search').value='Sensitive private search';
   draft.value='PRIVATE DRAFT';
   switchedUser=true;
   buttons=[...window.document.querySelectorAll('#items article button')];
@@ -273,6 +274,10 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(window.document.getElementById('items').children.length,0,'account switch hides private memories');
   assert.equal(draft.value,'','account switch clears draft');
+  assert.equal(window.document.getElementById('search').value,'','account switch clears private search text');
+  assert.equal(window.document.getElementById('refresh').disabled,true,'account switch disables refresh');
+  assert.equal(window.document.getElementById('more').disabled,true,'account switch disables pagination');
+  assert.equal(window.document.getElementById('memory-count').textContent,'0 / 4000 caracteres','account switch resets draft length indicator');
   assert.equal(window.document.getElementById('load-info').textContent,'','account switch clears loaded-memory metadata');
   assert.equal(window.document.getElementById('propose').disabled,true,'account switch locks proposal creation');
   switchedUser=false;
