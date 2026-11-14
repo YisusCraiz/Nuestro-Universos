@@ -17,6 +17,7 @@ async function scenario(name,handle,expected){
  const mutations=[];
  let mutationRows=true;
  let failAuth=false;
+ let failMemoryLoad=false;
  let switchedUser=false;
  const db={
   auth:{getUser:async()=>{if(failAuth)throw Error('Network unavailable');return {data:{user:handle===null?null:(switchedUser?{id:'different-account'}:user)},error:null};},onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
@@ -25,7 +26,7 @@ async function scenario(name,handle,expected){
    if(table==='yuki_memory_proposals'){
     proposalsQueried++;
     return {
-     select:()=>({eq:()=>({order:()=>({limit:async()=>({data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null})})})}),
+     select:()=>({eq:()=>({order:()=>({limit:async()=>failMemoryLoad?{data:null,error:{message:'Mock network error'}}:{data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null}})})}),
      insert:async row=>{inserted.push(row);return {error:null};},
      update:row=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'update',row});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);if(matches)Object.assign(inserted[0],row);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;},
      delete:()=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'delete'});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;}
@@ -52,6 +53,15 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
   assert.ok(window.document.getElementById('load-info').textContent.includes('1 recuerdos cargados'),'loaded count is explicitly shown');
+  failMemoryLoad=true;
+  window.document.getElementById('refresh').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se pudo cargar'),'failed refresh must not claim success');
+  assert.equal(window.document.getElementById('load-info').textContent,'','failed refresh clears stale loaded-memory count');
+  failMemoryLoad=false;
+  window.document.getElementById('refresh').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(window.document.getElementById('notice').textContent.includes('actualizados'),'successful refresh confirms completion');
   const cancelledEdit=window.document.querySelector('#items article textarea');
   cancelledEdit.value='Unsaved content must survive cancelled approval';
   const priorCancelledQueries=proposalsQueried;
