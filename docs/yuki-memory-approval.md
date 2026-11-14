@@ -1,7 +1,7 @@
 # Yuki: memoria con aprobación individual (fase 1)
 
 ## Estado
-Propuesta en rama, **no desplegada**. No se ha ejecutado SQL ni se ha conectado ChatGPT a Supabase. La memoria interna de ChatGPT no dispone aquí de una API de lectura o sincronización automática.
+Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_proposals` y su trigger de seguridad ya se aplicaron al proyecto Supabase `wainkarkdlbfprgytyty`; las pruebas SQL de aislamiento se ejecutaron correctamente. Las pruebas DOM de GitHub Actions usan un cliente Supabase simulado: **no equivalen a una prueba real con dos sesiones**. Gemini aún no tiene acceso a estos recuerdos. La memoria interna de ChatGPT no dispone aquí de una API de lectura o sincronización automática.
 
 ## Flujo
 1. Yisus redacta o importa manualmente un resumen de recuerdo (nunca conversaciones completas por defecto).
