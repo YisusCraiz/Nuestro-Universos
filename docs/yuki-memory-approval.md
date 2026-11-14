@@ -37,3 +37,9 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - Se confirmó que RLS está activado y existen cuatro políticas para SELECT, INSERT, UPDATE y DELETE por propietario.
 - Esta prueba SQL **no sustituye** las pruebas E2E con sesión real en navegador ni demuestra aún que Gemini respete las reglas.
 - La interfaz de importación exige sesión de Supabase y perfil `jesus`; la verdadera barrera de acceso a los datos es RLS, no la verificación del navegador.
+
+## Integración Gemini preparada (sin activar)
+- `supabase/functions/yuki-chat/index.ts` consulta `yuki_memory_proposals` **solo** si `YUKI_REVIEWED_MEMORY_AI_ENABLED=true` y el perfil autenticado es `jesus`.
+- Filtra `owner_id` con el UUID del JWT, `status='approved'`, y limita a 20 registros. Se usa el cliente con JWT del usuario y RLS; no se usa el cliente administrador para leer propuestas.
+- Por defecto el interruptor está apagado; este cambio en la rama no despliega la Edge Function. No habilitar hasta confirmar consentimiento para enviar recuerdos a Gemini y completar pruebas reales de ambas cuentas, revocación y ausencia de filtraciones.
+- La función ya tenía un sistema **anterior y separado** de recuerdos (`yuki_chat_memories` / `yuki_memories`). Este cambio no modifica sus políticas ni los permisos de recuerdos compartidos preexistentes.
