@@ -4,6 +4,8 @@ on:
     paths:
       - 'yuki-memory.html'
       - 'tests/yuki-memory-browser.cjs'
+      - 'tests/yuki-memory-gemini.cjs'
+      - 'supabase/functions/yuki-chat/index.ts'
       - 'supabase/yuki-memory-*.sql'
       - '.github/workflows/yuki-memory-check.yml'
   push:
@@ -28,6 +30,8 @@ jobs:
         run: npm install --no-save --ignore-scripts --no-audit --no-fund jsdom@26.1.0
       - name: Run account access browser-DOM smoke tests
         run: node tests/yuki-memory-browser.cjs
+      - name: Check Gemini approved-memory gate
+        run: node tests/yuki-memory-gemini.cjs
       - name: Check embedded JavaScript syntax and critical privacy controls
         shell: bash
         run: |
