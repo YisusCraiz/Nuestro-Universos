@@ -20,7 +20,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
 <label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
 <small id="memory-count">0 / 4000 caracteres</small><label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
 <button id="propose">Guardar para revisar</button></section>
-<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><div class="toolbar"><label for="search">Buscar</label><input id="search" type="search" placeholder="Buscar en mis recuerdos" autocomplete="off" aria-label="Buscar recuerdos"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><button id="refresh" class="secondary" type="button">Actualizar recuerdos</button><p id="notice" role="status" aria-live="polite"></p><div id="items"></div><button id="more" class="secondary" type="button" hidden>Cargar más recuerdos</button></section>
+<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><small id="load-info" class="muted" aria-live="polite"></small><div class="toolbar"><label for="search">Buscar</label><input id="search" type="search" placeholder="Buscar en mis recuerdos" autocomplete="off" aria-label="Buscar recuerdos"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><button id="refresh" class="secondary" type="button">Actualizar recuerdos</button><p id="notice" role="status" aria-live="polite"></p><div id="items"></div><button id="more" class="secondary" type="button" hidden>Cargar más recuerdos</button></section>
 <script>
 (async()=>{
  const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter'),search=document.getElementById('search');
@@ -66,6 +66,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   say('Tus recuerdos solo están disponibles para tu cuenta.');
   more.hidden=data.length<=pageSize;
   cached=data.slice(0,pageSize);
+  document.getElementById('load-info').textContent=more.hidden?'Mostrando '+cached.length+' recuerdos cargados.':'Mostrando los primeros '+cached.length+' recuerdos. Hay más por cargar; los contadores y la búsqueda solo incluyen los cargados.';
   render(cached);
  }
  function render(data){
