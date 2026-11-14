@@ -156,6 +156,7 @@ async function scenario(name,handle,expected){
   buttons.find(x=>x.textContent==='Rechazar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.at(-1)?.row?.status,'rejected','rejection updates proposal status');
+  assert.deepEqual(Object.keys(mutations.at(-1).row),['status'],'rejection must not save unsaved memory edits');
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Eliminar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
