@@ -89,9 +89,13 @@ async function scenario(name,handle,expected){
   assert.equal(mutations.length,beforeRevoke,'cancelled revocation does not mutate');
   window.confirm=()=>true;
   buttons=[...window.document.querySelectorAll('#items article button')];
+  const unsavedText=window.document.querySelector('#items article textarea');
+  unsavedText.value='DO NOT SAVE THIS UNSAVED EDIT';
   buttons.find(x=>x.textContent==='Revocar aprobación').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.at(-1)?.row?.status,'pending','revocation returns memory to pending');
+  assert.deepEqual(Object.keys(mutations.at(-1).row),['status'],'revocation must not overwrite memory text or visibility');
+  assert.equal(inserted[0].memory_text,'A memory awaiting individual approval','unsaved text is not persisted during revocation');
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Rechazar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
