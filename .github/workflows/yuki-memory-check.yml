@@ -1,0 +1,55 @@
+name: Yuki memory panel checks
+on:
+  pull_request:
+    paths:
+      - 'yuki-memory.html'
+      - 'tests/yuki-memory-browser.cjs'
+      - 'tests/yuki-memory-gemini.cjs'
+      - 'supabase/functions/yuki-chat/index.ts'
+      - 'supabase/yuki-memory-*.sql'
+      - '.github/workflows/yuki-memory-check.yml'
+  push:
+    branches:
+      - feature/yuki-memory-approval
+    paths:
+      - 'yuki-memory.html'
+      - 'tests/yuki-memory-browser.cjs'
+      - '.github/workflows/yuki-memory-check.yml'
+jobs:
+  static-panel-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated DOM test dependency
+        run: npm install --no-save --ignore-scripts --no-audit --no-fund jsdom@26.1.0
+      - name: Run account access browser-DOM smoke tests
+        run: node tests/yuki-memory-browser.cjs
+      - name: Check Gemini approved-memory gate
+        run: node tests/yuki-memory-gemini.cjs
+      - name: Check embedded JavaScript syntax and critical privacy controls
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          const assert = require('node:assert/strict');
+          const html = fs.readFileSync('yuki-memory.html','utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m => m[1]).filter(Boolean);
+          assert.ok(scripts.length, 'No embedded script found');
+          scripts.forEach((script,i) => new vm.Script(script,{filename:'yuki-memory-inline-'+i+'.js'}));
+          for (const required of ["db.auth.getUser()", "profile?.handle!=='jesus'", ".eq('owner_id',user.id)", "db.auth.onAuthStateChange", "confirm("]) {
+            assert.ok(html.includes(required), 'Missing required privacy or consent control: '+required);
+          }
+          assert.ok(!html.includes('\\\\n const {data:profile'), 'Escaped newline corrupted script');
+          assert.ok(html.includes("new Date(entry.approved_at)"), 'Approval timestamp not displayed');
+          assert.ok(html.includes("await requireSession()"), 'Auth must be checked before mutations');
+          assert.ok(html.includes("clearSensitive()"), 'Sensitive UI data not cleared on sign-out');
+          assert.ok(html.includes("memory_text.toLocaleLowerCase()"), 'Client-side memory search missing');
+          console.log('PASS: panel syntax and privacy/consent control presence');
+          NODE

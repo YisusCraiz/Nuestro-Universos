@@ -61,6 +61,9 @@
   toggle.onclick=()=>{try{localStorage.setItem(visibleKey(),String(!avatarVisible()))}catch{}caption();sync();};
   card.append(title,text,toggle);
   if(owner()){
+   const memory=document.createElement('a');memory.className='btn secondary';memory.href='yuki-memory.html';memory.textContent=say('Revisar memoria de Yuki','Review Yuki memories');memory.style.display='inline-block';memory.style.margin='8px 0';card.append(memory);
+  }
+  if(owner()){
    const row=document.createElement('label');row.className='row';row.style.margin='18px 0';const box=document.createElement('input');box.type='checkbox';box.checked=JJSections.values?.yuki===true;
    const msg=document.createElement('p');msg.setAttribute('role','status');
    row.append(box,say('Mostrar Primer aniversario / Yuki a Julie','Show First anniversary / Yuki to Julie'));card.append(row,msg);
