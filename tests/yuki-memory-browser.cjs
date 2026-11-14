@@ -16,8 +16,9 @@ async function scenario(name,handle,expected){
  const inserted=[];
  const mutations=[];
  let mutationRows=true;
+ let failAuth=false;
  const db={
-  auth:{getUser:async()=>({data:{user:handle===null?null:user},error:null}),onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
+  auth:{getUser:async()=>{if(failAuth)throw Error('Network unavailable');return {data:{user:handle===null?null:user},error:null};},onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
    if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle},error:null})})})};
    if(table==='yuki_memory_proposals'){
@@ -92,6 +93,13 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.ok(window.document.getElementById('notice').textContent.includes('No se eliminó ningún recuerdo'),'zero-row delete reports error');
   draft.value='PRIVATE DRAFT';
+  failAuth=true;
+  buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Rechazar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(window.document.getElementById('items').children.length,0,'auth network failure hides private memories');
+  assert.equal(draft.value,'','auth network failure clears private draft');
+  assert.equal(window.document.getElementById('propose').disabled,true,'auth network failure locks proposal creation');
   authListener('SIGNED_OUT',null);
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
   assert.equal(window.document.getElementById('propose').disabled,true,'submission disabled on sign-out');
