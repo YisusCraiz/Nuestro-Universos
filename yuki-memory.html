@@ -30,10 +30,11 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  let cached=[];
  let pageSize=100;
  let loadRevision=0;
+ const hasUnsavedEdits=()=>[...items.querySelectorAll('article')].some(card=>{const area=card.querySelector('textarea'),level=card.querySelector('select');return area&&(area.value!==area.defaultValue||level&&level.value!==level.dataset.original)});
  const more=document.getElementById('more');
- more.onclick=async()=>{if(more.disabled||!sessionActive)return;const previousSize=pageSize;pageSize+=100;more.disabled=true;try{if(await load()!==true)pageSize=previousSize;}catch(e){pageSize=previousSize;say('No se pudieron cargar más recuerdos: '+e.message);}finally{more.disabled=false;}};
+ more.onclick=async()=>{if(more.disabled||!sessionActive)return;if(hasUnsavedEdits()&&!confirm('Hay cambios sin guardar. Cargar más recuerdos descartará esas ediciones. ¿Continuar?'))return;const previousSize=pageSize;pageSize+=100;more.disabled=true;try{if(await load()!==true)pageSize=previousSize;}catch(e){pageSize=previousSize;say('No se pudieron cargar más recuerdos: '+e.message);}finally{more.disabled=false;}};
  const refresh=document.getElementById('refresh');
- refresh.onclick=async()=>{if(refresh.disabled)return;const edited=[...items.querySelectorAll('article')].some(card=>{const area=card.querySelector('textarea'),level=card.querySelector('select');return area&&(area.value!==area.defaultValue||level&&level.value!==level.dataset.original)});if(edited&&!confirm('Hay cambios sin guardar. Actualizar descartará esas ediciones. ¿Continuar?'))return;refresh.disabled=true;try{if(await load()===true)say('Recuerdos actualizados.')}catch(e){say('No se pudo actualizar: '+e.message)}finally{refresh.disabled=false;}};
+ refresh.onclick=async()=>{if(refresh.disabled)return;if(hasUnsavedEdits()&&!confirm('Hay cambios sin guardar. Actualizar descartará esas ediciones. ¿Continuar?'))return;refresh.disabled=true;try{if(await load()===true)say('Recuerdos actualizados.')}catch(e){say('No se pudo actualizar: '+e.message)}finally{refresh.disabled=false;}};
  let sessionActive=true;
  const requireSession=async()=>{
   if(!sessionActive)throw Error('La sesión cambió. Vuelve a iniciar sesión.');
