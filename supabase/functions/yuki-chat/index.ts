@@ -48,7 +48,7 @@ Deno.serve(async req => {
         .order('approved_at',{ascending:false})
         .limit(20);
       if (reviewed.error) return json({code:'reviewed_memory_unavailable'},503);
-      reviewedMemories = (reviewed.data ?? []).map(row=>row.memory_text).filter((value):value is string=>typeof value==='string');
+      reviewedMemories = (reviewed.data ?? []).map(row=>row.memory_text).filter((value):value is string=>typeof value==='string' && value.trim().length>0).map(value=>value.slice(0,4000));
     }
     const saved = await db.from('yuki_chat_turns').insert({id:payload.requestId,message:payload.message.trim()});
     if(saved.error) return json({code:'save_failed'},saved.error.code==='23505'?409:503);
