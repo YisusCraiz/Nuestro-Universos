@@ -38,7 +38,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   let currentUser,error;
   try{({data:{user:currentUser},error}=await db.auth.getUser());}
   catch(e){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}
-  if(!sessionActive||error||!currentUser||currentUser.id!==user.id){sessionActive=false;document.getElementById('propose').disabled=true;items.replaceChildren();stats.replaceChildren();cached=[];more.hidden=true;throw Error('La sesión ya no corresponde a Yisus.');}
+  if(!sessionActive||error||!currentUser||currentUser.id!==user.id){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('La sesión ya no corresponde a Yisus.');}
  };
  filter.onchange=()=>render(cached);
  const say=(s)=>notice.textContent=s;
@@ -59,7 +59,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   let latestUser,latestError;
   try{({data:{user:latestUser},error:latestError}=await db.auth.getUser());}catch(e){if(revision===loadRevision){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}return;}
   if(revision!==loadRevision)return;
-  if(latestError||latestUser?.id!==user.id||!sessionActive){sessionActive=false;items.replaceChildren();stats.replaceChildren();cached=[];more.hidden=true;say('La sesión cambió mientras se cargaban los recuerdos.');return;}
+  if(latestError||latestUser?.id!==user.id||!sessionActive){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('La sesión cambió mientras se cargaban los recuerdos.');return;}
   if(error||!Array.isArray(data)){items.replaceChildren();stats.replaceChildren();cached=[];more.hidden=true;say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return;}
   say('Tus recuerdos solo están disponibles para tu cuenta.');
   more.hidden=data.length<=pageSize;
