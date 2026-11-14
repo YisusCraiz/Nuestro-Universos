@@ -51,6 +51,25 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].status,'pending','new memories are pending, never approved');
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
+  const refresh=window.document.getElementById('refresh');
+  const refreshEdit=window.document.querySelector('#items article textarea');
+  refreshEdit.value='Unsubmitted edit stays here';
+  const beforeRefreshQueries=proposalsQueried;
+  window.confirm=()=>false;
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(proposalsQueried,beforeRefreshQueries,'cancelled refresh must not query memories');
+  assert.equal(refreshEdit.value,'Unsubmitted edit stays here','cancelled refresh preserves draft');
+  window.confirm=()=>true;
+  inserted[0].memory_text='A memory updated on another device';
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(proposalsQueried>beforeRefreshQueries,'confirmed refresh fetches latest memories');
+  assert.equal(window.document.querySelector('#items article textarea').value,'A memory updated on another device','confirmed refresh shows latest text');
+  inserted[0].memory_text='A memory awaiting individual approval';
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+
   const staleEdit=window.document.querySelector('#items article textarea');
   staleEdit.value='An older local edit';
   inserted[0].memory_text='A newer edit from another device';
