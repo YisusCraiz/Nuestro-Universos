@@ -97,6 +97,27 @@ async function scenario(name,handle,expected){
   assert.deepEqual(Object.keys(mutations.at(-1).row),['status'],'revocation must not overwrite memory text or visibility');
   assert.equal(inserted[0].memory_text,'A memory awaiting individual approval','unsaved text is not persisted during revocation');
   assert.equal(inserted[0].status,'pending','revocation persisted pending status');
+  // A stale approved card must not undo a concurrent status change.
+  inserted[0].status='approved';
+  const reloadButton=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Aprobar');
+  assert.ok(reloadButton,'pending card shows approve action after revocation');
+  reloadButton.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(inserted[0].status,'approved','re-approval persisted');
+  const staleRevoke=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Revocar aprobación');
+  assert.ok(staleRevoke,'approved card offers revocation');
+  inserted[0].status='rejected'; // Concurrent edit after card render.
+  const beforeStale=mutations.length;
+  staleRevoke.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,beforeStale+1,'stale revoke attempted exactly one guarded update');
+  assert.equal(inserted[0].status,'rejected','stale revocation did not overwrite concurrent rejection');
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se pudo revocar'),'stale revoke reports conflict');
+  // Reload current state before testing subsequent actions.
+  inserted[0].status='pending';
+  window.document.getElementById('filter').value='all';
+  window.document.getElementById('filter').dispatchEvent(new window.Event('change'));
+
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Rechazar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
