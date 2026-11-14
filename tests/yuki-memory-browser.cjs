@@ -233,7 +233,7 @@ async function scenario(name,handle,expected){
   buttons.find(x=>x.textContent==='Volver a pendiente').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(conflictConfirmationCount,2,'restore confirmation and conflict reload confirmation both shown');
-  assert.equal(proposalsQueried,queriesBeforeConflictCancel,'declined conflict reload does not fetch private memories');
+  assert.equal(proposalsQueried,queriesBeforeConflictCancel+1,'declined conflict reload only performs the attempted update, without another list fetch');
   assert.equal(conflictingEdit.value,'Keep this local edit during a conflict','declined conflict reload preserves local edits');
   assert.ok(window.document.getElementById('notice').textContent.includes('Conservamos tu borrador local'),'conflict explains local draft is preserved');
   window.confirm=()=>true;
