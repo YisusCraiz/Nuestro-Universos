@@ -224,6 +224,17 @@ async function scenario(name,handle,expected){
   buttons.find(x=>x.textContent==='Eliminar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'zero-row delete refreshes the current version');
+  const conflictingEdit=window.document.querySelector('#items article textarea');
+  conflictingEdit.value='Keep this local edit during a conflict';
+  const queriesBeforeConflictCancel=proposalsQueried;
+  window.confirm=()=>false;
+  buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Volver a pendiente').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(proposalsQueried,queriesBeforeConflictCancel,'declined conflict reload does not fetch private memories');
+  assert.equal(conflictingEdit.value,'Keep this local edit during a conflict','declined conflict reload preserves local edits');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Conservamos tu borrador local'),'conflict explains local draft is preserved');
+  window.confirm=()=>true;
   draft.value='PRIVATE DRAFT';
   switchedUser=true;
   buttons=[...window.document.querySelectorAll('#items article button')];
