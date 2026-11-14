@@ -96,6 +96,7 @@ async function scenario(name,handle,expected){
   assert.equal(mutations.at(-1)?.row?.status,'pending','revocation returns memory to pending');
   assert.deepEqual(Object.keys(mutations.at(-1).row),['status'],'revocation must not overwrite memory text or visibility');
   assert.equal(inserted[0].memory_text,'A memory awaiting individual approval','unsaved text is not persisted during revocation');
+  assert.equal(inserted[0].status,'pending','revocation persisted pending status');
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Rechazar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
