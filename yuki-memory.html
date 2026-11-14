@@ -31,9 +31,9 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  let pageSize=100;
  let loadRevision=0;
  const more=document.getElementById('more');
- more.onclick=async()=>{pageSize+=100;more.disabled=true;try{await load();}catch(e){say(e.message);}finally{more.disabled=false;}};
+ more.onclick=async()=>{if(more.disabled||!sessionActive)return;const previousSize=pageSize;pageSize+=100;more.disabled=true;try{if(await load()!==true)pageSize=previousSize;}catch(e){pageSize=previousSize;say('No se pudieron cargar más recuerdos: '+e.message);}finally{more.disabled=false;}};
  const refresh=document.getElementById('refresh');
- refresh.onclick=async()=>{if(refresh.disabled)return;const edited=[...items.querySelectorAll('article')].some(card=>{const area=card.querySelector('textarea'),level=card.querySelector('select');return area&&(area.value!==area.defaultValue||level&&level.value!==level.dataset.original)});if(edited&&!confirm('Hay cambios sin guardar. Actualizar descartará esas ediciones. ¿Continuar?'))return;refresh.disabled=true;try{await load();say('Recuerdos actualizados.')}catch(e){say('No se pudo actualizar: '+e.message)}finally{refresh.disabled=false;}};
+ refresh.onclick=async()=>{if(refresh.disabled)return;const edited=[...items.querySelectorAll('article')].some(card=>{const area=card.querySelector('textarea'),level=card.querySelector('select');return area&&(area.value!==area.defaultValue||level&&level.value!==level.dataset.original)});if(edited&&!confirm('Hay cambios sin guardar. Actualizar descartará esas ediciones. ¿Continuar?'))return;refresh.disabled=true;try{if(await load()===true)say('Recuerdos actualizados.')}catch(e){say('No se pudo actualizar: '+e.message)}finally{refresh.disabled=false;}};
  let sessionActive=true;
  const requireSession=async()=>{
   if(!sessionActive)throw Error('La sesión cambió. Vuelve a iniciar sesión.');
@@ -57,17 +57,18 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   const revision=++loadRevision;
   await requireSession();
   const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(pageSize+1);
-  if(!sessionActive||revision!==loadRevision)return;
+  if(!sessionActive||revision!==loadRevision)return false;
   let latestUser,latestError;
-  try{({data:{user:latestUser},error:latestError}=await db.auth.getUser());}catch(e){if(revision===loadRevision){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}return;}
-  if(revision!==loadRevision)return;
-  if(latestError||latestUser?.id!==user.id||!sessionActive){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('La sesión cambió mientras se cargaban los recuerdos.');return;}
-  if(error||!Array.isArray(data)){items.replaceChildren();stats.replaceChildren();cached=[];more.hidden=true;say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return;}
+  try{({data:{user:latestUser},error:latestError}=await db.auth.getUser());}catch(e){if(revision===loadRevision){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}return false;}
+  if(revision!==loadRevision)return false;
+  if(latestError||latestUser?.id!==user.id||!sessionActive){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('La sesión cambió mientras se cargaban los recuerdos.');return false;}
+  if(error||!Array.isArray(data)){items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];more.hidden=true;say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return false;}
   say('Tus recuerdos solo están disponibles para tu cuenta.');
   more.hidden=data.length<=pageSize;
   cached=data.slice(0,pageSize);
   document.getElementById('load-info').textContent=more.hidden?'Mostrando '+cached.length+' recuerdos cargados.':'Mostrando los primeros '+cached.length+' recuerdos. Hay más por cargar; los contadores y la búsqueda solo incluyen los cargados.';
   render(cached);
+  return true;
  }
  function render(data){
   items.replaceChildren();stats.replaceChildren();
