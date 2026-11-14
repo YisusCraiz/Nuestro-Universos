@@ -51,6 +51,7 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].status,'pending','new memories are pending, never approved');
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
+  assert.ok(window.document.getElementById('load-info').textContent.includes('1 recuerdos cargados'),'loaded count is explicitly shown');
   const refresh=window.document.getElementById('refresh');
   const refreshEdit=window.document.querySelector('#items article textarea');
   refreshEdit.value='Unsubmitted edit stays here';
