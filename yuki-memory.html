@@ -45,7 +45,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  filter.onchange=()=>render(cached);
  const say=(s)=>notice.textContent=s;
  // Do not retain sensitive draft text in session history when leaving the panel.
- const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();cached=[];memoryInput.value='';more.hidden=true;};
+ const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];memoryInput.value='';more.hidden=true;};
  const config=window.UNIVERSE_CONFIG;
  if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo iniciar Supabase.');return;}
  const db=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
