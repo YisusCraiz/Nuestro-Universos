@@ -40,6 +40,8 @@ Deno.serve(async req => {
     // Opt-in rollout: only Yisus may use his individually approved proposals as Gemini context.
     // Keep disabled until the owner reviews AI processing consent and live access tests pass.
     let reviewedMemories: string[] = [];
+    // Read approved proposals fresh for every new turn; never cache them across requests.
+    // An approval revoked before this query must not appear in the next Gemini prompt.
     if (Deno.env.get('YUKI_REVIEWED_MEMORY_AI_ENABLED') === 'true' && profile.data.handle === 'jesus') {
       const reviewed = await db.from('yuki_memory_proposals')
         .select('memory_text')
