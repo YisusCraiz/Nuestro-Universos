@@ -132,7 +132,7 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].status,'pending','stale approval cannot approve changed text');
   assert.equal(inserted[0].memory_text,'Updated from another device','concurrent text remains intact');
   assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'stale approval reports conflict');
-  inserted[0].memory_text='A memory awaiting individual approval';
+  // The conflict refresh now displays the newer text, so approve that version.
 
   // A stale approved card must not undo a concurrent status change.
   const reloadButton=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Aprobar');
