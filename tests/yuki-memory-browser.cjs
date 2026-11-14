@@ -219,6 +219,7 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(window.document.getElementById('items').children.length,0,'account switch hides private memories');
   assert.equal(draft.value,'','account switch clears draft');
+  assert.equal(window.document.getElementById('load-info').textContent,'','account switch clears loaded-memory metadata');
   assert.equal(window.document.getElementById('propose').disabled,true,'account switch locks proposal creation');
   switchedUser=false;
 
