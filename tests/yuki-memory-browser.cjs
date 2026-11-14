@@ -204,7 +204,7 @@ async function scenario(name,handle,expected){
   assert.equal(mutations.at(-1)?.type,'delete','delete action requires confirmation');
   mutationRows=false;
   buttons=[...window.document.querySelectorAll('#items article button')];
-  buttons.find(x=>x.textContent==='Rechazar').click();
+  buttons.find(x=>x.textContent==='Volver a pendiente').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'zero-row update reports error');
   buttons=[...window.document.querySelectorAll('#items article button')];
@@ -214,7 +214,7 @@ async function scenario(name,handle,expected){
   draft.value='PRIVATE DRAFT';
   switchedUser=true;
   buttons=[...window.document.querySelectorAll('#items article button')];
-  buttons.find(x=>x.textContent==='Rechazar').click();
+  buttons.find(x=>x.textContent==='Volver a pendiente').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(window.document.getElementById('items').children.length,0,'account switch hides private memories');
   assert.equal(draft.value,'','account switch clears draft');
