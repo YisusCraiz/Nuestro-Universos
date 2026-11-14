@@ -31,6 +31,14 @@ begin
  exception when others then transfer_denied := true;
  end;
  if not transfer_denied then raise exception 'Memory ownership transfer allowed'; end if;
+ update public.yuki_memory_proposals set visibility='shared' where id=memory_id;
+ select status into current_status from public.yuki_memory_proposals where id=memory_id;
+ if current_status <> 'pending' then raise exception 'Privacy change did not revoke approval'; end if;
+ select approved_at into new_time from public.yuki_memory_proposals where id=memory_id;
+ if new_time is not null then raise exception 'Approval timestamp survived privacy change'; end if;
+ update public.yuki_memory_proposals set status='approved' where id=memory_id;
+ select status into current_status from public.yuki_memory_proposals where id=memory_id;
+ if current_status <> 'approved' then raise exception 'Re-approval after privacy change failed'; end if;
  update public.yuki_memory_proposals set memory_text='TEMP ISOLATION EDIT' where id=memory_id;
  select status into current_status from public.yuki_memory_proposals where id=memory_id;
  if current_status <> 'pending' then raise exception 'Edit did not revoke approval'; end if;
@@ -53,6 +61,6 @@ begin
  delete from public.yuki_memory_proposals where id=memory_id;
  get diagnostics changed_count = row_count;
  if changed_count <> 0 then raise exception 'Cross-account delete allowed'; end if;
- raise notice 'PASS: cross-account isolation, insert spoofing, ownership lock, timestamp protection and edit revocation';
+ raise notice 'PASS: cross-account isolation, insert spoofing, ownership lock, timestamp protection, privacy-change revocation and edit revocation';
 end $$;
 rollback;
