@@ -77,7 +77,9 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   for(const entry of shown){
    const card=document.createElement('article'),heading=document.createElement('p'),edit=document.createElement('textarea'),level=document.createElement('select');
    heading.className='status';heading.textContent=entry.status==='pending'?'Pendiente de aprobación':entry.status==='approved'?'Aprobado':'Rechazado';
-   if(entry.status==='approved'&&entry.approved_at){const stamp=document.createElement('small');stamp.textContent=' · '+new Date(entry.approved_at).toLocaleString();heading.append(stamp);}
+   const stamp=document.createElement('small');
+   stamp.textContent=entry.status==='approved'&&entry.approved_at?' · Aprobado el '+new Date(entry.approved_at).toLocaleString('es-MX'):' · Creado el '+new Date(entry.created_at).toLocaleString('es-MX');
+   heading.append(stamp);
    edit.value=entry.memory_text;edit.maxLength=4000;
    for(const [value,label] of [['private','Solo yo'],['shared','Compartido (sin acceso de Julie aún)'],['surprise','Sorpresa protegida']]){
     const opt=document.createElement('option');opt.value=value;opt.textContent=label;level.append(opt);
