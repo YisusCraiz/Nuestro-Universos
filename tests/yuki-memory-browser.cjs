@@ -70,6 +70,10 @@ async function scenario(name,handle,expected){
   buttons.find(x=>x.textContent==='Eliminar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.length,0,'cancelled deletion must not mutate');
+  buttons=[...window.document.querySelectorAll('#items article button')];
+  buttons.find(x=>x.textContent==='Rechazar').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,0,'cancelled rejection must not mutate');
   window.confirm=()=>true;
   buttons=[...window.document.querySelectorAll('#items article button')];
   buttons.find(x=>x.textContent==='Aprobar').click();
