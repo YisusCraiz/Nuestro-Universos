@@ -93,6 +93,8 @@ async function scenario(name,handle,expected){
   assert.ok(window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'stale save reports conflict');
   inserted[0].memory_text='A memory awaiting individual approval';
 
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(draft.value,'','draft cleared after successful submission');
   const editable=window.document.querySelector('#items article textarea');
   editable.value='Unsaved modification';
