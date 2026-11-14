@@ -109,6 +109,18 @@ async function scenario(name,handle,expected){
   assert.deepEqual(Object.keys(mutations.at(-1).row),['status'],'revocation must not overwrite memory text or visibility');
   assert.equal(inserted[0].memory_text,'A memory awaiting individual approval','unsaved text is not persisted during revocation');
   assert.equal(inserted[0].status,'pending','revocation persisted pending status');
+  // A stale card must not delete a memory whose privacy changed elsewhere.
+  const staleDelete=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Eliminar');
+  assert.ok(staleDelete,'pending card exposes delete action');
+  inserted[0].visibility='shared';
+  const beforeDeleteConflict=mutations.length;
+  staleDelete.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,beforeDeleteConflict+1,'stale delete attempted a guarded operation');
+  assert.equal(inserted[0].visibility,'shared','concurrent privacy edit survives stale delete');
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se eliminó'),'stale delete reports conflict');
+  inserted[0].visibility='private';
+
   // A stale pending card must not approve text changed on another device.
   const staleApprove=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Aprobar');
   assert.ok(staleApprove,'pending card offers approval');
