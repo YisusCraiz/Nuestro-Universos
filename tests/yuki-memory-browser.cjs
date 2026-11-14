@@ -27,7 +27,7 @@ async function scenario(name,handle,expected){
     return {
      select:()=>({eq:()=>({order:()=>({limit:async()=>({data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null})})})}),
      insert:async row=>{inserted.push(row);return {error:null};},
-     update:row=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'update',row});return {data:mutationRows?[{id:'proposal-0'}]:[],error:null};}})})}),
+     update:row=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'update',row});if(mutationRows && inserted[0])Object.assign(inserted[0],row);return {data:mutationRows?[{id:'proposal-0'}]:[],error:null};}})})}),
      delete:()=>({eq:()=>({eq:()=>({select:async()=>{mutations.push({type:'delete'});return {data:mutationRows?[{id:'proposal-0'}]:[],error:null};}})})})
     };
    }
@@ -80,8 +80,6 @@ async function scenario(name,handle,expected){
   buttons.find(x=>x.textContent==='Aprobar').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(mutations.at(-1)?.row?.status,'approved','approval requires explicit action');
-  inserted[0].status='approved';
-  await new Promise(resolve=>setTimeout(resolve,30));
   buttons=[...window.document.querySelectorAll('#items article button')];
   assert.ok(buttons.some(x=>x.textContent==='Revocar aprobación'),'approved memory exposes revoke action');
   window.confirm=()=>false;
