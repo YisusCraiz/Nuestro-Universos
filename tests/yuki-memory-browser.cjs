@@ -51,6 +51,18 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].status,'pending','new memories are pending, never approved');
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
+  const staleEdit=window.document.querySelector('#items article textarea');
+  staleEdit.value='An older local edit';
+  inserted[0].memory_text='A newer edit from another device';
+  const beforeStaleSave=mutations.length;
+  const staleSave=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Guardar cambios');
+  staleSave.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,beforeStaleSave+1,'stale save attempted a guarded update');
+  assert.equal(inserted[0].memory_text,'A newer edit from another device','stale save preserves concurrent text');
+  assert.ok(window.document.getElementById('notice').textContent.includes('no se actualizó'),'stale save reports conflict');
+  inserted[0].memory_text='A memory awaiting individual approval';
+
   assert.equal(draft.value,'','draft cleared after successful submission');
   const editable=window.document.querySelector('#items article textarea');
   editable.value='Unsaved modification';
