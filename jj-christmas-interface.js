@@ -12,7 +12,7 @@
  const groups=[
   ['⚔','Arena','Arena',['vs','casino','cards']],
   ['▷','Sala multimedia','Media room',['comics','live']],
-  ['♡','Nuestro rincón','Our corner',['pets','collection','shop','messages','affection','flowers','gifts','candy','yuki','secret_adventures']],
+  ['♡','Nuestro rincón','Our corner',['pets','collection','shop','messages','affection','flowers','gifts','regalos-jxj','candy','yuki','secret_adventures']],
   ['✦','Novedades y cuenta','News and account',['news','profile','season','missions','calendar','goals','approvals']]
  ];
  let arcade=null;
