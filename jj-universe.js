@@ -8,10 +8,24 @@ sectionAllowed=function(page){if(page==='novios')return false;if(page==='games')
 const universeVisibility=paintSectionVisibility;
 paintSectionVisibility=function(){universeVisibility();document.querySelectorAll('[data-nav]').forEach(el=>{if(['novios','puzzles','secretpuzzle','truth','bombitas',...UniverseGroups.musicas].includes(el.dataset.nav))el.hidden=true;});};
 function universeCards(items){return `<div class="universe-grid">${items.map(([id,icon,es,en])=>`<button class="game-panel universe-card" data-universe-route="${id}"><span class="game-symbol" aria-hidden="true">${icon}</span><strong>${bi(es,en)}</strong><span>${bi('Abrir','Open')} →</span></button>`).join('')}</div>`;}
+function universeMinecraftCard(){
+ const url=new URL('https://mcraft.fun/');
+ url.search=new URLSearchParams({
+  ip:'127.0.0.1:25565',
+  version:'1.21.4',
+  proxy:'https://fluffy-enigma-596xwq64776hpp5j-42622.app.github.dev',
+  name:'Nuestro Mundo'
+ }).toString();
+ return `<section class="game-panel" id="universe-minecraft">
+  <h2>${bi('Minecraft · Nuestro Mundo','Minecraft · Our World')}</h2>
+  <p class="hint">${bi('Prueba en el navegador. En Account Override, elige tu cuenta de Microsoft con Minecraft Java o selecciona Any other MS account.','Browser playtest. Under Account Override, pick your Microsoft account with Minecraft Java or select Any other MS account.')}</p>
+  <a class="btn" href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">${bi('Entrar al mundo','Join our world')}</a>
+ </section>`;
+}
 function bindUniverseCards(){document.querySelectorAll('[data-universe-route]').forEach(b=>b.onclick=()=>{const id=b.dataset.universeRoute;if(['wordsearch','maze'].includes(id))return startPuzzle(id);if(id==='tictactoe')return tttPage();if(id==='wands'){jjCleanup();clearTimers();return duoPage('wands',++state.version).catch(lifeError);}return navigate(id);});}
 const universeNavigate=navigate;
 navigate=async function(page){if(!state.profile)return;if(page==='novios')page='profile';if(!['games','musicas','comics','news'].includes(page))return universeNavigate(page);try{await loadSections();if(!sectionAllowed(page))return universeNavigate('home');jjCleanup();clearTimers();state.page=page;const v=++state.version;rememberRoute(historyRoute(page));shell();window.scrollTo(0,0);
- if(page==='games'){if(universeAllowed('games'))await games(v);else document.querySelector('#main').innerHTML='';if(v!==state.version)return;$('#main').insertAdjacentHTML('afterbegin',lifeHeading('Games','Games','Todos nuestros juegos en un solo lugar. Elige una aventura.','All our games in one place. Choose an adventure.')+universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze'],['tictactoe','✕ ◯','Juego del gato','Tic-tac-toe'],['wands','🪄','Duelo de varitas','Wand duel'],['secretpuzzle','🧩','Puzle secreto','Secret puzzle'],['truth','♠','Verdad o reto','Truth or dare'],['bombitas','💣','Bombitas JJ','Bombitas JJ']].filter(([id])=>sectionAllowed(['wordsearch','maze','tictactoe','wands'].includes(id)?'puzzles':id))));bindUniverseCards();}
+ if(page==='games'){if(universeAllowed('games'))await games(v);else document.querySelector('#main').innerHTML='';if(v!==state.version)return;$('#main').insertAdjacentHTML('afterbegin',lifeHeading('Games','Games','Todos nuestros juegos en un solo lugar. Elige una aventura.','All our games in one place. Choose an adventure.')+(!state.demo&&universeAllowed('games')?universeMinecraftCard():'')+universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze'],['tictactoe','✕ ◯','Juego del gato','Tic-tac-toe'],['wands','🪄','Duelo de varitas','Wand duel'],['secretpuzzle','🧩','Puzle secreto','Secret puzzle'],['truth','♠','Verdad o reto','Truth or dare'],['bombitas','💣','Bombitas JJ','Bombitas JJ']].filter(([id])=>sectionAllowed(['wordsearch','maze','tictactoe','wands'].includes(id)?'puzzles':id))));bindUniverseCards();}
  else if(page==='musicas'){$('#main').innerHTML=`<section class="page-heading music-hero"><h1>${bi('Música','Music')}</h1><p>${bi('La banda sonora de Jesús y Julissa','Jesús and Julissa’s soundtrack')}</p></section><div class="music-hub">`+universeCards([['music','♫','Nuestra música','Our music'],['playlists','☷','Playlists','Playlists'],['videos','▷','Videoclips','Music videos']].filter(([id])=>sectionAllowed(id)))+'</div>';bindUniverseCards();}
  else if(page==='comics')await universeComics(v);else await universeNews(v);
  }catch(e){console.error(e);$('#main').innerHTML=`<p>${page==='news'?bi('No se pudo cargar el tablón. Comprueba tu conexión.','Could not load the announcement board. Check your connection.'):bi('No se pudo cargar. Comprueba la conexión y aplica SQL 27 para Comics y títulos.','Could not load. Check your connection and apply SQL 27 for Comics and titles.')}</p>${jjButton('universe-retry','Reintentar','Retry')}`;$('#universe-retry').onclick=()=>navigate(page);}};
