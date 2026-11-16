@@ -92,7 +92,7 @@ DECLARE
   difficulty_level integer;
 BEGIN
   IF action='create' THEN
-    IF actor IS NULL OR NOT public.is_jesus() THEN RAISE EXCEPTION 'HOST_ONLY'; END IF;
+    IF actor IS NULL OR public.is_jesus() IS NOT TRUE THEN RAISE EXCEPTION 'HOST_ONLY'; END IF;
     duration_seconds := (payload->>'duration')::integer;
     difficulty_level := (payload->>'difficulty')::integer;
     IF length(coalesce(secret,''))<>64 OR secret !~ '^[0-9a-f]+$'
