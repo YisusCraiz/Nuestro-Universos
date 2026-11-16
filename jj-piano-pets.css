@@ -65,3 +65,8 @@
 #piano-duo-gestures-label{display:flex;align-items:center;gap:.65rem}
 #piano-duo-gestures-label[hidden]{display:none}
 #piano-duo-gestures{width:1.25rem;height:1.25rem;flex:none}
+
+#piano-concert-preview,#piano-live-band{background:var(--piano-backdrop,radial-gradient(ellipse at 50% 100%,#64367d,#1a1935 68%))}
+[data-piano-scene="neon"]{--piano-backdrop:radial-gradient(ellipse at 50% 115%,#874277 1%,transparent 65%),repeating-linear-gradient(90deg,transparent 0 29px,#7562db38 29px 30px),linear-gradient(#25214c,#0e122c)}
+[data-piano-scene="festival"]{--piano-backdrop:radial-gradient(ellipse at 20px 18px,#ffca79 0 4px,#c7674870 6px,transparent 15px) 0 0/74px 100%,radial-gradient(ellipse at 50% 110%,#a95656,#321c3a 68%)}
+[data-piano-scene="snow"]{--piano-backdrop:radial-gradient(circle at 9px 18px,#ffffffaf 0 1px,transparent 2px) 0 0/23px 31px,radial-gradient(circle at 13px 9px,#d1efff9a 0 1px,transparent 2px) 0 0/37px 29px,radial-gradient(ellipse at 50% 120%,#4d83aa,#182b54 68%)}
