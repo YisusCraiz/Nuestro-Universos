@@ -21,6 +21,76 @@ const PianoEngine=(()=>{
    if(idx<0){wrong++;combo=0;return 'wrong';}const p=distance<=Math.floor(win/2);states[idx]=p?1:2;lastHit=notes[idx];p?perfect++:good++;maxCombo=Math.max(maxCombo,++combo);return p?'perfect':'good';
   },tick:expire,get lastHit(){return lastHit;},get combo(){return combo;},result(){const score=Math.max(0,perfect*100+good*70-wrong*10),accuracy=Math.min(10000,Math.floor(score*100/notes.length));return {perfect,good,wrong,miss:notes.length-perfect-good,score,accuracy,combo:maxCombo,grade:accuracy>=9700?'S':accuracy>=9000?'A':accuracy>=7500?'B':accuracy>=6000?'C':'D'};}};
  }
- return {chart,game,windows};
+
+ // Practice uses local gesture judgement. Ranked runs still use game().
+ function practice(notes,difficulty,duration){
+  const chart=notes.map((note,index)=>{
+   if(index>0&&index%8===3&&note.t+530<duration*1000&&
+    !notes.slice(index+1,index+5).some(next=>next.l===note.l&&next.t-note.t<730)){
+    return {...note,kind:'hold',end:note.t+500};
+   }
+   return {...note,kind:index%8===6?'flick':'tap'};
+  });
+  const states=chart.map(()=>0),pending=new Map(),win=windows[difficulty];
+  let perfect=0,good=0,wrong=0,combo=0,best=0,lastHit=null;
+  function fail(index){states[index]=3;pending.delete(chart[index].l);combo=0;}
+  function award(index,error){
+   const note=chart[index],clean=error<=win/2;
+   states[index]=clean?1:2;pending.delete(note.l);lastHit=note;
+   if(clean)perfect++;else good++;
+   best=Math.max(best,++combo);
+   return clean?'perfect':'good';
+  }
+  function tick(t){
+   for(const [lane,entry] of pending){
+    const note=chart[entry.index];
+    if(note.kind==='hold'&&t>=note.end)award(entry.index,entry.error);
+    if(note.kind==='flick'&&t>note.t+win)fail(entry.index);
+   }
+   for(let i=0;i<chart.length;i++){
+    if(states[i]===0&&t>chart[i].t+win){states[i]=3;combo=0;}
+   }
+  }
+  function press(t,lane,flick=false){
+   tick(t);
+   lastHit=null;
+   if(pending.has(lane))return 'ignored';
+   let index=-1,error=win+1;
+   for(let i=0;i<chart.length;i++){
+    const diff=Math.abs(t-chart[i].t);
+    if(states[i]===0&&chart[i].l===lane&&diff<error){index=i;error=diff;}
+   }
+   if(index<0){wrong++;combo=0;return 'wrong';}
+   const note=chart[index];
+   if(note.kind==='tap'||(note.kind==='flick'&&flick))return award(index,error);
+   states[index]=4;pending.set(lane,{index,error});
+   return note.kind;
+  }
+  function release(t,lane){
+   const entry=pending.get(lane);
+   if(!entry)return 'ignored';
+   const note=chart[entry.index];
+   if(note.kind==='hold'&&t>=note.end-65)return award(entry.index,entry.error);
+   fail(entry.index);
+   return 'miss';
+  }
+  function flick(t,lane){
+   const entry=pending.get(lane);
+   if(!entry||chart[entry.index].kind!=='flick')return 'ignored';
+   const error=Math.abs(t-chart[entry.index].t);
+   if(error<=win)return award(entry.index,error);
+   fail(entry.index);
+   return 'miss';
+  }
+  return {notes:chart,states,press,release,flick,tick,
+   get combo(){return combo;},get lastHit(){return lastHit;},
+   result(){
+    const score=Math.max(0,perfect*100+good*70-wrong*10);
+    const accuracy=chart.length?Math.min(10000,Math.floor(score*100/chart.length)):0;
+    return {perfect,good,wrong,miss:chart.length-perfect-good,score,accuracy,combo:best,grade:accuracy>=9700?'S':accuracy>=9000?'A':accuracy>=7500?'B':accuracy>=6000?'C':'D'};
+   }
+  };
+ }
+ return {chart,game,practice,windows};
 })();
 if(typeof module!=='undefined')module.exports=PianoEngine;
