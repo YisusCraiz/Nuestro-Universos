@@ -4,6 +4,13 @@ CREATE SCHEMA IF NOT EXISTS jj_piano_private;
 REVOKE ALL ON SCHEMA jj_piano_private FROM PUBLIC, anon, authenticated;
 GRANT USAGE ON SCHEMA jj_piano_private TO authenticated;
 
+CREATE TABLE IF NOT EXISTS jj_piano_private.equipped (
+  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  skin text NOT NULL
+);
+ALTER TABLE jj_piano_private.equipped ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON jj_piano_private.equipped FROM PUBLIC, anon, authenticated;
+
 CREATE UNIQUE INDEX IF NOT EXISTS jj_piano_skin_purchase_once
   ON public.jj_money_log (user_id, (data->>'skin'))
   WHERE kind = 'piano_skin';
@@ -34,6 +41,20 @@ BEGIN
       INSERT INTO public.jj_money_log (user_id, request, kind, data, jj, result)
       VALUES (owner_id, gen_random_uuid(), 'piano_skin', jsonb_build_object('skin', skin), -price, '{}'::jsonb);
     END IF;
+    INSERT INTO jj_piano_private.equipped (user_id, skin) VALUES (owner_id, skin)
+    ON CONFLICT (user_id) DO UPDATE SET skin = excluded.skin;
+  ELSIF action = 'equip' THEN
+    IF skin IS NULL OR (
+      skin <> ''
+      AND NOT coalesce((public.bb_shop()->'owned') ? skin, false)
+      AND NOT EXISTS (
+        SELECT 1 FROM public.jj_money_log
+        WHERE user_id = owner_id AND kind = 'piano_skin' AND data->>'skin' = skin
+      )
+    ) THEN RAISE EXCEPTION 'NOT_OWNED'; END IF;
+    PERFORM pg_advisory_xact_lock(hashtextextended(owner_id::text, 25));
+    INSERT INTO jj_piano_private.equipped (user_id, skin) VALUES (owner_id, skin)
+    ON CONFLICT (user_id) DO UPDATE SET skin = excluded.skin;
   ELSIF action IS DISTINCT FROM 'read' THEN
     RAISE EXCEPTION 'INVALID_ACTION';
   END IF;
@@ -41,6 +62,7 @@ BEGIN
   RETURN jsonb_build_object(
     'coins', (public.bb_shop()->>'coins')::bigint,
     'catalog', catalog,
+    'equipped', (SELECT e.skin FROM jj_piano_private.equipped e WHERE e.user_id = owner_id),
     'owned', coalesce((
       SELECT jsonb_agg(data->>'skin' ORDER BY data->>'skin')
       FROM public.jj_money_log WHERE user_id = owner_id AND kind = 'piano_skin'
