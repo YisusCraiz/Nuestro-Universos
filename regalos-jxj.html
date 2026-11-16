@@ -13,6 +13,14 @@ section,form,article{background:#131e39;border:1px solid #485578;border-radius:1
 label{display:block;margin-top:.55rem}input,select,textarea{display:block;width:100%;background:#0b1328;color:inherit;border:1px solid #7a88ab;border-radius:.5rem;padding:.65rem;font:inherit}
 input[type=checkbox]{display:inline;width:auto}button,a{color:#f9dcff}button{background:#303962;padding:.6rem .85rem;border:1px solid #9c8cba;border-radius:.55rem;font:inherit;margin:.25rem;cursor:pointer}
 button:disabled{opacity:.55}#letter{white-space:pre-wrap;overflow-wrap:anywhere}
+#giftNav{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
+#giftNav button{flex:1 1 8rem;margin:0;min-height:3rem}
+#giftNav button[aria-pressed=true],#scan{background:#e8cffa;color:#211834;border-color:#e8cffa;font-weight:700}
+#scan{width:100%;min-height:3rem;margin:0 0 .75rem}
+summary{cursor:pointer;padding:.55rem 0;color:#f9dcff}
+#items,#managedItems{display:grid;gap:.4rem}
+#items button,#managedItems button{text-align:left;margin:0}
+#giftLink{overflow-wrap:anywhere}
 #qr,#bars{background:#fff;padding:12px;width:max-content;max-width:100%}#bars{height:auto}#camera{max-width:100%}
 main[data-theme=christmas] article{background:#162c29;border-color:#bd9470}
 main[data-theme=anniversary] article{background:#14264b;border-color:#bf9bd8}
@@ -30,12 +38,19 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
  <label><span data-t="password"></span><input required name="password" type="password" autocomplete="current-password"></label>
  <button data-t="login"></button>
 </form>
+<nav id="giftNav" hidden aria-label="JXJ">
+ <button type="button" data-view="scan" data-t="scanTab" aria-controls="entry"></button>
+ <button type="button" data-view="mine" data-t="gifts" aria-controls="collection"></button>
+ <button type="button" data-view="create" data-t="createTab" aria-controls="editor" hidden></button>
+</nav>
 <section id="entry" hidden>
- <form id="lookup">
+ <h2 data-t="scanTab"></h2>
+ <p data-t="scanHint"></p>
+ <button id="scan" type="button" data-t="scan"></button><div id="camera"></div>
+ <details><summary data-t="manual"></summary><form id="lookup">
   <label><span data-t="code"></span><input name="code" required maxlength="36" autocomplete="off" autocapitalize="characters"></label>
   <button data-t="find"></button>
- </form>
- <button id="scan" type="button" data-t="scan"></button><div id="camera"></div>
+ </form></details>
 </section>
 <article id="gift" hidden>
  <h2 id="title"></h2>
@@ -47,8 +62,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
 <section id="collection" hidden><h2 data-t="gifts"></h2><div id="items"></div></section>
 <section id="editor" hidden>
  <h2 data-t="editor"></h2>
+ <p data-t="createHint"></p>
  <button id="newGift" type="button" data-t="new"></button>
+ <details><summary data-t="manage"></summary><div id="managedItems"></div></details>
  <form id="draft">
+  <label><span data-t="recipient"></span><select name="recipient"><option value="julisa">Julie</option><option value="jesus" data-t="self"></option></select></label>
   <label><span data-t="title"></span><input required name="title" maxlength="120"></label>
   <label><span data-t="letter"></span><textarea required name="body" rows="6" maxlength="16000"></textarea></label>
   <label><span data-t="theme"></span><select name="theme"><option value="anniversary" data-t="anniversary"></option><option value="christmas" data-t="christmas"></option><option value="surprise" data-t="surprise"></option></select></label>
@@ -71,6 +89,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
 'use strict';
 const $ = id => document.getElementById(id);
 const tr = {
+ scanTab:['Escáner JXJ','JXJ Scanner'], createTab:['Crear regalos','Create gifts'],
+ scanHint:['Apunta la cámara al QR o al código de barras.','Point your camera at the QR or barcode.'],
+ manual:['Escribir el código','Enter code manually'],
+ createHint:['Elige a quién va dirigido. Guarda el regalo para descargar sus códigos.','Choose a recipient and save the gift to download its codes.'],
+ manage:['Editar regalos preparados','Edit prepared gifts'],
+ recipient:['Destinatario','Recipient'], self:['Mi cuenta · Yisus','My account · Yisus'], noDrafts:['Todavía no has preparado regalos.','You have not created any gifts yet.'],
  profile:['Perfil','Profile'], password:['Contraseña','Password'], login:['Iniciar sesión','Sign in'],
  heading:['Regalos secretos','Secret gifts'], code:['Código del regalo','Gift code'], find:['Buscar regalo','Find gift'],
  scan:['Escanear QR o código de barras','Scan QR or barcode'], stop:['Cerrar cámara','Close camera'],
@@ -95,6 +119,8 @@ const params = new URLSearchParams(location.hash.slice(1));
 let code = params.get('gift') || '';
 let lang = params.get('lang') === 'en' || (!params.has('lang') && (code || navigator.language.startsWith('en'))) ? 1 : 0;
 let selected = null, scanner = null, generation = 0, pending = false;
+let view = params.get('view') === 'create' && !code ? 'create' : 'scan';
+let account = null;
 const bucket = 'jj-secret-gifts';
 const config = window.UNIVERSE_CONFIG;
 const client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
@@ -107,13 +133,13 @@ function status(key) {
 function language() {
   document.documentElement.lang = lang ? 'en' : 'es';
   document.querySelectorAll('[data-t]').forEach(node => {node.textContent = t(node.dataset.t);});
-  if (!$('collection').hidden) $('heading').textContent = t('heading');
+  if (account) $('heading').textContent = t('heading');
   if (!$('openGift').hidden) $('title').textContent = t('sealed');
   $('language').textContent = lang ? 'Español' : 'English';
   if (scanner) $('scan').textContent = t('stop');
   status($('status').dataset.key || '');
 }
-$('language').onclick = () => {lang = 1-lang; language(); if (!$('collection').hidden) run(refresh);};
+$('language').onclick = () => {lang = 1-lang; language(); if (account) drawLists();};
 language();
 function script(url) {
   if (!cachedScripts.has(url)) cachedScripts.set(url,new Promise((resolve,reject) => {
@@ -210,6 +236,8 @@ function edit(gift) {
   form.reset();
   const fields = form.elements;
   fields.code.disabled = Boolean(gift);
+  fields.recipient.disabled = Boolean(gift);
+  fields.recipient.value = gift?.for_self ? 'jesus' : 'julisa';
   fields.title.value = gift?.title || '';
   fields.body.value = gift?.body || '';
   fields.code.value = gift?.code || '';
@@ -225,20 +253,49 @@ function edit(gift) {
   else {generation++; $('print').hidden = true;}
 }
 $('newGift').onclick = () => edit(null);
-async function refresh() {
-  const data = await rpc('list');
-  $('heading').textContent = t('heading');
-  $('entry').hidden = data.admin;
-  $('editor').hidden = !data.admin;
-  $('collection').hidden = false;
-  $('items').replaceChildren();
-  if (!data.gifts.length) $('items').textContent = t('empty');
-  for (const item of data.gifts) {
-    const button = document.createElement('button');
-    button.textContent = item.title + (data.admin ? ' · '+t(item.redeemed_at ? 'claimed' : item.enabled ? 'ready' : 'draft') : '');
-    button.onclick = () => data.admin ? edit(item) : run(() => showGift(item));
-    $('items').append(button);
+function renderView() {
+  const page = !account.admin && view === 'create' ? 'scan' : view;
+  $('giftNav').hidden = false;
+  $('entry').hidden = page !== 'scan';
+  $('editor').hidden = page !== 'create';
+  $('collection').hidden = page !== 'mine';
+  for (const button of $('giftNav').querySelectorAll('[data-view]')) {
+    button.hidden = button.dataset.view === 'create' && !account.admin;
+    button.setAttribute('aria-pressed', String(button.dataset.view === page));
   }
+}
+function drawList(container, entries, managed) {
+  const root = $(container);
+  root.replaceChildren();
+  if (!entries.length) root.textContent = t(managed ? 'noDrafts' : 'empty');
+  for (const item of entries) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = item.title + (managed ? ' · '+t(item.redeemed_at ? 'claimed' : item.enabled ? 'ready' : 'draft') : '');
+    button.onclick = () => managed ? edit(item) : run(() => showGift(item));
+    root.append(button);
+  }
+}
+function drawLists() {
+  drawList('items',account.mine,false);
+  drawList('managedItems', account.admin ? account.gifts : [],true);
+}
+$('giftNav').onclick = event => {
+  const button = event.target.closest('[data-view]');
+  if (!button || pending || !account || button.hidden) return;
+  view = button.dataset.view;
+  $('gift').hidden = true;
+  status('');
+  renderView();
+  if (view !== 'scan') void stopScan().catch(() => status('cameraError'));
+};
+async function refresh() {
+  const [data,mine] = await Promise.all([rpc('list'),rpc('mine')]);
+  account = {...data,mine};
+  if (!account.admin && view === 'create') view = 'scan';
+  $('heading').textContent = t('heading');
+  renderView();
+  drawLists();
 }
 async function lookup(value) {
   const normalized = value.trim().toUpperCase();
@@ -271,7 +328,7 @@ $('draft').onsubmit = event => {
       if (result.error) throw result.error;
     }
     const gift = await rpc('save',{
-      id:selected?.id,title:f.title.value,body:f.body.value,code:f.code.value,theme:f.theme.value,
+      id:selected?.id,recipient:f.recipient.value,title:f.title.value,body:f.body.value,code:f.code.value,theme:f.theme.value,
       attachment,card:f.card.value,opens_at:f.date.value ? new Date(f.date.value).toISOString() : null,enabled:f.enabled.checked
     });
     edit(gift);
@@ -305,8 +362,9 @@ $('scan').onclick = async () => {
       $('lookup').elements.code.value = value;
       run(() => lookup(value));
     });
+    if (scanner && view !== 'scan') await stopScan();
     if (scanner) $('scan').textContent = t('stop');
-  } catch {await stopScan(); status('cameraError');}
+  } catch {await stopScan().catch(() => {}); status('cameraError');}
   finally {$('scan').disabled = false;}
 };
 async function start() {
@@ -315,7 +373,7 @@ async function start() {
   $('login').hidden = Boolean(info.data.session);
   if (!info.data.session) return;
   await refresh();
-  if (code && $('editor').hidden) await lookup(code);
+  if (code) await lookup(code);
 }
 $('login').onsubmit = event => {
   event.preventDefault();
