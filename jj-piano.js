@@ -70,6 +70,7 @@ function pianoConcert(owner){
  const instruments=[['drums','Batería','Drums'],['keys','Teclado','Keyboard'],['voice','Micrófono','Microphone'],['guitar','Guitarra','Guitar']];
  const key='jj-piano-concert-'+owner;
  let saved={}, wardrobe, shopData, buying=false;
+ let shopLoading=!state.demo;
  try{saved=JSON.parse(localStorage.getItem(key))||{};}catch{}
  const lineup=Object.fromEntries(band.map(([id,,instrument])=>[id,instruments.some(([value])=>value===saved.lineup?.[id])?saved.lineup[id]:instrument]));
  let skin=typeof saved.skin==='string'?saved.skin:'';
@@ -101,7 +102,7 @@ function pianoConcert(owner){
   input.value=lineup[id];
   input.onchange=()=>{lineup[id]=input.value;persist();draw();};
  }
- skinInput.onchange=()=>{skin=skinInput.value;persist();if(shopData)paintShop();else draw();};
+ skinInput.onchange=()=>selectSkin(skinInput.value);
  async function loadWardrobe(){
   try{
    const data=await JJWardrobe.read();
@@ -115,6 +116,7 @@ function pianoConcert(owner){
   }
  }
  function paintSkinOptions(){
+  skinInput.disabled=shopLoading||buying;
   skinInput.length=1;
   for(const [id,es,en] of BBSkins)if(wardrobe?.owned.includes(id))skinInput.add(new Option(say(es,en),id));
   for(const [id,es,en] of PianoStageSkins)if(shopData?.owned.includes(id))skinInput.add(new Option(say(es,en),id));
@@ -142,38 +144,64 @@ function pianoConcert(owner){
   }
   draw();
  }
- function selectSkin(id){skin=id;persist();paintSkinOptions();paintShop();}
+ function applyShopData(data){
+  shopData=data;
+  if(typeof data.equipped==='string'){skin=data.equipped;persist();}
+ }
+ async function selectSkin(id){
+  if(buying||shopLoading)return;
+  if(!shopData){skin=id;persist();draw();return;}
+  buying=true;
+  paintSkinOptions();
+  paintShop();
+  try{
+   const data=await rpc('jj_piano_shop',{p_action:'equip',p_skin:id});
+   if(root.isConnected){
+    applyShopData(data);
+    $('#piano-shop-status').textContent=say('Atuendo guardado en tu cuenta.','Outfit saved to your account.');
+   }
+  }catch{
+   if(root.isConnected)$('#piano-shop-status').textContent=say('No se pudo equipar el atuendo. Intenta de nuevo.','Could not equip the outfit. Try again.');
+  }finally{
+   buying=false;
+   if(root.isConnected){paintSkinOptions();paintShop();}
+  }
+ }
  async function loadShop(){
   if(state.demo)return;
   try{
-   shopData=await rpc('jj_piano_shop');
-   if(root.isConnected){paintSkinOptions();paintShop();}
+   const data=await rpc('jj_piano_shop');
+   if(root.isConnected){applyShopData(data);paintShop();}
   }catch{
    if(!root.isConnected)return;
    $('#piano-exclusive-shop').hidden=false;
    $('#piano-shop-status').textContent=say('El vestuario exclusivo no está disponible en este momento.','Exclusive outfits are currently unavailable.');
+  }finally{
+   shopLoading=false;
+   if(root.isConnected)paintSkinOptions();
   }
  }
  async function buySkin(id){
   if(buying)return;
   buying=true;
+  paintSkinOptions();
   $('#piano-shop-confirm').replaceChildren();
   paintShop();
   try{
-   shopData=await rpc('jj_piano_shop',{p_action:'buy',p_skin:id});
+   const data=await rpc('jj_piano_shop',{p_action:'buy',p_skin:id});
    if(state.profile?.id!==owner)return;
+   if(root.isConnected)applyShopData(data);
    JJ.dashboard=null;
-   window.dispatchEvent(new CustomEvent('jj-wallet-update',{detail:{owner,coins:shopData.coins}}));
-   document.querySelectorAll('.sidebar-bottom .coin-pill').forEach(el=>el.textContent=`✦ ${shopData.coins} JJ`);
+   window.dispatchEvent(new CustomEvent('jj-wallet-update',{detail:{owner,coins:data.coins}}));
+   document.querySelectorAll('.sidebar-bottom .coin-pill').forEach(el=>el.textContent=`✦ ${data.coins} JJ`);
    if(root.isConnected){
-    selectSkin(id);
     $('#piano-shop-status').textContent=say('Compra confirmada. Atuendo equipado.','Purchase confirmed. Outfit equipped.');
    }
   }catch(error){
    if(root.isConnected)$('#piano-shop-status').textContent=error.message?.includes('INSUFFICIENT_COINS')?say('Te faltan monedas JJ.','Not enough JJ coins.'):say('No se confirmó la compra. Puedes reintentar.','Purchase unconfirmed. You can retry.');
   }finally{
    buying=false;
-   if(root.isConnected)paintShop();
+   if(root.isConnected){paintSkinOptions();paintShop();}
   }
  }
  function drawExclusive(canvas,handle,outfit){
@@ -194,6 +222,7 @@ function pianoConcert(owner){
   ctx.fillText('✦',19,83);ctx.fillText('✧',98,72);
   ctx.restore();
  }
+ paintSkinOptions();
  draw();
  loadWardrobe();
  loadShop();
