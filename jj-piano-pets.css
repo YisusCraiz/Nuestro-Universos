@@ -58,3 +58,6 @@
 .piano-shop-card .btn{padding:.35rem .5rem;font-size:.8rem;white-space:normal}
 #piano-shop-confirm:not(:empty){padding:.65rem 0}
 @media(max-width:400px){#piano-exclusive-shop .piano-band-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.piano-track-touch{position:absolute;inset:70% 1px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.piano-track-touch span{touch-action:none;user-select:none;-webkit-user-select:none}
