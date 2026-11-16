@@ -1,28 +1,24 @@
 'use strict';
+const giftsMenuPage='regalos-jxj';
+menus.push([giftsMenuPage,'◇','Regalos JXJ']);
 const JJSections={user:null,values:null,request:0,loading:null};
-function sectionAllowed(page){return state.profile?.handle==='jesus'||['home','profile'].includes(page)||(page!=='novios'&&JJSections.user===state.profile?.id&&JJSections.values?.[page]===true);}
+function sectionAllowed(page){if(page===giftsMenuPage)return !state.demo&&['jesus','julisa'].includes(state.profile?.handle);return state.profile?.handle==='jesus'||['home','profile'].includes(page)||(page!=='novios'&&JJSections.user===state.profile?.id&&JJSections.values?.[page]===true);}
 async function loadSections(){const id=state.profile?.id;if(!id)return;if(JJSections.loading?.id===id)return JJSections.loading.promise;const request=++JJSections.request;const promise=(async()=>{const values=state.demo?Object.fromEntries(menus.map(([key])=>[key,!['gifts','novios'].includes(key)])):await rpc('jj_sections');if(state.profile?.id===id&&request===JJSections.request){JJSections.user=id;JJSections.values=values;}})();JJSections.loading={id,promise};try{await promise;}finally{if(JJSections.loading?.promise===promise)JJSections.loading=null;}}
 function syncMenuYuki(){window.YukiHub?.sync();}
 function paintSectionVisibility(){syncMenuYuki();if(!state.profile)return;document.querySelectorAll('[data-nav],[data-go]').forEach(el=>{const page=el.dataset.nav||el.dataset.go;el.hidden=!sectionAllowed(page);});for(const [id,page] of [['our-memories','memories'],['haunted-play','games']]){const el=document.getElementById(id);if(el)el.hidden=!sectionAllowed(page);}}
-const sectionsShell=shell;shell=function(){sectionsShell();paintSectionVisibility();};
+const sectionsShell=shell;
+shell=function(){
+  sectionsShell();
+  paintSectionVisibility();
+  const giftsButton=document.querySelector('[data-nav="regalos-jxj"]');
+  if(giftsButton)giftsButton.onclick=()=>{
+    if(!sectionAllowed(giftsMenuPage))return;
+    window.location.assign('./regalos-jxj.html#view=scan&lang='+say('es','en'));
+  };
+};
 const sectionsProfile=profilePage;profilePage=async function(v){await sectionsProfile(v);if(v!==state.version||!state.profile)return;
-  const handle=state.profile.handle;
-  if(!state.demo&&['jesus','julisa'].includes(handle)){
-    const giftTools=document.createElement('div');
-    giftTools.className='row';
-    const tools=[['scan','Escáner JXJ','JXJ Scanner']];
-    if(handle==='jesus')tools.push(['create','Crear regalos JXJ','Create JXJ gifts']);
-    for(const [view,es,en] of tools){
-      const link=document.createElement('a');
-      link.className='btn secondary';
-      link.href='./regalos-jxj.html#'+new URLSearchParams({view,lang:say('es','en')});
-      link.innerHTML=bi(es,en);
-      giftTools.append(link);
-    }
-    $('#main').append(giftTools);
-  }
-  if(handle!=='jesus')return;
-  const box=document.createElement('section');box.className='game-panel section-controls';box.id='section-controls';$('#main').append(box);try{await loadSections();if(v!==state.version)return;box.innerHTML=`<h2>${bi('Apartados que puede ver Julissa','Sections Julissa can see')}</h2><p>${bi('Activa un apartado cuando esté listo. Tú siempre puedes abrirlo para prepararlo. Ocultarlo no borra su contenido.','Enable a section when it is ready. You can always open it to prepare it. Hiding it does not delete its contents.')}</p><p class="hint">${bi('Inicio y Perfiles siempre están disponibles. Novios ahora es un título en los perfiles. Los apartados nuevos comienzan ocultos.','Home and Profiles are always available. Sweethearts is now a profile title. New sections start hidden.')}</p><div class="section-switches">${menus.filter(([id])=>!['home','profile','novios'].includes(id)).map(([id,icon,label])=>`<label class="row"><input type="checkbox" data-section-toggle="${id}" ${JJSections.values?.[id]?'checked':''}><span aria-hidden="true">${icon}</span><span>${esc(label)}</span></label>`).join('')}</div><p id="section-save-status" role="status"></p>`;box.querySelectorAll('[data-section-toggle]').forEach(input=>input.onchange=async()=>{const visible=input.checked;input.disabled=true;const user=state.profile.id;try{if(!ensureLive())throw Error('DEMO');const values=await rpc('jj_sections',{p_section:input.dataset.sectionToggle,p_visible:visible});if(user!==state.profile?.id)return;JJSections.values=values;$('#section-save-status').textContent=say('Guardado. El cambio llegará a Julissa en unos segundos.','Saved. Julissa will receive the change in a few seconds.');}catch{input.checked=!visible;if(input.isConnected)$('#section-save-status').textContent=say('No se guardó. Reintenta y comprueba el SQL 18.','Not saved. Retry and check SQL 18.');}finally{input.disabled=false;}});}catch{box.innerHTML=`<p>${bi('No se pudo cargar la visibilidad. Ejecuta SQL 18 y vuelve a abrir Perfiles.','Could not load section visibility. Apply SQL 18 and reopen Profiles.')}</p>`;}};
+  if(state.profile.handle!=='jesus')return;
+  const box=document.createElement('section');box.className='game-panel section-controls';box.id='section-controls';$('#main').append(box);try{await loadSections();if(v!==state.version)return;box.innerHTML=`<h2>${bi('Apartados que puede ver Julissa','Sections Julissa can see')}</h2><p>${bi('Activa un apartado cuando esté listo. Tú siempre puedes abrirlo para prepararlo. Ocultarlo no borra su contenido.','Enable a section when it is ready. You can always open it to prepare it. Hiding it does not delete its contents.')}</p><p class="hint">${bi('Inicio y Perfiles siempre están disponibles. Novios ahora es un título en los perfiles. Los apartados nuevos comienzan ocultos.','Home and Profiles are always available. Sweethearts is now a profile title. New sections start hidden.')}</p><div class="section-switches">${menus.filter(([id])=>!['home','profile','novios',giftsMenuPage].includes(id)).map(([id,icon,label])=>`<label class="row"><input type="checkbox" data-section-toggle="${id}" ${JJSections.values?.[id]?'checked':''}><span aria-hidden="true">${icon}</span><span>${esc(label)}</span></label>`).join('')}</div><p id="section-save-status" role="status"></p>`;box.querySelectorAll('[data-section-toggle]').forEach(input=>input.onchange=async()=>{const visible=input.checked;input.disabled=true;const user=state.profile.id;try{if(!ensureLive())throw Error('DEMO');const values=await rpc('jj_sections',{p_section:input.dataset.sectionToggle,p_visible:visible});if(user!==state.profile?.id)return;JJSections.values=values;$('#section-save-status').textContent=say('Guardado. El cambio llegará a Julissa en unos segundos.','Saved. Julissa will receive the change in a few seconds.');}catch{input.checked=!visible;if(input.isConnected)$('#section-save-status').textContent=say('No se guardó. Reintenta y comprueba el SQL 18.','Not saved. Retry and check SQL 18.');}finally{input.disabled=false;}});}catch{box.innerHTML=`<p>${bi('No se pudo cargar la visibilidad. Ejecuta SQL 18 y vuelve a abrir Perfiles.','Could not load section visibility. Apply SQL 18 and reopen Profiles.')}</p>`;}};
 const sectionsNavigate=navigate;let sectionNavigation=0;
 navigate=async function(page){if(!state.profile)return;const request=++sectionNavigation,user=state.profile.id;try{await loadSections();}catch{if(state.profile?.handle!=='jesus'&&!['home','profile'].includes(page)){toast(say('No se pudo abrir. Comprueba la conexión.','Could not open. Check your connection.'));page='home';}}if(request!==sectionNavigation||state.profile?.id!==user)return;if(!sectionAllowed(page))page='home';await sectionsNavigate(page);if(request===sectionNavigation)paintSectionVisibility();};
 // New controls inserted by the existing page modules also inherit the visibility rule.
