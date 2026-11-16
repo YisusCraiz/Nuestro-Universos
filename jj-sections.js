@@ -13,7 +13,8 @@ shell=function(){
   const giftsButton=document.querySelector('[data-nav="regalos-jxj"]');
   if(giftsButton)giftsButton.onclick=()=>{
     if(!sectionAllowed(giftsMenuPage))return;
-    window.location.assign('./regalos-jxj.html#view=scan&lang='+say('es','en'));
+    const query=new URLSearchParams({view:'scan',lang:say('es','en'),from:state.page});
+    window.location.assign('./regalos-jxj.html#'+query);
   };
 };
 const sectionsProfile=profilePage;profilePage=async function(v){await sectionsProfile(v);if(v!==state.version||!state.profile)return;
