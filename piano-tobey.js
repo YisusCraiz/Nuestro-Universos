@@ -9,15 +9,25 @@ const member = group && !host && params.get('member') === '1';
 const rpcName = group ? 'jj_piano_guest_group' : 'jj_tobey_duel';
 const say = (es, en) => host ? es : en;
 document.documentElement.lang = host ? 'es' : 'en';
-if(group) {
-  $('duel-title').textContent = say('Concierto para cuatro','Four-player concert');
-  $('duel-cast').replaceChildren(...['jesus','julisa','sani','tobey'].map((id,index)=>{
-    const image = document.createElement('img');
-    image.src = 'assets/piano-band/'+id+'.webp';
-    image.alt = ['Yisus','Julie','Sani','Tobey'][index];
-    return image;
-  }));
-}
+if(group)$('duel-title').textContent=say('Concierto para cuatro','Four-player concert');
+const cast = group
+  ? [['jesus','Yisus','drums'],['julisa','Julie','keys'],['sani','Sani','voice'],['tobey','Tobey','guitar']]
+  : [['jesus','Yisus','drums'],['tobey','Tobey','guitar']];
+const performers = cast.map(([id,name,instrument])=>{
+  const stage=document.createElement('div');
+  stage.className='duel-artist';
+  const image=document.createElement('img');
+  image.src='assets/piano-band/'+id+'.webp';
+  image.alt=name;
+  const canvas=document.createElement('canvas');
+  canvas.width=112;canvas.height=72;canvas.setAttribute('aria-hidden','true');
+  stage.append(image,canvas);
+  const artist=PianoInstruments.attach(canvas,image);
+  artist.set(instrument);
+  return {stage,artist};
+});
+$('duel-cast').replaceChildren(...performers.map(({stage})=>stage));
+
 $('exit').textContent = say('Cerrar duelo','Leave duel');
 $('back').hidden = !host && !member;
 if(member)$('back').textContent = 'Back to Nuestro Universo';
@@ -38,6 +48,7 @@ function readSession(key) {
 }
 function renderEnd(message) {
   ended = true;
+  for(const {artist} of performers)artist.stop();
   clearInterval(polling);
   cancelAnimationFrame(frame);
   if(source) { try { source.stop(); } catch {} }
@@ -246,6 +257,7 @@ function hit(lane) {
   if(t < 0 || t > currentRoom.duration*1000 || game.events.length>=1500) return;
   const result = game.press(t,lane);
   if(result === 'perfect' || result === 'good') {
+    performers[lane%performers.length].artist.play(lane);
     keys[lane].dataset.hit = '';
     setTimeout(() => delete keys[lane].dataset.hit,100);
   }

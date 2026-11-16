@@ -21,3 +21,9 @@ canvas{display:block;width:100%;height:min(53svh,24rem);border-radius:1rem 1rem 
 .duel-cast img{height:100%;max-width:45%;object-fit:contain}
 
 #group-invites section{margin:.65rem 0} #group-invites strong{display:block;color:#ffd793;margin-bottom:.35rem} .duel-cast img{max-width:24%}
+
+.duel-artist{height:100%;width:25%;position:relative;display:grid;justify-items:center}
+.duel-artist img{width:100%;max-width:none;height:100%;object-fit:contain;transform-origin:50% 85%}
+.duel-artist canvas{position:absolute;inset:auto auto 6% 50%;transform:translateX(-27%);width:74%;height:auto;background:none;border-radius:0;pointer-events:none}
+.duel-artist canvas[data-instrument="voice"]{width:52%;bottom:29%}
+.duel-artist canvas[data-instrument="guitar"]{bottom:16%}

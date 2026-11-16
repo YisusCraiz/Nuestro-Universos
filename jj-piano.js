@@ -118,18 +118,18 @@ function pianoConcert(owner){
   persist();
  };
  showScene();
- const performers=[...live.querySelectorAll('.piano-band-art')];
- const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
- const reactions=new WeakMap();
- function hit(lane){
-  const performer=performers[lane];
-  if(motionPreference.matches||!performer?.animate||reactions.get(performer)?.playState==='running')return;
-  const pulse=performer.animate([{transform:'translateY(0)',filter:'brightness(1)'},{transform:'translateY(-4px)',filter:'brightness(1.42)',offset:.4},{transform:'translateY(0)',filter:'brightness(1)'}],{duration:210,easing:'ease-out'});
-  reactions.set(performer,pulse);
+ const artists=new Map();
+ for(const panel of [root,live]){
+  const bandInPanel=band.map(([id])=>PianoInstruments.attach(
+   panel.querySelector(`[data-piano-instrument-art="${id}"]`),
+   panel.querySelector(`[data-piano-performer="${id}"]`)
+  ));
+  artists.set(panel,bandInPanel);
  }
+ function hit(lane){artists.get(live)[lane]?.play(lane);}
  function draw(){
   const handle=state.profile?.handle;
-  for(const [id] of band){
+  for(const [index,[id]] of band.entries()){
    for(const panel of [root,live]){
     const canvas=panel.querySelector(`[data-piano-performer="${id}"]`);
     if(id==='jesus'||id==='julisa'){
@@ -138,15 +138,15 @@ function pianoConcert(owner){
      if(stageSkin)drawExclusive(canvas,id,stageSkin);
      else if((look&&look!=='casual')||!drawPianoBandMember(canvas,id))JJWardrobe.draw(canvas,id,look||'casual');
     }else if(!drawPianoBandMember(canvas,id))pianoGuestPortrait(canvas,id);
-    pianoInstrumentSprite(panel.querySelector(`[data-piano-instrument-art="${id}"]`),lineup[id]);
+    artists.get(panel)[index].set(lineup[id]);
    }
   }
   for(const canvas of root.querySelectorAll('[data-piano-shop-preview]'))drawExclusive(canvas,handle,PianoStageSkins.find(([id])=>id===canvas.dataset.pianoShopPreview));
  }
- for(const input of root.querySelectorAll('[data-piano-instrument]')){
+ for(const [index,input] of [...root.querySelectorAll('[data-piano-instrument]')].entries()){
   const id=input.dataset.pianoInstrument;
   input.value=lineup[id];
-  input.onchange=()=>{lineup[id]=input.value;persist();draw();};
+  input.onchange=()=>{lineup[id]=input.value;persist();draw();artists.get(root)[index].play();};
  }
  skinInput.onchange=()=>selectSkin(skinInput.value);
  async function loadWardrobe(){
@@ -274,33 +274,8 @@ function pianoConcert(owner){
  loadShop();
  window.addEventListener('bb-art-ready',draw);
  window.addEventListener('jj-wardrobe-changed',loadWardrobe);
- JJ.cleanups.push(()=>{window.removeEventListener('bb-art-ready',draw);window.removeEventListener('jj-wardrobe-changed',loadWardrobe);});
+ JJ.cleanups.push(()=>{for(const list of artists.values())for(const artist of list)artist.stop();window.removeEventListener('bb-art-ready',draw);window.removeEventListener('jj-wardrobe-changed',loadWardrobe);});
  return {scene:()=>PianoScenes[scene],hit};
-}
-
-function pianoInstrumentSprite(canvas,instrument){
- const ctx=canvas.getContext('2d');
- ctx.clearRect(0,0,112,72);
- const box=(x,y,w,h,color)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h);};
- const oval=(x,y,rx,ry,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();};
- ctx.save();
- if(instrument==='keys'){
-  box(8,23,96,32,'#2b2348');box(8,19,96,8,'#9a82f4');
-  for(let i=0;i<12;i++){box(11+i*7.5,28,6.5,21,'#f2edff');if([0,1,3,4,5,7,8,10].includes(i))box(16+i*7.5,28,4,13,'#30264e');}
- }else if(instrument==='drums'){
-  box(19,24,3,40,'#d9cceb');box(89,20,3,42,'#d9cceb');
-  oval(21,23,15,4,'#fac46c');oval(90,19,15,4,'#fac46c');
-  oval(56,53,24,17,'#51418b');oval(56,51,20,15,'#cdbdff');
-  oval(42,33,12,7,'#f399cf');oval(72,33,12,7,'#f399cf');
- }else if(instrument==='voice'){
-  ctx.translate(56,36);ctx.rotate(.55);
-  box(-5,-8,10,36,'#7667a0');box(-5,-5,10,5,'#dba0ff');oval(0,-12,9,11,'#eee6ff');box(-7,-15,14,2,'#af9ecb');box(-7,-10,14,2,'#af9ecb');
- }else{
-  ctx.translate(56,38);ctx.rotate(-.54);
-  oval(-20,0,19,14,'#f1a06e');oval(-6,0,13,10,'#f1a06e');oval(-15,0,6,6,'#51305a');
-  box(-8,-4,43,8,'#6b456e');box(30,-6,12,12,'#ffcc92');box(-24,-1,58,2,'#fff1ce');
- }
- ctx.restore();
 }
 
 function pianoGuestPortrait(canvas,id){
@@ -441,7 +416,9 @@ async function pianoPage(v){
  function draw(){
   if(!current()||!active||paused)return;
   const t=time(),canvas=$('#piano-board');
+  const previousHit=game.lastHit;
   game.tick(t);
+  if(game.lastHit&&game.lastHit!==previousHit)concert.hit(game.lastHit.l);
   PianoHighway.draw(canvas.getContext('2d'),game,t,PianoHighway.lead[speed],concert.scene());
   const r=game.result(),hud=`${Math.max(0,Math.floor(t/1000))} / ${duration}s · ${r.score} pts · ${say('Rango','Rank')} ${r.grade} · ${game.combo} combo`;if(hud!==lastHUD){lastHUD=hud;$('#piano-hud').textContent=hud;}
   if(t>=duration*1000){finish();return;}raf=requestAnimationFrame(draw);
