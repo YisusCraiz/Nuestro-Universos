@@ -19,3 +19,5 @@ canvas{display:block;width:100%;height:min(53svh,24rem);border-radius:1rem 1rem 
 #exit{background:#251d3c}#back{color:#b9eaf0;margin-inline-start:.6rem}
 .duel-cast{display:flex;justify-content:space-around;height:clamp(5.5rem,18vh,11rem);background:radial-gradient(ellipse at 50% 110%,#63448a,#211c40 72%);border-radius:1rem}
 .duel-cast img{height:100%;max-width:45%;object-fit:contain}
+
+#group-invites section{margin:.65rem 0} #group-invites strong{display:block;color:#ffd793;margin-bottom:.35rem} .duel-cast img{max-width:24%}

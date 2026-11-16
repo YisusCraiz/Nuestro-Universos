@@ -72,3 +72,5 @@
 [data-piano-scene="snow"]{--piano-backdrop:radial-gradient(circle at 9px 18px,#ffffffaf 0 1px,transparent 2px) 0 0/23px 31px,radial-gradient(circle at 13px 9px,#d1efff9a 0 1px,transparent 2px) 0 0/37px 29px,radial-gradient(ellipse at 50% 120%,#4d83aa,#182b54 68%)}
 
 #piano-invite-tobey[hidden]{display:none}
+
+#piano-invite-four[hidden]{display:none}

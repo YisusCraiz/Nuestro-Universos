@@ -2,9 +2,21 @@
 
 const $ = id => document.getElementById(id);
 const config = window.UNIVERSE_CONFIG;
-const host = new URLSearchParams(location.search).get('host') === '1';
+const params = new URLSearchParams(location.search);
+const host = params.get('host') === '1';
+const group = params.get('group') === '1';
+const rpcName = group ? 'jj_piano_guest_group' : 'jj_tobey_duel';
 const say = (es, en) => host ? es : en;
 document.documentElement.lang = host ? 'es' : 'en';
+if(group) {
+  $('duel-title').textContent = say('Concierto para cuatro','Four-player concert');
+  $('duel-cast').replaceChildren(...['jesus','julisa','sani','tobey'].map((id,index)=>{
+    const image = document.createElement('img');
+    image.src = 'assets/piano-band/'+id+'.webp';
+    image.alt = ['Yisus','Julie','Sani','Tobey'][index];
+    return image;
+  }));
+}
 $('exit').textContent = say('Cerrar duelo','Leave duel');
 $('back').hidden = !host;
 const client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey,
@@ -27,12 +39,12 @@ function renderEnd(message) {
   clearInterval(polling);
   cancelAnimationFrame(frame);
   if(source) { try { source.stop(); } catch {} }
-  for(const id of ['claim','invitation','action','track','exit']) $(id).hidden = true;
+  for(const id of ['claim','invitation','group-invites','group-status','action','track','exit']) $(id).hidden = true;
   status(message);
 }
 async function request(action, payload = {}, credential = guestKey) {
   const sent = performance.now();
-  const {data,error} = await client.rpc('jj_tobey_duel',{
+  const {data,error} = await client.rpc(rpcName,{
     p_action:action,p_room:roomId??null,p_secret:credential??null,p_data:payload
   });
   if(error) throw error;
@@ -66,6 +78,10 @@ function update(room) {
     return;
   }
   currentRoom = room;
+  if(group) {
+    updateGroup(room);
+    return;
+  }
   if(room.starts_at) {
     $('action').hidden = true;
     $('invitation').hidden = true;
@@ -82,6 +98,63 @@ function update(room) {
   if(host) {
     status(room.ready ? 'Tobey está listo.' : room.guest_joined ? 'Tobey se conectó. Esperando que prepare la canción.' : 'Comparte el enlace y el PIN con Tobey.');
     $('action').hidden = !room.ready;
+  }
+}
+function updateGroup(room) {
+  const seats = room.seats;
+  $('group-status').hidden = false;
+  $('group-status').textContent = seats.map(seat => seat.name+' · '+(
+    seat.left ? say('salió','left') : seat.score !== null ? seat.score+' pts' :
+    seat.ready ? say('listo','ready') : seat.joined ? say('en sala','joined') : say('por entrar','waiting')
+  )).join('  |  ');
+  if(!room.starts_at) {
+    if(host) {
+      const ready = seats.every(seat=>seat.ready&&!seat.left);
+      $('action').hidden = !ready;
+      status(seats.some(seat=>seat.left)
+        ? 'Alguien salió antes del inicio. Cierra esta sala y crea enlaces nuevos.'
+        : ready ? 'Los cuatro están listos.' : 'Comparte cada enlace y su PIN con la persona correspondiente.');
+    }
+    return;
+  }
+  $('action').hidden = true;
+  $('group-invites').hidden = true;
+  if(!active && !finished && buffer) start(room);
+  if(room.host_score !== null && seats.every(seat=>seat.score!==null||seat.left)) {
+    const scores = [{name:'Yisus',score:room.host_score},...seats.filter(seat=>seat.score!==null)];
+    const best = Math.max(...scores.map(player=>player.score));
+    const winners = scores.filter(player=>player.score===best).map(player=>player.name);
+    $('result-title').textContent = winners.length===1 ? say('Gana '+winners[0],winners[0]+' wins') : say('Empate','Tie');
+    $('result-scores').textContent = scores.map(player=>player.name+' '+player.score).join(' · ');
+    $('results').hidden = false;
+    status(room.title);
+  }
+}
+function copyInvite(input) {
+  return navigator.clipboard?.writeText(input.value).catch(()=>input.select()) ?? input.select();
+}
+function showGroupInvites(invites) {
+  $('group-invites').hidden = false;
+  for(const [name,{token,pin}] of Object.entries(invites)) {
+    const row = document.createElement('section');
+    const title = document.createElement('strong');
+    title.textContent = name+' · PIN '+pin;
+    const controls = document.createElement('div');
+    controls.className = 'copy-row';
+    const field = document.createElement('input');
+    field.readOnly = true;
+    field.setAttribute('aria-label','Enlace para '+name);
+    const link = new URL(location.pathname,location.origin);
+    link.searchParams.set('group','1');
+    link.hash = roomId+'.'+token;
+    field.value = link.href;
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.textContent = 'Copiar';
+    copy.onclick = () => copyInvite(field);
+    controls.append(field,copy);
+    row.append(title,controls);
+    $('group-invites').append(row);
   }
 }
 function loop() {
@@ -181,7 +254,7 @@ $('exit').onclick = async () => {
 };
 function closeOnExit() {
   if(ended || host || !roomId || !guestKey) return;
-  fetch(config.supabaseUrl+'/rest/v1/rpc/jj_tobey_duel',{
+  fetch(config.supabaseUrl+'/rest/v1/rpc/'+rpcName,{
     method:'POST',keepalive:true,
     headers:{apikey:config.supabasePublishableKey,'Content-Type':'application/json'},
     body:JSON.stringify({p_action:'leave',p_room:roomId,p_secret:guestKey})
@@ -196,7 +269,7 @@ $('copy').onclick = async () => {
 if(host) {
   const outfit = readSession('jj-tobey-selected-track');
   if(!outfit?.path) renderEnd('Elige la canción en VS → Piano JJ antes de crear el duelo.');
-  else action('Crear invitación para Tobey', async () => {
+  else action(group?'Crear invitaciones':'Crear invitación para Tobey', async () => {
     audio ??= new AudioContext();
     await audio.resume();
     const {data,error} = await client.storage.from('universe').createSignedUrl(outfit.path,1200);
@@ -208,15 +281,17 @@ if(host) {
     if(chart.length < 20) { status('No se pudieron generar suficientes notas para esa canción.');return; }
     const token = secret();
     const pin = String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0');
-    const created = await request('create',{pin,url:data.signedUrl,title:outfit.title.slice(0,160),duration,difficulty:outfit.difficulty,chart},token);
+    const invites = group ? Object.fromEntries(['Julie','Sani','Tobey'].map(name=>[name,{token:secret(),pin:String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0')}])) : undefined;
+    const created = await request('create',{pin,url:data.signedUrl,title:outfit.title.slice(0,160),duration,difficulty:outfit.difficulty,chart,invites},token);
     roomId = created.id;
     const link = new URL(location.pathname,location.origin);
     link.hash = roomId+'.'+token;
     $('invite-url').value = link.href;
     $('invite-pin').textContent = pin;
-    $('invitation').hidden = false;
+    if(group) showGroupInvites(invites);
+    else $('invitation').hidden = false;
     $('exit').hidden = false;
-    action('Comenzar duelo',async()=>{await audio.resume();update(await request('start'));});
+    action(group?'Comenzar concierto':'Comenzar duelo',async()=>{await audio.resume();update(await request('start'));});
     $('action').hidden = true;
     update(await request('read'));
     loop();
@@ -238,7 +313,7 @@ if(host) {
         const room = await request('claim',{pin:$('pin').value,browser_key:proposedKey},inviteToken);
         if(room.denied) { status('That PIN or invitation could not be used.');return; }
         guestKey = proposedKey;
-        history.replaceState(null,'',location.pathname);
+        history.replaceState(null,'',location.pathname+location.search);
         $('claim').hidden = true;
         $('exit').hidden = false;
         status(room.title);

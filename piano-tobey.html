@@ -6,16 +6,16 @@
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <title>Piano JJ · Tobey</title>
-<link rel="stylesheet" href="piano-tobey.css">
+<link rel="stylesheet" href="piano-tobey.css?v=four">
 <script defer src="config.js"></script>
 <script defer src="assets/supabase.js"></script>
 <script defer src="jj-piano-engine.js?v=nuestro-escenario-3"></script>
-<script defer src="piano-tobey.js"></script>
+<script defer src="piano-tobey.js?v=four"></script>
 </head>
 <body>
 <main>
- <header><p class="eyebrow">PIANO JJ</p><h1>Yisus <span>vs</span> Tobey</h1></header>
- <div class="duel-cast"><img src="assets/piano-band/jesus.webp" alt="Yisus"><img src="assets/piano-band/tobey.webp" alt="Tobey"></div>
+ <header><p class="eyebrow">PIANO JJ</p><h1 id="duel-title">Yisus <span>vs</span> Tobey</h1></header>
+ <div id="duel-cast" class="duel-cast"><img src="assets/piano-band/jesus.webp" alt="Yisus"><img src="assets/piano-band/tobey.webp" alt="Tobey"></div>
  <p id="status" role="status"></p>
  <form id="claim" hidden>
   <label for="pin">Invitation PIN</label>
@@ -27,6 +27,8 @@
   <div class="copy-row"><input id="invite-url" readonly><button id="copy" type="button">Copiar</button></div>
   <p>PIN <strong id="invite-pin"></strong></p>
  </section>
+ <section id="group-invites" hidden></section>
+ <p id="group-status" role="status" hidden></p>
  <button id="action" type="button" hidden></button>
  <section id="track" hidden>
   <p id="score" aria-live="off"></p>
