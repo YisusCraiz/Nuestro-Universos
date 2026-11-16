@@ -6,6 +6,46 @@ UniverseGroups.games=UniverseGroups.games.filter(id=>!VsItems.some(([key])=>id==
 const vsItemSection=id=>id==='golf'?'vs':['tictactoe','wands'].includes(id)?'puzzles':id;
 const vsAllowed=sectionAllowed;sectionAllowed=function(page){if(page==='vs')return vsAllowed('vs')&&VsItems.some(([id])=>vsAllowed(vsItemSection(id)));return vsAllowed(page);};
 const vsVisibility=paintSectionVisibility;paintSectionVisibility=function(){vsVisibility();document.querySelectorAll('[data-nav="pool"]').forEach(b=>b.hidden=true);};
+function vsMinecraftCard(){
+ const url=new URL('https://mcraft.fun/');
+ url.search=new URLSearchParams({
+  ip:'127.0.0.1:25565',
+  version:'1.21.4',
+  proxy:'https://fluffy-enigma-596xwq64776hpp5j-42622.app.github.dev',
+  name:'Nuestro Mundo'
+ }).toString();
+ return `<section class="game-panel" id="universe-minecraft">
+  <h2>${bi('Minecraft · Nuestro Mundo','Minecraft · Our World')}</h2>
+  <p class="hint">${bi('Prueba en el navegador. En Account Override, elige tu cuenta de Microsoft con Minecraft Java o selecciona Any other MS account.','Browser playtest. Under Account Override, pick your Microsoft account with Minecraft Java or select Any other MS account.')}</p>
+  <a class="btn" href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">${bi('Entrar al mundo','Join our world')}</a>
+ </section>`;
+}
+function openUniverseGolf(){
+ if(state.page!=='vs'||!sectionAllowed('vs'))return navigate('vs');
+ const url=new URL('games/golf-jxj.html',document.baseURI);
+ url.searchParams.set('v','14');
+ url.searchParams.set('lang',document.documentElement.lang==='en'?'en':'es');
+ const href=esc(url.href);
+ jjCleanup();
+ clearTimers();
+ ++state.version;
+ $('#main').innerHTML=`<section class="game-panel universe-golf" aria-labelledby="golf-heading">
+  <header class="universe-golf-actions">
+   <div>
+    <h1 id="golf-heading" tabindex="-1">Golf J×J</h1>
+    <p class="hint">${bi('Yisus y Julie · 12 hoyos en cuatro mundos','Yisus and Julie · 12 holes across four worlds')}</p>
+   </div>
+   <div>
+    <button class="btn" id="golf-back" type="button">${bi('Volver a VS','Back to VS')}</button>
+    <a class="btn" href="${href}" target="_blank" rel="noopener">${bi('Abrir en otra pestaña','Open in a new tab')}</a>
+   </div>
+  </header>
+  <iframe class="universe-golf-frame" src="${href}" title="Golf J×J"></iframe>
+ </section>`;
+ $('#golf-back').onclick=()=>navigate('vs');
+ window.scrollTo(0,0);
+ $('#golf-heading').focus();
+}
 const vsNavigate=navigate;let vsRequest=0,vsLanding=false;
 navigate=async function(page){if(!state.profile)return;const req=++vsRequest;if(!vsLanding){vsLanding=true;if(JJRooms.code('pool'))page='pool';}
  if(!['vs','casino','pool','puzzles'].includes(page)){await vsNavigate(page);if(req===vsRequest&&state.page==='games'){
@@ -14,7 +54,7 @@ navigate=async function(page){if(!state.profile)return;const req=++vsRequest;if(
   $('#main').insertAdjacentHTML('afterbegin',`<p class="game-panel">${bi('Minijuegos clásicos: 3 JJ por terminar; +3 JJ al mejorar tu propio récord del período. Piano tiene su propia tabla de premios y comparte los límites. Hasta 12 partidas premiadas y 45 JJ al día. Las partidas de prueba no dan monedas.','Classic minigames: 3 JJ for finishing; +3 JJ for improving your own best this period. Piano has its own pay table and shares the limits. Up to 12 rewarded games and 45 JJ per day. Demo games do not award coins.')}</p>`);
  }return;}
  try{await loadSections();if(req!==vsRequest)return;if(!sectionAllowed(page))return vsNavigate('home');jjCleanup();clearTimers();state.page=page;const v=++state.version;rememberRoute(historyRoute(page));shell();window.scrollTo(0,0);
-  if(page==='vs'){$('#main').innerHTML=lifeHeading('Vs','Vs','Una sala para dos. Elige el juego, comparte el código y acepta las reglas.','A room for two. Choose a game, share the code and accept the rules.')+universeCards(VsItems.filter(([id])=>vsAllowed(vsItemSection(id))));bindUniverseCards();}
+  if(page==='vs'){$('#main').innerHTML=lifeHeading('Vs','Vs','Una sala para dos. Elige el juego, comparte el código y acepta las reglas.','A room for two. Choose a game, share the code and accept the rules.')+(state.demo?'':vsMinecraftCard())+universeCards(VsItems.filter(([id])=>vsAllowed(vsItemSection(id))));bindUniverseCards();}
   else if(page==='puzzles'){$('#main').innerHTML=lifeHeading('Sopas y laberintos','Word searches & mazes','Un reto a tu ritmo.','A challenge at your pace.')+universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze']]);bindUniverseCards();}
   else if(page==='casino')await casinoPage(v);else await poolPage(v);
  }catch(e){if(req===vsRequest){console.error(e);$('#main').innerHTML='<p>'+bi('No se pudo abrir. Comprueba la conexión y las actualizaciones SQL 32 y 33.','Could not open. Check your connection and SQL updates 32 and 33.')+'</p>';}}
