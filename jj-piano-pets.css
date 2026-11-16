@@ -29,3 +29,19 @@
  50%{transform:translateY(-3px) scale(1.025,1.04)}
 }
 @media(prefers-reduced-motion:reduce){#jj-pet-talk img:not(.pet-halloween){animation:none}}
+
+
+#piano-dressing-room summary{cursor:pointer;font-weight:700}
+#piano-dressing-room > label{display:grid;gap:.35rem;max-width:25rem;margin-top:.9rem}
+.piano-band-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(.25rem,1vw,.8rem);padding:.65rem;background:radial-gradient(ellipse at 50% 100%,#64367d,#1a1935 68%);border-radius:14px;color:#fff}
+#piano-dressing-room .piano-band-grid{margin-top:.85rem}
+.piano-band-member{text-align:center;min-width:0}
+.piano-band-art{position:relative;margin:auto;width:min(100%,95px);background:radial-gradient(ellipse at 50% 80%,var(--performer),transparent 65%);border-bottom:2px solid var(--performer);border-radius:0 0 40% 40%}
+.piano-band-art canvas{display:block;width:100%;height:auto}
+.piano-band-art [data-piano-instrument-art]{position:absolute;right:-5%;bottom:0;width:68%;filter:drop-shadow(0 2px 2px #151221)}
+.piano-band-member label{display:grid;gap:.25rem;margin-top:.3rem;font-size:.9rem}
+.piano-band-member select{width:100%;min-width:0;font-size:.8rem}
+#piano-live-band .piano-band-art{width:min(100%,57px)}
+#piano-live-band strong{font-size:.75rem}
+#piano-live-song{margin:.2rem auto;text-align:center;font-weight:700}
+@media(max-width:420px){#piano-dressing-room .piano-band-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
