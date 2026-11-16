@@ -25,6 +25,7 @@ function universeMinecraftCard(){
 function openUniverseGolf(){
  if(!universeAllowed('games'))return navigate('games');
  const url=new URL('games/golf-jxj.html',document.baseURI);
+ url.searchParams.set('v','12');
  url.searchParams.set('lang',document.documentElement.lang==='en'?'en':'es');
  const href=esc(url.href);
  jjCleanup();
@@ -34,7 +35,7 @@ function openUniverseGolf(){
   <header class="universe-golf-actions">
    <div>
     <h1 id="golf-heading" tabindex="-1">Golf J×J</h1>
-    <p class="hint">${bi('Yisus y Julie · Cinco hoyos','Yisus and Julie · Five holes')}</p>
+    <p class="hint">${bi('Yisus y Julie · 12 hoyos en cuatro mundos','Yisus and Julie · 12 holes across four worlds')}</p>
    </div>
    <div>
     <button class="btn" id="golf-back" type="button">${bi('Volver a Juegos','Back to Games')}</button>
