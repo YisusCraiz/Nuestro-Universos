@@ -1,9 +1,10 @@
 'use strict';
-const VsItems=[['bombitas','💣','Bombitas JJ','Bombitas JJ'],['cards','▣','Última carta JJ · tipo UNO','Last Card JJ · UNO-style'],['playingcards','♠','Baraja inglesa','Playing cards'],['pool','🎱','Billar JJ','Pool JJ'],['tictactoe','✕ ◯','Juego del gato','Tic-tac-toe'],['wands','🪄','Duelo de varitas','Wand duel'],['secretpuzzle','🧩','Puzle secreto','Secret puzzle'],['truth','♠','Verdad o reto','Truth or dare']];
+const VsItems=[['bombitas','💣','Bombitas JJ','Bombitas JJ'],['cards','▣','Última carta JJ · tipo UNO','Last Card JJ · UNO-style'],['playingcards','♠','Baraja inglesa','Playing cards'],['pool','🎱','Billar JJ','Pool JJ'],['golf','⛳','Golf J×J','Golf J×J'],['tictactoe','✕ ◯','Juego del gato','Tic-tac-toe'],['wands','🪄','Duelo de varitas','Wand duel'],['secretpuzzle','🧩','Puzle secreto','Secret puzzle'],['truth','♠','Verdad o reto','Truth or dare']];
 menus.splice(menus.findIndex(m=>m[0]==='games')+1,0,['vs','⚔','Vs']);
 menus.push(['casino','♦','Casino'],['pool','🎱','Billar JJ']);
 UniverseGroups.games=UniverseGroups.games.filter(id=>!VsItems.some(([key])=>id===key));
-const vsAllowed=sectionAllowed;sectionAllowed=function(page){if(page==='vs')return vsAllowed('vs')&&VsItems.some(([id])=>vsAllowed(['tictactoe','wands'].includes(id)?'puzzles':id));return vsAllowed(page);};
+const vsItemSection=id=>id==='golf'?'vs':['tictactoe','wands'].includes(id)?'puzzles':id;
+const vsAllowed=sectionAllowed;sectionAllowed=function(page){if(page==='vs')return vsAllowed('vs')&&VsItems.some(([id])=>vsAllowed(vsItemSection(id)));return vsAllowed(page);};
 const vsVisibility=paintSectionVisibility;paintSectionVisibility=function(){vsVisibility();document.querySelectorAll('[data-nav="pool"]').forEach(b=>b.hidden=true);};
 const vsNavigate=navigate;let vsRequest=0,vsLanding=false;
 navigate=async function(page){if(!state.profile)return;const req=++vsRequest;if(!vsLanding){vsLanding=true;if(JJRooms.code('pool'))page='pool';}
@@ -13,7 +14,7 @@ navigate=async function(page){if(!state.profile)return;const req=++vsRequest;if(
   $('#main').insertAdjacentHTML('afterbegin',`<p class="game-panel">${bi('Minijuegos clásicos: 3 JJ por terminar; +3 JJ al mejorar tu propio récord del período. Piano tiene su propia tabla de premios y comparte los límites. Hasta 12 partidas premiadas y 45 JJ al día. Las partidas de prueba no dan monedas.','Classic minigames: 3 JJ for finishing; +3 JJ for improving your own best this period. Piano has its own pay table and shares the limits. Up to 12 rewarded games and 45 JJ per day. Demo games do not award coins.')}</p>`);
  }return;}
  try{await loadSections();if(req!==vsRequest)return;if(!sectionAllowed(page))return vsNavigate('home');jjCleanup();clearTimers();state.page=page;const v=++state.version;rememberRoute(historyRoute(page));shell();window.scrollTo(0,0);
-  if(page==='vs'){$('#main').innerHTML=lifeHeading('Vs','Vs','Una sala para dos. Elige el juego, comparte el código y acepta las reglas.','A room for two. Choose a game, share the code and accept the rules.')+universeCards(VsItems.filter(([id])=>sectionAllowed(['tictactoe','wands'].includes(id)?'puzzles':id)));bindUniverseCards();}
+  if(page==='vs'){$('#main').innerHTML=lifeHeading('Vs','Vs','Una sala para dos. Elige el juego, comparte el código y acepta las reglas.','A room for two. Choose a game, share the code and accept the rules.')+universeCards(VsItems.filter(([id])=>vsAllowed(vsItemSection(id))));bindUniverseCards();}
   else if(page==='puzzles'){$('#main').innerHTML=lifeHeading('Sopas y laberintos','Word searches & mazes','Un reto a tu ritmo.','A challenge at your pace.')+universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze']]);bindUniverseCards();}
   else if(page==='casino')await casinoPage(v);else await poolPage(v);
  }catch(e){if(req===vsRequest){console.error(e);$('#main').innerHTML='<p>'+bi('No se pudo abrir. Comprueba la conexión y las actualizaciones SQL 32 y 33.','Could not open. Check your connection and SQL updates 32 and 33.')+'</p>';}}
