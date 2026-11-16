@@ -59,18 +59,24 @@ const PianoHighway={
  }
 };
 
+const PianoStageSkins=[
+ ['neon-pulse','Pulso neón','Neon Pulse','#63eee9','#35216d'],
+ ['midnight-blue','Medianoche azul','Midnight Blue','#b5cbff','#152451'],
+ ['starlight','Luz estelar','Starlight','#ffd280','#52264e']
+];
+
 function pianoConcert(owner){
  const band=[['jesus','Yisus','drums','#74e8f2'],['julisa','Julie','keys','#91aaff'],['sani','Sani','voice','#ec98df'],['tobey','Tobey','guitar','#ffc67d']];
  const instruments=[['drums','Batería','Drums'],['keys','Teclado','Keyboard'],['voice','Micrófono','Microphone'],['guitar','Guitarra','Guitar']];
  const key='jj-piano-concert-'+owner;
- let saved={}, wardrobe;
+ let saved={}, wardrobe, shopData, buying=false;
  try{saved=JSON.parse(localStorage.getItem(key))||{};}catch{}
  const lineup=Object.fromEntries(band.map(([id,,instrument])=>[id,instruments.some(([value])=>value===saved.lineup?.[id])?saved.lineup[id]:instrument]));
  let skin=typeof saved.skin==='string'?saved.skin:'';
  const root=$('#piano-dressing-room'), live=$('#piano-live-band');
  const choices=instruments.map(([value,es,en])=>`<option value="${value}">${esc(say(es,en))}</option>`).join('');
  const card=([id,name,,color],controls)=>`<div class="piano-band-member" style="--performer:${color}"><div class="piano-band-art"><canvas width="128" height="146" data-piano-performer="${id}" aria-hidden="true"></canvas><canvas width="112" height="72" data-piano-instrument-art="${id}" aria-hidden="true"></canvas></div>${controls?`<label>${name}<select data-piano-instrument="${id}">${choices}</select></label>`:`<strong>${name}</strong>`}</div>`;
- root.innerHTML=`<summary>${bi('Camerino de Nuestro Escenario','Our Stage dressing room')}</summary><div class="piano-band-grid">${band.map(member=>card(member,true)).join('')}</div><label>${bi('Tu skin para este concierto','Your outfit for this concert')}<select id="piano-concert-skin"><option value="">${say('Usar mi skin equipada','Use my equipped outfit')}</option></select></label><p id="piano-concert-status" role="status"></p>`;
+ root.innerHTML=`<summary>${bi('Camerino de Nuestro Escenario','Our Stage dressing room')}</summary><div class="piano-band-grid">${band.map(member=>card(member,true)).join('')}</div><label>${bi('Tu skin para este concierto','Your outfit for this concert')}<select id="piano-concert-skin"><option value="">${say('Usar mi skin equipada','Use my equipped outfit')}</option></select></label><p id="piano-concert-status" role="status"></p><section id="piano-exclusive-shop" hidden><h3>${bi('Vestuario exclusivo de Piano JJ','Piano JJ exclusive outfits')}</h3><p id="piano-shop-balance"></p><div id="piano-shop-items" class="piano-band-grid"></div><div id="piano-shop-confirm"></div><p id="piano-shop-status" role="status"></p></section>`;
  live.innerHTML=band.map(member=>card(member,false)).join('');
  const skinInput=$('#piano-concert-skin');
  const persist=()=>{try{localStorage.setItem(key,JSON.stringify({skin,lineup}));}catch{}};
@@ -81,34 +87,116 @@ function pianoConcert(owner){
     const canvas=panel.querySelector(`[data-piano-performer="${id}"]`);
     if(id==='jesus'||id==='julisa'){
      const look=id===handle?(wardrobe?.owned.includes(skin)?skin:wardrobe?.equipped):null;
-     JJWardrobe.draw(canvas,id,look||'casual');
+     const stageSkin=id===handle&&shopData?.owned.includes(skin)?PianoStageSkins.find(([key])=>key===skin):null;
+     if(stageSkin)drawExclusive(canvas,id,stageSkin);
+     else JJWardrobe.draw(canvas,id,look||'casual');
     }else pianoGuestPortrait(canvas,id);
     pianoInstrumentSprite(panel.querySelector(`[data-piano-instrument-art="${id}"]`),lineup[id]);
    }
   }
+  for(const canvas of root.querySelectorAll('[data-piano-shop-preview]'))drawExclusive(canvas,handle,PianoStageSkins.find(([id])=>id===canvas.dataset.pianoShopPreview));
  }
  for(const input of root.querySelectorAll('[data-piano-instrument]')){
   const id=input.dataset.pianoInstrument;
   input.value=lineup[id];
   input.onchange=()=>{lineup[id]=input.value;persist();draw();};
  }
- skinInput.onchange=()=>{skin=skinInput.value;persist();draw();};
+ skinInput.onchange=()=>{skin=skinInput.value;persist();if(shopData)paintShop();else draw();};
  async function loadWardrobe(){
   try{
    const data=await JJWardrobe.read();
    if(!root.isConnected)return;
    wardrobe=data;
-   skinInput.length=1;
-   for(const [id,es,en] of BBSkins)if(data.owned.includes(id))skinInput.add(new Option(say(es,en),id));
-   skinInput.value=data.owned.includes(skin)?skin:'';
+   paintSkinOptions();
    $('#piano-concert-status').textContent='';
    draw();
   }catch{
    if(root.isConnected)$('#piano-concert-status').textContent=say('El armario no pudo cargar. Vuelve a abrir Piano JJ para reintentar.','The wardrobe could not load. Reopen Piano JJ to retry.');
   }
  }
+ function paintSkinOptions(){
+  skinInput.length=1;
+  for(const [id,es,en] of BBSkins)if(wardrobe?.owned.includes(id))skinInput.add(new Option(say(es,en),id));
+  for(const [id,es,en] of PianoStageSkins)if(shopData?.owned.includes(id))skinInput.add(new Option(say(es,en),id));
+  skinInput.value=(wardrobe?.owned.includes(skin)||shopData?.owned.includes(skin))?skin:'';
+ }
+ function paintShop(){
+  const shop=$('#piano-exclusive-shop');
+  shop.hidden=false;
+  $('#piano-shop-balance').textContent=shopData?`${shopData.coins} JJ`:'';
+  $('#piano-shop-items').innerHTML=shopData?PianoStageSkins.filter(([id])=>Number.isInteger(shopData.catalog[id])).map(([id,es,en])=>{
+   const owned=shopData.owned.includes(id),price=shopData.catalog[id];
+   return `<article class="piano-shop-card" data-piano-shop-item="${id}"><canvas width="128" height="146" data-piano-shop-preview="${id}" aria-hidden="true"></canvas><strong>${bi(es,en)}</strong><button type="button" class="btn secondary" ${buying||skin===id||(!owned&&shopData.coins<price)?'disabled':''}>${skin===id?bi('Equipada','Equipped'):owned?bi('Usar','Wear'):`${bi('Comprar','Buy')} · ${price} JJ`}</button></article>`;
+  }).join(''):'';
+  for(const item of shop.querySelectorAll('[data-piano-shop-item]')){
+   const id=item.dataset.pianoShopItem;
+   item.querySelector('button').onclick=()=>{
+    if(buying)return;
+    $('#piano-shop-confirm').replaceChildren();
+    if(shopData.owned.includes(id)){selectSkin(id);return;}
+    const [,es,en]=PianoStageSkins.find(([key])=>key===id);
+    $('#piano-shop-confirm').innerHTML=`<p>${bi('Comprar','Buy')} ${bi(es,en)} · ${shopData.catalog[id]} JJ</p>${jjButton('piano-buy-skin','Confirmar compra','Confirm purchase')}${jjButton('piano-cancel-skin','Cancelar','Cancel','btn secondary')}`;
+    $('#piano-buy-skin').onclick=()=>buySkin(id);
+    $('#piano-cancel-skin').onclick=()=>$('#piano-shop-confirm').replaceChildren();
+   };
+  }
+  draw();
+ }
+ function selectSkin(id){skin=id;persist();paintSkinOptions();paintShop();}
+ async function loadShop(){
+  if(state.demo)return;
+  try{
+   shopData=await rpc('jj_piano_shop');
+   if(root.isConnected){paintSkinOptions();paintShop();}
+  }catch{
+   if(!root.isConnected)return;
+   $('#piano-exclusive-shop').hidden=false;
+   $('#piano-shop-status').textContent=say('El vestuario exclusivo no está disponible en este momento.','Exclusive outfits are currently unavailable.');
+  }
+ }
+ async function buySkin(id){
+  if(buying)return;
+  buying=true;
+  $('#piano-shop-confirm').replaceChildren();
+  paintShop();
+  try{
+   shopData=await rpc('jj_piano_shop',{p_action:'buy',p_skin:id});
+   if(state.profile?.id!==owner)return;
+   JJ.dashboard=null;
+   window.dispatchEvent(new CustomEvent('jj-wallet-update',{detail:{owner,coins:shopData.coins}}));
+   document.querySelectorAll('.sidebar-bottom .coin-pill').forEach(el=>el.textContent=`✦ ${shopData.coins} JJ`);
+   if(root.isConnected){
+    selectSkin(id);
+    $('#piano-shop-status').textContent=say('Compra confirmada. Atuendo equipado.','Purchase confirmed. Outfit equipped.');
+   }
+  }catch(error){
+   if(root.isConnected)$('#piano-shop-status').textContent=error.message?.includes('INSUFFICIENT_COINS')?say('Te faltan monedas JJ.','Not enough JJ coins.'):say('No se confirmó la compra. Puedes reintentar.','Purchase unconfirmed. You can retry.');
+  }finally{
+   buying=false;
+   if(root.isConnected)paintShop();
+  }
+ }
+ function drawExclusive(canvas,handle,outfit){
+  const [,,,trim,cloth]=outfit;
+  JJWardrobe.draw(canvas,handle,'casual');
+  const ctx=canvas.getContext('2d');
+  ctx.save();
+  ctx.scale(canvas.width/128,canvas.height/146);
+  ctx.fillStyle=cloth;
+  ctx.beginPath();
+  ctx.moveTo(45,101);ctx.lineTo(58,98);ctx.lineTo(64,106);ctx.lineTo(70,98);
+  ctx.lineTo(83,101);ctx.lineTo(86,127);ctx.lineTo(42,127);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=trim;ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(56,101);ctx.lineTo(64,112);ctx.lineTo(72,101);ctx.moveTo(64,112);ctx.lineTo(64,126);ctx.stroke();
+  ctx.fillStyle=trim;
+  ctx.fillRect(71,115,7,3);
+  ctx.font='bold 15px sans-serif';
+  ctx.fillText('✦',19,83);ctx.fillText('✧',98,72);
+  ctx.restore();
+ }
  draw();
  loadWardrobe();
+ loadShop();
  window.addEventListener('bb-art-ready',draw);
  window.addEventListener('jj-wardrobe-changed',loadWardrobe);
  JJ.cleanups.push(()=>{window.removeEventListener('bb-art-ready',draw);window.removeEventListener('jj-wardrobe-changed',loadWardrobe);});
