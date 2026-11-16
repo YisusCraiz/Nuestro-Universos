@@ -58,6 +58,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
  <button id="openGift" type="button" data-t="open" hidden></button>
  <p id="letter"></p>
  <ul id="attachmentLinks" hidden></ul>
+ <p id="coinsReceived" hidden></p>
  <p id="cardNote" hidden data-t="cardNote"></p>
 </article>
 <section id="collection" hidden><h2 data-t="gifts"></h2><div id="items"></div></section>
@@ -68,6 +69,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
  <details><summary data-t="manage"></summary><div id="managedItems"></div></details>
  <form id="draft">
   <label><span data-t="recipient"></span><select name="recipient"><option value="partner" id="giftPartner"></option><option value="self" data-t="self"></option></select></label>
+  <div id="giftCoins">
+   <label><span data-t="coins"></span><input name="coins" type="number" min="0" step="1" max="2147483647" value="0" inputmode="numeric"></label>
+   <p id="coinBalance"></p>
+   <p data-t="coinsHint"></p>
+  </div>
   <label><span data-t="title"></span><input required name="title" maxlength="120"></label>
   <label><span data-t="letter"></span><textarea required name="body" rows="6" maxlength="16000"></textarea></label>
   <label><span data-t="theme"></span><select name="theme"><option value="anniversary" data-t="anniversary"></option><option value="christmas" data-t="christmas"></option><option value="surprise" data-t="surprise"></option></select></label>
@@ -90,6 +96,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
 'use strict';
 const $ = id => document.getElementById(id);
 const tr = {
+ coins:['Monedas JJ para regalar','JJ coins to gift'],
+ coinsHint:['Al habilitar el regalo se apartan las monedas. Si lo deshabilitas antes del canje, vuelven a tu saldo.','Coins are set aside when you enable the gift. Disable it before redemption to get them back.'],
+ availableCoins:['Saldo disponible','Available balance'],
+ receivedCoins:['Monedas JJ recibidas','JJ coins received'],
+ insufficientCoins:['Tu saldo disponible no alcanza para este regalo.','Your available balance is too low for this gift.'],
+ invalidCoins:['Elige una cantidad válida y envía las monedas a la otra persona.','Enter a valid amount and send the coins to the other person.'],
  back:['← Atrás','← Back'],
  scanTab:['Escáner JXJ','JXJ Scanner'], createTab:['Crear regalos','Create gifts'],
  scanHint:['Apunta la cámara al QR o al código de barras.','Point your camera at the QR or barcode.'],
@@ -139,7 +151,12 @@ function status(key) {
 function language() {
   document.documentElement.lang = lang ? 'en' : 'es';
   document.querySelectorAll('[data-t]').forEach(node => {node.textContent = t(node.dataset.t);});
-  if (account) $('heading').textContent = t('heading');
+  if (account) {
+    $('heading').textContent = t('heading');
+    showBalance();
+  }
+  const received=$('coinsReceived');
+  if (!received.hidden) received.textContent=t('receivedCoins')+': '+received.dataset.amount;
   if (!$('openGift').hidden) $('title').textContent = t('sealed');
   $('language').textContent = lang ? 'Español' : 'English';
   if (scanner) $('scan').textContent = t('stop');
@@ -168,7 +185,8 @@ async function run(task) {
   status('');
   try { await task(); }
   catch (error) {
-    status(error.message === 'GIFT_UNAVAILABLE' ? 'unavailable' :
+    status(error.message === 'INSUFFICIENT_GIFT_COINS' ? 'insufficientCoins' :
+      error.message === 'INVALID_GIFT_COINS' ? 'invalidCoins' : error.message === 'GIFT_UNAVAILABLE' ? 'unavailable' :
       ['23505','23503','23514'].includes(error.code) ? 'invalid' : 'error');
   } finally { pending = false; }
 }
@@ -179,6 +197,9 @@ async function showGift(gift) {
   $('title').textContent = gift.title || t('sealed');
   $('letter').textContent = gift.body || '';
   $('cardNote').hidden = !gift.card;
+  $('coinsReceived').hidden = !gift.coins;
+  $('coinsReceived').dataset.amount=gift.coins || 0;
+  $('coinsReceived').textContent=t('receivedCoins')+': '+(gift.coins || 0);
   const list=$('attachmentLinks');
   list.replaceChildren();
   list.hidden=true;
@@ -275,6 +296,17 @@ $('draft').elements.file.onchange=event=>{
   event.target.value='';
   drawDraftFiles();
 };
+function showBalance(){
+  $('coinBalance').textContent=account?.balance == null ? '' : t('availableCoins')+': '+account.balance+' JJ';
+}
+function updateCoinField(){
+  const fields=$('draft').elements;
+  const self=fields.recipient.value==='self';
+  $('giftCoins').hidden=self;
+  fields.coins.disabled=self;
+  if(self)fields.coins.value=0;
+}
+$('draft').elements.recipient.onchange=updateCoinField;
 function edit(gift) {
   selected = gift;
   const form = $('draft');
@@ -286,6 +318,8 @@ function edit(gift) {
   fields.code.disabled = Boolean(gift);
   fields.recipient.disabled = Boolean(gift);
   fields.recipient.value = gift?.for_self ? 'self' : 'partner';
+  fields.coins.value=gift?.coins || 0;
+  updateCoinField();
   fields.title.value = gift?.title || '';
   fields.body.value = gift?.body || '';
   fields.code.value = gift?.code || '';
@@ -340,6 +374,7 @@ $('giftNav').onclick = event => {
 async function refresh() {
   const [data,mine] = await Promise.all([rpc('list'),rpc('mine')]);
   account = {...data,creator:data.creator ?? data.admin,mine};
+  showBalance();
   $('giftPartner').textContent = data.admin ? 'Julie' : 'Yisus';
   if (!account.creator && view === 'create') view = 'scan';
   $('heading').textContent = t('heading');
@@ -387,7 +422,7 @@ $('draft').onsubmit = event => {
     }
     const gift = await rpc('save',{
       id:selected?.id,recipient:f.recipient.value,title:f.title.value,body:f.body.value,code:f.code.value,theme:f.theme.value,
-      attachments,card:f.card.value,opens_at:f.date.value ? new Date(f.date.value).toISOString() : null,enabled:f.enabled.checked
+      attachments,coins:Number(f.coins.value || 0),card:f.card.value,opens_at:f.date.value ? new Date(f.date.value).toISOString() : null,enabled:f.enabled.checked
     });
     edit(gift);
     await refresh();
