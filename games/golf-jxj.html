@@ -23,9 +23,11 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 .caddie{display:flex;gap:10px;align-items:center;padding:8px 10px;margin:0 0 8px;border:1px solid var(--line);border-left:3px solid var(--player);background:#203449;border-radius:10px}.caddie .chibi-face{width:40px}.caddie strong{color:var(--player);font-size:.92rem}.caddie #hint{margin:2px 0 0;font-size:.79rem}.score .chibi-face{width:30px}.score.active .chibi-face{box-shadow:0 0 9px var(--player)}.bar #turn:empty{display:none}.result-title{display:flex;align-items:center;gap:10px;margin-bottom:10px}.result-title #headline{margin:0}.result-title .chibi-face{width:45px}#resultFaces{display:flex;gap:4px}
 @media(max-width:580px){.club{grid-template-columns:1fr;min-height:0}.chibi-stage{width:clamp(83px,25vw,118px)}.club p{margin-top:6px}.club{gap:10px;padding-block:15px}.score{padding:7px}.score .chibi-face{width:25px}}
 .world-selector{margin:12px 0}.world-selector h2{font:700 1.12rem Georgia;color:var(--gold);margin:0 0 8px}.world-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(143px,1fr));gap:7px}.world-choices button{text-align:left}.world-choices small{display:block;color:var(--muted);margin-top:3px;font-size:.77rem}.world-choices [aria-pressed=true],.skin-filters [aria-pressed=true]{border-color:var(--gold);background:#37465a}.shop-trigger{margin-top:9px}.skin-filters{display:flex;flex-wrap:wrap;gap:7px}.skin-filters button{padding:6px 8px}#shop{width:min(720px,calc(100% - 24px));max-height:85dvh;overflow:auto;color:var(--ink);background:#182c41;border:1px solid #66829e;border-radius:17px;padding:16px}#shop::backdrop{background:#0c1422af}.shop-heading{margin-bottom:12px}.shop-heading h2{margin:0;color:var(--gold);font:700 1.5rem Georgia}.shop-heading p{color:var(--muted);margin:4px 0 0}#shopStatus{margin:9px 0;color:var(--gold);font-size:.87rem}#shopStatus:empty{display:none}.skin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-top:9px}.skin-card{display:grid;justify-items:center;gap:6px;text-align:center;padding:10px 6px;border:1px solid #688096;border-radius:12px;background:#21384e}.skin-card.rarity-1{border-color:#7aaff5;background:#253f62}.skin-card.rarity-2{border-color:#ce9df6;background:#3e315e}.skin-card small{color:#d9e6f5}.skin-card button{font-size:.82rem;padding:7px}.skin-ball{display:grid;place-items:center;width:46px;aspect-ratio:1;border-radius:50%;color:#202738;font:bold 20px Georgia;box-shadow:0 3px 9px #101924;background:radial-gradient(circle at 30% 27%,var(--l),var(--m) 57%,var(--d))}.track{flex-wrap:wrap}.table-wrap table{min-width:max-content}@media(max-width:550px){.world-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.world-choices strong{font-size:.85rem}.world-choices small{font-size:.68rem}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.golf-people{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;color:var(--muted);font-size:.8rem}.golf-people span{border:1px solid var(--line);padding:5px 9px;border-radius:20px}.golf-people i{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#8b9bb1}.golf-people .golf-online{background:#80dfad;box-shadow:0 0 6px #80dfad80}.skin-sample{width:88px;height:82px;background:#14253a80;border:0;box-shadow:none}
 </style>
 <main>
 <header><div><h1>Golf J×J</h1><p>Yisus & Julie · Nuestro Universo</p></div><button class="signature" id="language" lang="en">English</button></header>
+<div id="golfPeople" class="golf-people" aria-live="polite"></div>
 <section id="lobby">
 <div class="club">
 <div class="club-copy"><h2 data-en="A tee time for two">Una cita en el green</h2><p data-en="Twelve holes across four worlds. Fewest strokes wins.">Doce hoyos en cuatro mundos. Gana quien dé menos golpes.</p></div>
@@ -83,7 +85,8 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <script src="golf-art.js?v=12"></script>
 <script src="../config.js"></script>
 <script src="../assets/supabase.js"></script>
-<script src="golf-shop.js?v=12"></script>
+<script src="golf-shop.js?v=13"></script>
+<script src="golf-style.js?v=13"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esText=new WeakMap();
@@ -159,7 +162,7 @@ $('sound').onclick=async()=>{
 
 function translatePage(){
  document.documentElement.lang=tr('es','en');
- records();soundLabel();renderWorlds();if($("shop").open)renderShop();
+ records();soundLabel();renderWorlds();renderGolfPeople();if($("shop").open)renderShop();
  document.querySelectorAll('[data-en]').forEach(node=>{
   if(!esText.has(node))esText.set(node,node.textContent);
   node.textContent=tr(esText.get(node),node.dataset.en);
@@ -288,7 +291,7 @@ function finishRound(focus=true){
   try{localStorage.setItem(recordKey(),JSON.stringify(bests));}catch{}
   records();
  }
- done=true;update();
+ done=true;update();if(focus)syncGolfPeople();
  $('roundNotes').replaceChildren();
  const leaders=players.length===2 && total[0]!==total[1]?[total[0]<total[1]?0:1]:players;
  $('resultFaces').replaceChildren(...leaders.map(portrait));
@@ -337,17 +340,17 @@ function startGame(choice){
  mode=choice;
  courses=choice==='practice'||circuit==='A'?catalog:catalog.filter(course=>worlds[course.world].id===circuit);
  $('lobby').hidden=true;$('game').hidden=false;
- reset();$('label').focus();
+ reset();$('label').focus();syncGolfPeople();
 }
 $('localMode').onclick=()=>startGame('local');
 $('farMode').onclick=()=>startGame('far');
 $('practiceMode').onclick=()=>startGame('practice');
 $('back').onclick=()=>{
- moving=false;drag=null;target=null;$('game').hidden=true;$('lobby').hidden=false;
+ moving=false;drag=null;target=null;$('game').hidden=true;$('lobby').hidden=false;syncGolfPeople();
  $(mode==='practice'?'practiceMode':mode==='far'?'farMode':'localMode').focus();
 };
 $('who').onchange=$('coursePick').onchange=$('reset').onclick=reset;
-$('again').onclick=()=>{reset();$('label').focus();};
+$('again').onclick=()=>{reset();$('label').focus();syncGolfPeople();};
 $('aimMode').onclick=()=>{tapAim=!tapAim;drag=null;target=null;update();};
 $('aimForce').oninput=()=>{if(target&&!moving&&!done)setPower(Number($('aimForce').value));};
 function targetVector(){
@@ -445,7 +448,7 @@ function circle(x,y,r,color){
  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
 }
 let drawnCourse, backdrop;
-function draw(){
+function draw(time){
  const c=courses[hole];
  if(drawnCourse!==c){
   backdrop??=document.createElement('canvas');
@@ -457,17 +460,17 @@ function draw(){
  if(done||checkpoint)return;
  const order=players.filter(p=>p!==turn).concat(turn);
  for(const p of order){
+  if(tally[p].length<=hole)drawGolfPlayer(ctx,balls[p],p,time);
+ }
+ for(const p of order){
   if(tally[p].length>hole)continue;
   const b=balls[p];
   if(p===turn&&!moving&&!drag){
    ctx.beginPath();ctx.arc(b.x,b.y,22,0,Math.PI*2);ctx.strokeStyle=colors[p];ctx.lineWidth=1.5;ctx.stroke();
   }
   const skin=ballSkins.find(item=>item.id===golfShop?.equipped?.[p===0?'jesus':'julisa']);
-  const gradient=ctx.createRadialGradient(b.x-5,b.y-6,1,b.x,b.y,radius);
-  const shades=skin?.colors??['#ffffff',colors[p],'#4b577e'];
-  shades.forEach((shade,i)=>gradient.addColorStop([0,.55,1][i],shade));
-  circle(b.x+2,b.y+5,radius,'#152b28aa');circle(b.x,b.y,radius,gradient);
-  ctx.fillStyle='#172438';ctx.font='bold 13px Georgia';ctx.textAlign='center';ctx.fillText(skin?.mark??emblems[p],b.x,b.y+5);ctx.textAlign='start';
+  circle(b.x+2,b.y+5,radius,'#152b28aa');
+  drawStyledBall(ctx,b.x,b.y,radius,skin,colors[p],emblems[p],time,p===turn&&moving?b:null);
  }
  const aim=drag??(target?targetVector():null);
  if(aim){
@@ -494,10 +497,13 @@ function frame(time){
  const dt=Math.min(.05,(time-(last??time))/1000);last=time;
  remainder=moving?remainder+dt:0;
  while(moving&&remainder>=tick){remainder-=tick;physics(tick);}
- if(!$('game').hidden)draw();requestAnimationFrame(frame);
+ if(!$('game').hidden)draw(time);paintGolfSamples(time);requestAnimationFrame(frame);
 }
 $('shopLobby').onclick=$('shopGame').onclick=openGolfShop;
 $('closeShop').onclick=()=>$('shop').close();
 loadBests();translatePage();reset();readGolfShop();requestAnimationFrame(frame);
+setInterval(syncGolfPeople,20000);
+document.addEventListener('visibilitychange',syncGolfPeople);
+window.addEventListener('online',syncGolfPeople);
 </script>
 </html>

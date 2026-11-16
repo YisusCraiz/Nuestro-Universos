@@ -22,7 +22,7 @@ async function readGolfShop(){
  golfShopBusy=true;renderShop();
  try{golfShop=await shopRpc();golfShopLoaded=true;}
  catch{golfShopLoaded=false;shopMessage('La tienda no está disponible. Cierra y vuelve a abrir para reintentar.','The shop is unavailable. Close and reopen it to retry.');}
- finally{golfShopBusy=false;renderShop();}
+ finally{golfShopBusy=false;renderShop();syncGolfPeople();}
 }
 function skinButton(skin,owned,catalogItem){
  const button=document.createElement('button');
@@ -58,15 +58,15 @@ function renderShop(){
   return button;
  }));
  $('skinGrid').replaceChildren(...ballSkins.filter(skin=>skinFilter==='all'||worlds[skin.world]?.id===skinFilter).map(skin=>{
-  const card=document.createElement('article'), ball=document.createElement('span'), title=document.createElement('strong'), meta=document.createElement('small');
+  const card=document.createElement('article'), ball=document.createElement('canvas'), title=document.createElement('strong'), meta=document.createElement('small');
   card.className='skin-card rarity-'+skin.rarity;
-  ball.className='skin-ball';ball.setAttribute('aria-hidden','true');ball.textContent=skin.mark??'✦';
-  const shades=skin.colors??['#fff0f6','#a1cdff','#64629d'];
-  ['--l','--m','--d'].forEach((name,i)=>ball.style.setProperty(name,shades[i]));
+  ball.className='skin-sample';ball.setAttribute('aria-hidden','true');ball.width=88;ball.height=82;ball.dataset.skin=skin.id;
   title.textContent=tr(...skin.names);
   const owned=skin.id==='classic'||golfShop?.owned?.includes(skin.id), item=golfShop?.catalog?.[skin.id];
   meta.textContent=tr(...skinRarities[skin.rarity])+(!owned&&item?' · '+item.price+' JJ':'');
-  card.append(ball,title,meta,skinButton(skin,owned,item));return card;
+  const effect=document.createElement('small');
+  effect.textContent=skin.colors?tr(...golfEffects[skin.world].slice(0,2)):tr('Acabado clásico','Classic finish');
+  card.append(ball,title,meta,effect,skinButton(skin,owned,item));return card;
  }));
 }
 function openGolfShop(){

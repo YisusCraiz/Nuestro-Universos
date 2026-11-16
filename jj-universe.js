@@ -25,7 +25,7 @@ function universeMinecraftCard(){
 function openUniverseGolf(){
  if(!universeAllowed('games'))return navigate('games');
  const url=new URL('games/golf-jxj.html',document.baseURI);
- url.searchParams.set('v','12');
+ url.searchParams.set('v','13');
  url.searchParams.set('lang',document.documentElement.lang==='en'?'en':'es');
  const href=esc(url.href);
  jjCleanup();
