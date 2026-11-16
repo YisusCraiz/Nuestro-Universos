@@ -76,3 +76,8 @@
 #piano-invite-four[hidden]{display:none}
 
 #piano-join-four-member[hidden]{display:none}
+
+.piano-band-art [data-piano-performer]{transform-origin:50% 85%}
+.piano-band-art [data-instrument="guitar"]{bottom:13%;right:-7%}
+.piano-band-art [data-instrument="voice"]{width:52%;bottom:29%;right:-9%}
+.piano-band-art [data-instrument="keys"]{bottom:6%;right:3%}
