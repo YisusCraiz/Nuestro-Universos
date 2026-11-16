@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>JXJ</title>
+<style>
+[hidden]{display:none!important}*{box-sizing:border-box}
+body{margin:0;background:#080e21;color:#f9f2fd;font:16px/1.5 system-ui}
+main{width:min(42rem,100%);margin:auto;padding:1.25rem}
+section,form,article{background:#131e39;border:1px solid #485578;border-radius:1rem;padding:1rem;margin:1rem 0}
+label{display:block;margin-top:.55rem}input,select,textarea{display:block;width:100%;background:#0b1328;color:inherit;border:1px solid #7a88ab;border-radius:.5rem;padding:.65rem;font:inherit}
+input[type=checkbox]{display:inline;width:auto}button,a{color:#f9dcff}button{background:#303962;padding:.6rem .85rem;border:1px solid #9c8cba;border-radius:.55rem;font:inherit;margin:.25rem;cursor:pointer}
+button:disabled{opacity:.55}#letter{white-space:pre-wrap;overflow-wrap:anywhere}
+#qr,#bars{background:#fff;padding:12px;width:max-content;max-width:100%}#bars{height:auto}#camera{max-width:100%}
+main[data-theme=christmas] article{background:#162c29;border-color:#bd9470}
+main[data-theme=anniversary] article{background:#14264b;border-color:#bf9bd8}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4ff;outline-offset:2px}
+</style>
+<script src="config.js"></script>
+<script src="assets/supabase.js"></script>
+<main id="page">
+<a id="home" href="./">Nuestro Universo</a>
+<button id="language" type="button">English</button>
+<h1 id="heading">JXJ</h1>
+<p id="status" role="status"></p>
+<form id="login" hidden>
+ <label><span data-t="profile"></span><select name="profile"><option value="julisa">Julie</option><option value="jesus">Yisus</option></select></label>
+ <label><span data-t="password"></span><input required name="password" type="password" autocomplete="current-password"></label>
+ <button data-t="login"></button>
+</form>
+<section id="entry" hidden>
+ <form id="lookup">
+  <label><span data-t="code"></span><input name="code" required maxlength="36" autocomplete="off" autocapitalize="characters"></label>
+  <button data-t="find"></button>
+ </form>
+ <button id="scan" type="button" data-t="scan"></button><div id="camera"></div>
+</section>
+<article id="gift" hidden>
+ <h2 id="title"></h2>
+ <button id="openGift" type="button" data-t="open" hidden></button>
+ <p id="letter"></p>
+ <a id="attachment" data-t="attachment" target="_blank" rel="noopener noreferrer" hidden></a>
+ <p id="cardNote" hidden data-t="cardNote"></p>
+</article>
+<section id="collection" hidden><h2 data-t="gifts"></h2><div id="items"></div></section>
+<section id="editor" hidden>
+ <h2 data-t="editor"></h2>
+ <button id="newGift" type="button" data-t="new"></button>
+ <form id="draft">
+  <label><span data-t="title"></span><input required name="title" maxlength="120"></label>
+  <label><span data-t="letter"></span><textarea required name="body" rows="6" maxlength="16000"></textarea></label>
+  <label><span data-t="theme"></span><select name="theme"><option value="anniversary" data-t="anniversary"></option><option value="christmas" data-t="christmas"></option><option value="surprise" data-t="surprise"></option></select></label>
+  <label><span data-t="custom"></span><input name="code" maxlength="36" pattern="[A-Za-z0-9\\-]{6,36}" autocomplete="off"></label>
+  <label><span data-t="card"></span><input name="card" placeholder="nu-001"></label>
+  <label><span data-t="attachment"></span><input name="file" type="file" accept="image/png,image/jpeg,image/webp,application/pdf,audio/mpeg,audio/wav,video/mp4"></label>
+  <label><input name="removeFile" type="checkbox"> <span data-t="remove"></span></label>
+  <label><span data-t="date"></span><input type="datetime-local" name="date"></label>
+  <label><input name="enabled" type="checkbox"> <span data-t="enabled"></span></label>
+  <button data-t="save"></button>
+ </form>
+ <section id="print" hidden><h3 data-t="print"></h3><output id="printedCode"></output><br><a id="giftLink"></a>
+  <p id="printStatus" role="status"></p><div id="qr"></div><svg id="bars" aria-label="Code 128"></svg>
+  <button id="downloadQr" type="button" data-t="downloadQr" disabled></button>
+  <button id="downloadBars" type="button" data-t="downloadBars" disabled></button>
+ </section>
+</section>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const tr = {
+ profile:['Perfil','Profile'], password:['Contraseña','Password'], login:['Iniciar sesión','Sign in'],
+ heading:['Regalos secretos','Secret gifts'], code:['Código del regalo','Gift code'], find:['Buscar regalo','Find gift'],
+ scan:['Escanear QR o código de barras','Scan QR or barcode'], stop:['Cerrar cámara','Close camera'],
+ open:['Abrir mi regalo','Open my gift'], attachment:['Abrir archivo adjunto','Open attachment'],
+ cardNote:['Carta entregada en Álbum JJ.','Card delivered to Album JJ.'], gifts:['Mis regalos','My gifts'],
+ editor:['Preparar regalos para Julie','Prepare gifts for Julie'], new:['Nuevo borrador','New draft'],
+ title:['Título','Title'], letter:['Carta o mensaje','Letter or message'], theme:['Tema','Theme'],
+ anniversary:['Aniversario','Anniversary'], christmas:['Navidad','Christmas'], surprise:['Sorpresa','Surprise'],
+ custom:['Código manual personalizado (opcional)','Custom manual code (optional)'], card:['ID de carta de Álbum JJ (opcional)','Album JJ card ID (optional)'],
+ remove:['Quitar archivo guardado','Remove saved attachment'], date:['Abrir a partir de (hora local)','Available from (local time)'],
+ enabled:['Permitir que Julie abra este regalo con su código','Let Julie open this gift with her code'], save:['Guardar','Save'],
+ print:['Códigos para imprimir','Printable codes'], downloadQr:['Descargar QR PNG','Download QR PNG'],
+ downloadBars:['Descargar barras SVG','Download barcode SVG'], sealed:['Un regalo para ti','A gift for you'],
+ unavailable:['Este regalo todavía no está disponible.','This gift is not available yet.'],
+ error:['No se pudo completar. Revisa la conexión y los datos.','Could not complete. Check your connection and the details.'],
+ invalid:['Revisa el código y el ID de carta. El código debe ser único.','Check the code and card ID. The code must be unique.'],
+ saved:['Guardado.','Saved.'], cameraError:['La cámara no está disponible. Puedes escribir el código.','Camera unavailable. You can type the code.'],
+ printError:['No se cargaron los generadores. El enlace y el código siguen disponibles.','Generators did not load. The link and code are still available.'],
+ empty:['Aún no hay regalos abiertos.','No opened gifts yet.'], draft:['Borrador','Draft'], ready:['Habilitado','Enabled'], claimed:['Abierto','Opened']
+};
+const params = new URLSearchParams(location.hash.slice(1));
+let code = params.get('gift') || '';
+let lang = params.get('lang') === 'en' || (!params.has('lang') && (code || navigator.language.startsWith('en'))) ? 1 : 0;
+let selected = null, scanner = null, generation = 0, pending = false;
+const bucket = 'jj-secret-gifts';
+const config = window.UNIVERSE_CONFIG;
+const client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
+const cachedScripts = new Map();
+const t = key => tr[key][lang];
+function status(key) {
+  $('status').dataset.key = key;
+  $('status').textContent = key ? t(key) : '';
+}
+function language() {
+  document.documentElement.lang = lang ? 'en' : 'es';
+  document.querySelectorAll('[data-t]').forEach(node => {node.textContent = t(node.dataset.t);});
+  if (!$('collection').hidden) $('heading').textContent = t('heading');
+  if (!$('openGift').hidden) $('title').textContent = t('sealed');
+  $('language').textContent = lang ? 'Español' : 'English';
+  if (scanner) $('scan').textContent = t('stop');
+  status($('status').dataset.key || '');
+}
+$('language').onclick = () => {lang = 1-lang; language(); if (!$('collection').hidden) run(refresh);};
+language();
+function script(url) {
+  if (!cachedScripts.has(url)) cachedScripts.set(url,new Promise((resolve,reject) => {
+    const tag = document.createElement('script');
+    tag.src = url;
+    tag.onload = resolve;
+    tag.onerror = () => {cachedScripts.delete(url); tag.remove(); reject(new Error('LIBRARY'));};
+    document.head.append(tag);
+  }));
+  return cachedScripts.get(url);
+}
+async function rpc(action,data={}) {
+  const r = await client.rpc('jj_secret_gifts_api',{p_action:action,p_data:data});
+  if (r.error) throw r.error;
+  return r.data;
+}
+async function run(task) {
+  if (pending) return;
+  pending = true;
+  status('');
+  try { await task(); }
+  catch (error) {
+    status(error.message === 'GIFT_UNAVAILABLE' ? 'unavailable' :
+      ['23505','23503','23514'].includes(error.code) ? 'invalid' : 'error');
+  } finally { pending = false; }
+}
+async function showGift(gift) {
+  $('page').dataset.theme = gift.theme;
+  $('gift').hidden = false;
+  $('openGift').hidden = gift.redeemed !== false;
+  $('title').textContent = gift.title || t('sealed');
+  $('letter').textContent = gift.body || '';
+  $('cardNote').hidden = !gift.card;
+  $('attachment').hidden = true;
+  $('attachment').removeAttribute('href');
+  if (gift.attachment) {
+    const result = await client.storage.from(bucket).createSignedUrl(gift.attachment,300);
+    if (result.error) throw result.error;
+    $('attachment').href = result.data.signedUrl;
+    $('attachment').hidden = false;
+  }
+}
+function giftUrl(value) {
+  return new URL('#'+new URLSearchParams({gift:value,lang:'en'}),location.href).href;
+}
+function download(href,name) {
+  const anchor = document.createElement('a');
+  anchor.href = href;
+  anchor.download = name;
+  anchor.click();
+}
+async function printable(value) {
+  const job = ++generation;
+  const url = giftUrl(value);
+  $('giftLink').href = url;
+  $('giftLink').textContent = url;
+  $('printedCode').textContent = value;
+  $('print').hidden = false;
+  $('printStatus').textContent = '';
+  $('qr').replaceChildren();
+  $('bars').replaceChildren();
+  $('downloadQr').disabled = true;
+  $('downloadBars').disabled = true;
+  try {
+    await Promise.all([
+      script('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'),
+      script('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js')
+    ]);
+    if (job !== generation) return;
+    new QRCode($('qr'),{text:url,width:384,height:384,correctLevel:QRCode.CorrectLevel.M});
+    JsBarcode($('bars'),value,{format:'CODE128',width:2,height:75,margin:16});
+    $('downloadQr').onclick = () => {
+      const raw = $('qr').querySelector('canvas');
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0,0,480,480);
+      ctx.drawImage(raw,48,48);
+      download(canvas.toDataURL('image/png'),'JXJ-'+value+'-QR.png');
+    };
+    $('downloadBars').onclick = () => {
+      const file = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString($('bars'))],{type:'image/svg+xml'}));
+      download(file,'JXJ-'+value+'-Code128.svg');
+      setTimeout(() => URL.revokeObjectURL(file),1000);
+    };
+    $('downloadQr').disabled = !$('qr').querySelector('canvas');
+    $('downloadBars').disabled = false;
+  } catch { if (job === generation) $('printStatus').textContent = t('printError'); }
+}
+function edit(gift) {
+  selected = gift;
+  const form = $('draft');
+  form.reset();
+  const fields = form.elements;
+  fields.code.disabled = Boolean(gift);
+  fields.title.value = gift?.title || '';
+  fields.body.value = gift?.body || '';
+  fields.code.value = gift?.code || '';
+  fields.card.value = gift?.card || '';
+  fields.theme.value = gift?.theme || 'anniversary';
+  fields.enabled.checked = Boolean(gift?.enabled);
+  if (gift?.opens_at) {
+    const date = new Date(gift.opens_at);
+    fields.date.value = new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  }
+  $('draft').hidden = Boolean(gift?.redeemed_at);
+  if (gift) void printable(gift.code);
+  else {generation++; $('print').hidden = true;}
+}
+$('newGift').onclick = () => edit(null);
+async function refresh() {
+  const data = await rpc('list');
+  $('heading').textContent = t('heading');
+  $('entry').hidden = data.admin;
+  $('editor').hidden = !data.admin;
+  $('collection').hidden = false;
+  $('items').replaceChildren();
+  if (!data.gifts.length) $('items').textContent = t('empty');
+  for (const item of data.gifts) {
+    const button = document.createElement('button');
+    button.textContent = item.title + (data.admin ? ' · '+t(item.redeemed_at ? 'claimed' : item.enabled ? 'ready' : 'draft') : '');
+    button.onclick = () => data.admin ? edit(item) : run(() => showGift(item));
+    $('items').append(button);
+  }
+}
+async function lookup(value) {
+  const normalized = value.trim().toUpperCase();
+  if (!/^[A-Z0-9-]{6,36}$/.test(normalized)) throw new Error('GIFT_UNAVAILABLE');
+  $('gift').hidden = true;
+  const gift = await rpc('preview',{code:normalized});
+  code = normalized;
+  await showGift(gift);
+}
+$('lookup').onsubmit = event => {
+  event.preventDefault();
+  run(() => lookup($('lookup').elements.code.value));
+};
+$('openGift').onclick = () => run(async () => {
+  const gift = await rpc('redeem',{code});
+  await showGift(gift);
+  await refresh();
+});
+$('draft').onsubmit = event => {
+  event.preventDefault();
+  run(async () => {
+    const f = $('draft').elements;
+    const file = f.file.files[0];
+    let attachment = f.removeFile.checked ? null : selected?.attachment;
+    if (file) {
+      const login = await client.auth.getUser();
+      if (login.error) throw login.error;
+      attachment = login.data.user.id+'/'+crypto.randomUUID();
+      const result = await client.storage.from(bucket).upload(attachment,file,{contentType:file.type});
+      if (result.error) throw result.error;
+    }
+    const gift = await rpc('save',{
+      id:selected?.id,title:f.title.value,body:f.body.value,code:f.code.value,theme:f.theme.value,
+      attachment,card:f.card.value,opens_at:f.date.value ? new Date(f.date.value).toISOString() : null,enabled:f.enabled.checked
+    });
+    edit(gift);
+    await refresh();
+    status('saved');
+  });
+};
+async function stopScan() {
+  if (!scanner) return;
+  const active = scanner;
+  scanner = null;
+  if (active.isScanning) await active.stop();
+  active.clear();
+  $('scan').textContent = t('scan');
+}
+$('scan').onclick = async () => {
+  $('scan').disabled = true;
+  try {
+    if (scanner) {await stopScan(); return;}
+    await script('https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js');
+    scanner = new Html5Qrcode('camera',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_128]});
+    await scanner.start({facingMode:'environment'},{fps:8},async decoded => {
+      if (!scanner) return;
+      await stopScan();
+      let value = decoded;
+      try {
+        const link = new URL(decoded);
+        if (link.origin !== location.origin || link.pathname !== location.pathname) throw new Error('INVALID_QR');
+        value = new URLSearchParams(link.hash.slice(1)).get('gift') || '';
+      } catch { if (!/^[A-Z0-9-]{6,36}$/i.test(decoded)) {status('unavailable'); return;} }
+      $('lookup').elements.code.value = value;
+      run(() => lookup(value));
+    });
+    if (scanner) $('scan').textContent = t('stop');
+  } catch {await stopScan(); status('cameraError');}
+  finally {$('scan').disabled = false;}
+};
+async function start() {
+  const info = await client.auth.getSession();
+  if (info.error) throw info.error;
+  $('login').hidden = Boolean(info.data.session);
+  if (!info.data.session) return;
+  await refresh();
+  if (code && $('editor').hidden) await lookup(code);
+}
+$('login').onsubmit = event => {
+  event.preventDefault();
+  run(async () => {
+    const f = $('login').elements;
+    try {
+      const result = await client.auth.signInWithPassword({email:config.loginEmails[f.profile.value],password:f.password.value});
+      if (result.error) throw result.error;
+      await start();
+    } finally {f.password.value='';}
+  });
+};
+run(start);
+</script>
+</html>
