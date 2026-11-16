@@ -51,3 +51,10 @@
 @media (orientation:landscape) and (max-height:520px){#piano-board{height:48vh}#piano-stage .piano-keys button{height:44px}#piano-stage .piano-keys{margin-bottom:.45rem}#piano-live-band .piano-band-art{width:34px}}
 
 #piano-stage .piano-keys button{touch-action:none}
+
+#piano-exclusive-shop .piano-band-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:.35rem}
+.piano-shop-card{display:grid;justify-items:center;gap:.4rem;text-align:center;min-width:0}
+.piano-shop-card canvas{width:min(100%,85px);height:auto}
+.piano-shop-card .btn{padding:.35rem .5rem;font-size:.8rem;white-space:normal}
+#piano-shop-confirm:not(:empty){padding:.65rem 0}
+@media(max-width:400px){#piano-exclusive-shop .piano-band-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
