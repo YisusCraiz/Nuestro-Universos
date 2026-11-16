@@ -12,6 +12,7 @@ main{width:min(42rem,100%);margin:auto;padding:1.25rem}
 section,form,article{background:#131e39;border:1px solid #485578;border-radius:1rem;padding:1rem;margin:1rem 0}
 label{display:block;margin-top:.55rem}input,select,textarea{display:block;width:100%;background:#0b1328;color:inherit;border:1px solid #7a88ab;border-radius:.5rem;padding:.65rem;font:inherit}
 input[type=checkbox]{display:inline;width:auto}button,a{color:#f9dcff}button{background:#303962;padding:.6rem .85rem;border:1px solid #9c8cba;border-radius:.55rem;font:inherit;margin:.25rem;cursor:pointer}
+ .back-link{display:inline-flex;align-items:center;min-height:2.75rem;padding:0 .8rem;border:1px solid #9c8cba;border-radius:.55rem;text-decoration:none}
 button:disabled{opacity:.55}#letter{white-space:pre-wrap;overflow-wrap:anywhere}
 #giftNav{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
 #giftNav button{flex:1 1 8rem;margin:0;min-height:3rem}
@@ -29,7 +30,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
 <script src="config.js"></script>
 <script src="assets/supabase.js"></script>
 <main id="page">
-<a id="home" href="./">Nuestro Universo</a>
+<a id="home" class="back-link" href="./#volver-regalos" data-t="back">← Atrás</a>
 <button id="language" type="button">English</button>
 <h1 id="heading">JXJ</h1>
 <p id="status" role="status"></p>
@@ -89,6 +90,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
 'use strict';
 const $ = id => document.getElementById(id);
 const tr = {
+ back:['← Atrás','← Back'],
  scanTab:['Escáner JXJ','JXJ Scanner'], createTab:['Crear regalos','Create gifts'],
  scanHint:['Apunta la cámara al QR o al código de barras.','Point your camera at the QR or barcode.'],
  manual:['Escribir el código','Enter code manually'],
@@ -116,6 +118,7 @@ const tr = {
  empty:['Aún no hay regalos abiertos.','No opened gifts yet.'], draft:['Borrador','Draft'], ready:['Habilitado','Enabled'], claimed:['Abierto','Opened']
 };
 const params = new URLSearchParams(location.hash.slice(1));
+$('home').href = './#'+new URLSearchParams({ 'volver-regalos': params.get('from') || 'home' });
 let code = params.get('gift') || '';
 let lang = params.get('lang') === 'en' || (!params.has('lang') && (code || navigator.language.startsWith('en'))) ? 1 : 0;
 let selected = null, scanner = null, generation = 0, pending = false;
