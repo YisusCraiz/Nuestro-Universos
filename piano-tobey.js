@@ -5,6 +5,7 @@ const config = window.UNIVERSE_CONFIG;
 const params = new URLSearchParams(location.search);
 const host = params.get('host') === '1';
 const group = params.get('group') === '1';
+const member = group && !host && params.get('member') === '1';
 const rpcName = group ? 'jj_piano_guest_group' : 'jj_tobey_duel';
 const say = (es, en) => host ? es : en;
 document.documentElement.lang = host ? 'es' : 'en';
@@ -18,9 +19,10 @@ if(group) {
   }));
 }
 $('exit').textContent = say('Cerrar duelo','Leave duel');
-$('back').hidden = !host;
+$('back').hidden = !host && !member;
+if(member)$('back').textContent = 'Back to Nuestro Universo';
 const client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey,
-  host ? {} : {auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'piano-tobey-guest'}});
+  host || member ? {} : {auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'piano-tobey-guest'}});
 const secret = () => Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2,'0')).join('');
 const status = message => { $('status').textContent = message; };
 const keys = [...document.querySelectorAll('[data-lane]')];
@@ -113,7 +115,7 @@ function updateGroup(room) {
       $('action').hidden = !ready;
       status(seats.some(seat=>seat.left)
         ? 'Alguien salió antes del inicio. Cierra esta sala y crea enlaces nuevos.'
-        : ready ? 'Los cuatro están listos.' : 'Comparte cada enlace y su PIN con la persona correspondiente.');
+        : ready ? 'Los cuatro están listos.' : 'Julie entra desde Piano JJ. Comparte el enlace y PIN con Sani y Tobey.');
     }
     return;
   }
@@ -135,6 +137,19 @@ function copyInvite(input) {
 }
 function showGroupInvites(invites) {
   $('group-invites').hidden = false;
+  const memberLink = document.createElement('p');
+  const julieLink = document.createElement('input');
+  const url = new URL(location.pathname,location.origin);
+  url.search = new URLSearchParams({group:'1',member:'1',room:roomId});
+  julieLink.readOnly = true;
+  julieLink.value = url.href;
+  julieLink.setAttribute('aria-label','Acceso para la cuenta de Julie');
+  const copyJulie = document.createElement('button');
+  copyJulie.type = 'button';
+  copyJulie.textContent = 'Copiar acceso de Julie';
+  copyJulie.onclick = () => copyInvite(julieLink);
+  memberLink.append('Julie · entra desde su cuenta ',julieLink,copyJulie);
+  $('group-invites').append(memberLink);
   for(const [name,{token,pin}] of Object.entries(invites)) {
     const row = document.createElement('section');
     const title = document.createElement('strong');
@@ -281,7 +296,7 @@ if(host) {
     if(chart.length < 20) { status('No se pudieron generar suficientes notas para esa canción.');return; }
     const token = secret();
     const pin = String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0');
-    const invites = group ? Object.fromEntries(['Julie','Sani','Tobey'].map(name=>[name,{token:secret(),pin:String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0')}])) : undefined;
+    const invites = group ? Object.fromEntries(['Sani','Tobey'].map(name=>[name,{token:secret(),pin:String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0')}])) : undefined;
     const created = await request('create',{pin,url:data.signedUrl,title:outfit.title.slice(0,160),duration,difficulty:outfit.difficulty,chart,invites},token);
     roomId = created.id;
     const link = new URL(location.pathname,location.origin);
@@ -295,6 +310,28 @@ if(host) {
     $('action').hidden = true;
     update(await request('read'));
     loop();
+  });
+} else if(member) {
+  const selected = params.get('room');
+  if(validRoom.test(selected??'')) roomId = selected;
+  action('Join with my account', async () => {
+    audio ??= new AudioContext();
+    await audio.resume();
+    const {data:{session}} = await client.auth.getSession();
+    if(!session) {status('Sign in to Nuestro Universo as Julie, then open Piano JJ and join the concert.');return;}
+    const room = await request('join_member');
+    if(room.denied) {status('No open concert was found for Julie. Ask Yisus to create one and try again.');return;}
+    roomId = room.id;
+    $('exit').hidden = false;
+    update(room);
+    status(room.title);
+    loop();
+    action('Get ready',async()=>{
+      await audioReady(room.url);
+      update(await request('ready'));
+      $('action').hidden = true;
+      if(!ended)status('Ready. Waiting for Yisus to start.');
+    });
   });
 } else {
   [roomId,inviteToken] = location.hash.slice(1).split('.');
