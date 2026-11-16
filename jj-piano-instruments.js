@@ -96,10 +96,10 @@ const PianoInstruments = (() => {
 
 
  const gestures={
-  drums:{x:0,y:3,tilt:2,duration:240},
-  keys:{x:0,y:2,tilt:-2,duration:260},
-  voice:{x:2,y:-3,tilt:3,duration:360},
-  guitar:{x:-2,y:-2,tilt:-6,duration:290}
+  drums:{x:1,y:5,tilt:5,stretch:-.12,duration:310},
+  keys:{x:4,y:3,tilt:-5,stretch:-.08,duration:310},
+  voice:{x:4,y:-6,tilt:7,stretch:.09,duration:430},
+  guitar:{x:-5,y:-3,tilt:-11,stretch:.07,duration:380}
  };
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
  function attach(canvas,portrait){
@@ -117,13 +117,20 @@ const PianoInstruments = (() => {
    if(phase>=1||reduced.matches){stop();return;}
    const energy=Math.sin(Math.PI*phase)*(1-phase*.35);
    draw(canvas,instrument,energy,phase,lane);
-   portrait.style.transform=`translate(${move.x*energy}px,${move.y*energy}px) rotate(${move.tilt*energy}deg)`;
+   const rebound=Math.sin(2*Math.PI*phase)*(1-phase);
+   const turn=instrument==='keys'&&lane>1?-1:1;
+   const x=turn*move.x*energy;
+   const y=move.y*energy-2*rebound;
+   const tilt=turn*(move.tilt*energy+2*rebound);
+   const stretch=1+move.stretch*energy;
+   portrait.style.transform=`translate(${x}px,${y}px) rotate(${tilt}deg) scale(${2-stretch},${stretch})`;
    frame=requestAnimationFrame(paint);
   }
   return {
    set(next){
     if(Object.hasOwn(gestures,next))instrument=next;
     canvas.dataset.instrument=instrument;
+    portrait.dataset.pianoPerformance=instrument;
     stop();
    },
    play(hitLane=0){
