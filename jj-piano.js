@@ -271,7 +271,7 @@ async function pianoPage(v){
  <label class="piano-scroll-setting">${bi('Velocidad visual de notas','Note scroll speed')}<select id="piano-scroll-speed"><option value="0">${say('Lenta','Slow')}</option><option value="1">Normal</option><option value="2">${say('Rápida','Fast')}</option></select></label>
  <details id="piano-dressing-room" class="game-panel"></details>
  <section id="piano-bets" class="game-panel" hidden></section><section id="piano-room-actions" class="game-panel" hidden></section>
- <section id="piano-stage" hidden><p id="piano-hud" aria-live="off"></p><p id="piano-live-song" translate="no"></p><div id="piano-live-band" class="piano-band-grid" aria-hidden="true"></div><div class="piano-board-wrap"><canvas id="piano-board" width="640" height="720" aria-label="${say('Notas de piano','Piano notes')}"></canvas><div id="piano-glows" aria-hidden="true"></div></div>
+ <section id="piano-stage" hidden><p id="piano-hud" aria-live="off"></p><p id="piano-live-song" translate="no"></p><div id="piano-live-band" class="piano-band-grid" aria-hidden="true"></div><div class="piano-board-wrap"><canvas id="piano-board" width="640" height="720" aria-label="${say('Notas de piano','Piano notes')}"></canvas><div id="piano-glows" aria-hidden="true"></div><div class="piano-track-touch" aria-hidden="true">${[0,1,2,3].map(lane=>`<span data-piano-track-lane="${lane}"></span>`).join('')}</div></div>
  <div class="piano-keys">${['D','F','J','K'].map((k,i)=>`<button data-piano-lane="${i}" aria-label="${say('Tecla','Key')} ${k}">${k}</button>`).join('')}</div><div class="row">${jjButton('piano-pause','Pausar','Pause','btn secondary')}${jjButton('piano-stop','Terminar partida','Stop game','text-button')}</div><p id="piano-feedback" role="status"></p></section>
  <section id="piano-result" class="game-panel" hidden></section><div id="piano-pending"></div>
  <details class="game-panel piano-guide"><summary>${bi('Cómo jugar y ganar JJ','How to play and earn JJ')}</summary><p>${bi('Toca D F J K o las cuatro teclas al llegar las notas a la línea. Perfecto: 100; Bien: 70; fallo: −10. C requiere 60 %, B 75 %, A 90 % y S 97 %.','Press D F J K or the four keys as notes reach the line. Perfect: 100; Good: 70; wrong: −10. C needs 60%, B 75%, A 90%, S 97%.')}</p><table class="leaderboard"><thead><tr><th>${bi('Nivel','Level')}</th><th>C / B / A / S · JJ</th></tr></thead><tbody><tr><td>${bi('Fácil','Easy')}</td><td>2 / 3 / 5 / 6</td></tr><tr><td>Normal</td><td>3 / 5 / 8 / 11</td></tr><tr><td>${bi('Difícil','Hard')}</td><td>5 / 8 / 12 / 15</td></tr></tbody></table><p>${bi('+2 JJ por mejorar tu marca. Comparte el máximo de 45 JJ y 12 partidas premiadas diarias con minijuegos. Las apuestas son aparte de esos premios.','+2 JJ for a personal best. Shares the daily cap of 45 JJ and 12 rewarded games with minigames. Wagers are separate from rewards.')}</p></details>`;
@@ -412,25 +412,29 @@ async function pianoPage(v){
  const keyup=e=>{const lane={d:0,f:1,j:2,k:3}[e.key.toLowerCase()];if(lane!==undefined)practiceGesture(lane,'release');};
  document.addEventListener('keyup',keyup);
  document.addEventListener('keydown',key);document.addEventListener('visibilitychange',visibility);
- document.querySelectorAll('[data-piano-lane]').forEach(b=>{
-  const lane=Number(b.dataset.pianoLane);
-  let pointer=null,y=0;
-  b.onpointerdown=e=>{
+ const touches=new Map();
+ for(const target of document.querySelectorAll('[data-piano-lane],[data-piano-track-lane]')){
+  const lane=Number(target.dataset.pianoLane??target.dataset.pianoTrackLane);
+  target.onpointerdown=e=>{
+   if(!active||paused||e.button!==0||touches.has(lane))return;
    e.preventDefault();
-   if(mode==='practice'){
-    if(pointer!==null)return;
-    pointer=e.pointerId;y=e.clientY;b.setPointerCapture(pointer);
-   }
+   target.setPointerCapture(e.pointerId);
+   touches.set(lane,{id:e.pointerId,y:e.clientY});
    press(lane);
   };
-  b.onpointermove=e=>{if(pointer===e.pointerId&&y-e.clientY>=22)practiceGesture(lane,'flick');};
-  b.onpointerup=b.onpointercancel=b.onlostpointercapture=e=>{
-   if(pointer!==e.pointerId)return;
-   if(e.type==='pointerup'&&y-e.clientY>=22)practiceGesture(lane,'flick');
-   practiceGesture(lane,'release');pointer=null;
+  function swipe(e){
+   const touch=touches.get(lane);
+   if(touch?.id===e.pointerId&&touch.y-e.clientY>=22)practiceGesture(lane,'flick');
+  }
+  target.onpointermove=swipe;
+  target.onpointerup=target.onpointercancel=target.onlostpointercapture=e=>{
+   if(touches.get(lane)?.id!==e.pointerId)return;
+   if(e.type==='pointerup')swipe(e);
+   touches.delete(lane);
+   practiceGesture(lane,'release');
   };
-  b.onclick=e=>{if(e.detail===0){press(lane);practiceGesture(lane,'release');}};
- });
+  if(target.matches('button'))target.onclick=e=>{if(e.detail===0){press(lane);practiceGesture(lane,'release');}};
+ }
  $('#piano-pause').onclick=pause;$('#piano-stop').onclick=async()=>{if(duo){await leaveRoom();return;}active=false;cancelAnimationFrame(raf);stopAudio();if(run&&!state.demo)rpc('jj_piano',{p_action:'cancel',p_id:run.id}).catch(()=>{});$('#piano-stage').hidden=true;paint();};
  const timer=setInterval(()=>{if(!document.hidden)refreshDuo();},1500);window.addEventListener('bb-art-ready',drawPeople);
  JJ.cleanups.push(()=>{disposed=true;active=false;abort?.abort();clearInterval(timer);cancelAnimationFrame(raf);stopAudio();ctx?.close().catch(()=>{});document.removeEventListener('keydown',key);document.removeEventListener('keyup',keyup);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('bb-art-ready',drawPeople);if(duo&&!duo.closed)rpc('jj_piano_lobby',{p_action:'leave',p_code:duo.code}).catch(()=>{});if(run&&!retry&&!state.demo&&!duo)rpc('jj_piano',{p_action:'cancel',p_id:run.id}).catch(()=>{});});
