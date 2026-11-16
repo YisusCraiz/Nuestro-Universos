@@ -344,7 +344,7 @@ async function pianoPage(v){
  <label>${bi('Duración','Length')}<select id="piano-length"><option value="60">${say('Un minuto','One minute')}</option><option value="120">${say('Dos minutos','Two minutes')}</option><option value="600">${say('Canción completa · hasta 10 min','Full song · up to 10 min')}</option></select></label></div>
  <label id="piano-duo-gestures-label" hidden><span>${bi('Gestos en dúo · práctica sin apuestas','Duo gestures · practice without wagers')}</span><input type="checkbox" id="piano-duo-gestures"></label>
  <p class="hint">${bi('Usamos las canciones con audio de Nuestra música. Los enlaces de Spotify no se pueden reproducir en el juego.','Uses audio tracks from Our music. Spotify links cannot play inside this game.')}</p>
- <button class="btn" id="piano-prepare"></button><button type="button" class="btn secondary" id="piano-invite-tobey" hidden>${bi('Duelo privado con Tobey','Private duel with Tobey')}</button><p id="piano-load" role="status" aria-live="polite"></p></section>
+ <button class="btn" id="piano-prepare"></button><button type="button" class="btn secondary" id="piano-invite-tobey" hidden>${bi('Duelo privado con Tobey','Private duel with Tobey')}</button><button type="button" class="btn secondary" id="piano-invite-four" hidden>${bi('Sala privada para cuatro','Private room for four')}</button><p id="piano-load" role="status" aria-live="polite"></p></section>
  <label class="piano-scroll-setting">${bi('Velocidad visual de notas','Note scroll speed')}<select id="piano-scroll-speed"><option value="0">${say('Lenta','Slow')}</option><option value="1">Normal</option><option value="2">${say('Rápida','Fast')}</option></select></label>
  <details id="piano-dressing-room" class="game-panel"></details>
  <section id="piano-bets" class="game-panel" hidden></section><section id="piano-room-actions" class="game-panel" hidden></section>
@@ -393,6 +393,9 @@ async function pianoPage(v){
   const invitation=$('#piano-invite-tobey');
   invitation.hidden=state.demo||state.profile?.handle!=='jesus'||mode!=='duo'||!!duo;
   invitation.disabled=busy||!songs.length;
+  const groupInvitation=$('#piano-invite-four');
+  groupInvitation.hidden=invitation.hidden;
+  groupInvitation.disabled=invitation.disabled;
   if(!invitation.hidden)$('#piano-song').disabled=busy||!songs.length;
   const main=$('#piano-prepare');main.disabled=busy||!songs.length||(mode==='duo'&&!duo)||!!duo?.starts_at||(!host&&!!duo&&!duo.settings?.song);
   main.innerHTML=loading?bi('Preparando audio…','Preparing audio…'):mode==='practice'?bi('▶ Iniciar práctica','▶ Start practice'):mode==='solo'?bi('▶ Jugar ahora','▶ Play now'):host?bi('2 · Preparar selección','2 · Prepare selection'):duo?.bet?.state==='offered'&&!duo.bet.guest_ok?bi(`2 · Preparar y aceptar ${duo.bet.amount} JJ`,`2 · Prepare & accept ${duo.bet.amount} JJ`):bi('2 · Preparar y confirmar','2 · Prepare & confirm');
@@ -492,16 +495,18 @@ async function pianoPage(v){
    game=gestureGame()?PianoEngine.practice(duo?run.notes:notes,difficulty,duration):PianoEngine.game(run.notes,difficulty);$('#piano-glows').replaceChildren();$('#piano-feedback').textContent='';document.querySelectorAll('[data-piano-lane]').forEach(b=>b.classList.remove('piano-hit'));source=ctx.createBufferSource();source.buffer=buffer;source.connect(ctx.destination);const delay=duo?duo._startLocal-performance.now():3000;if(duo&&delay<300)throw Error('LATE_START');startedAt=ctx.currentTime+delay/1000;wallStart=duo?duo._startLocal:performance.now()+delay;source.start(startedAt,0,duration);active=true;paused=false;lastHUD='';$('#piano-live-song').textContent=songs.find(song=>song.id===$('#piano-song').value)?.title||'';$('#piano-stage').hidden=false;$('#piano-result').hidden=true;$('#piano-pause').innerHTML=bi('Pausar','Pause');$('#piano-pause').hidden=!!duo;document.body.classList.add('jj-rhythm-active');$('#piano-stage').scrollIntoView({block:'start'});raf=requestAnimationFrame(draw);
   }catch{message('No se pudo iniciar. Comprueba la conexión y SQL 34.','Could not start. Check connection and SQL 34.');}finally{loading=false;if(current())paint();}}
  $('#piano-prepare').onclick=mainAction;
- $('#piano-invite-tobey').onclick=()=>{
+ function launchGuestRoom(group){
   const song=songs.find(item=>item.id===$('#piano-song').value);
   if(!song?.audio_path)return;
   try{
    sessionStorage.setItem('jj-tobey-selected-track',JSON.stringify({path:song.audio_path,title:song.title,difficulty:Number($('#piano-level').value)}));
-   location.assign(new URL('piano-tobey.html?host=1',document.baseURI));
+   location.assign(new URL(group?'piano-tobey.html?host=1&group=1':'piano-tobey.html?host=1',document.baseURI));
   }catch{
    message('No se pudo abrir el duelo privado.','Could not open the private duel.');
   }
- };
+ }
+ $('#piano-invite-tobey').onclick=()=>launchGuestRoom(false);
+ $('#piano-invite-four').onclick=()=>launchGuestRoom(true);
  $('#piano-mode-practice').onclick=()=>setMode('practice');
  $('#piano-mode-solo').onclick=()=>setMode('solo');$('#piano-mode-duo').onclick=()=>setMode('duo');
  duoGestures.onchange=()=>{resetPrepared();paint();};
