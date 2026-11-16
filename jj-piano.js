@@ -5,6 +5,53 @@ const pianoNavigate=navigate;
 navigate=async function(page){if(page!=='piano')return pianoNavigate(page);
  if(!state.profile)return;await loadSections();if(!sectionAllowed('piano'))return pianoNavigate('home');jjCleanup();clearTimers();state.page='piano';const v=++state.version;rememberRoute(historyRoute('piano'));shell();await pianoPage(v);};
 
+const PianoHighway={
+ lead:[2400,1800,1250],
+ y:600,
+ colors:['#71f1f5','#a99cff','#ff92ca','#ffd486'],
+ edge(lane,depth){return 320+(lane-2)*160*(.25+.75*depth);},
+ note(lane,remaining,lead){
+  const depth=Math.max(0,Math.min(1,1-remaining/lead));
+  const left=this.edge(lane+.085,depth),right=this.edge(lane+.915,depth);
+  return {left,width:right-left,y:54+(this.y-54)*depth,height:8+20*depth};
+ },
+ draw(c,game,time,lead){
+  const background=c.createLinearGradient(0,0,0,720);
+  background.addColorStop(0,'#352752');
+  background.addColorStop(.37,'#191732');
+  background.addColorStop(1,'#080d1d');
+  c.fillStyle=background;c.fillRect(0,0,640,720);
+  for(let lane=0;lane<4;lane++){
+   c.beginPath();
+   c.moveTo(this.edge(lane,0),54);
+   c.lineTo(this.edge(lane+1,0),54);
+   c.lineTo(this.edge(lane+1,1),this.y);
+   c.lineTo(this.edge(lane,1),this.y);
+   c.closePath();
+   c.fillStyle=lane%2?'#211d3b':'#14172f';c.fill();
+   c.strokeStyle='#988ace65';c.lineWidth=2;c.stroke();
+   c.fillStyle=this.colors[lane];
+   c.fillRect(this.edge(lane,1)+4,this.y-2,152,4);
+   c.fillStyle='#d9d3ff';
+   c.font='bold 24px sans-serif';c.textAlign='center';
+   c.fillText('DFJK'[lane],this.edge(lane+.5,1),653);
+  }
+  for(let i=game.notes.length-1;i>=0;i--){
+   const note=game.notes[i],remaining=note.t-time;
+   if(game.states[i]||remaining>lead||remaining<-200)continue;
+   const shape=this.note(note.l,remaining,lead);
+   c.fillStyle=this.colors[note.l];
+   c.fillRect(shape.left,shape.y-shape.height/2,shape.width,shape.height);
+   c.fillStyle='#ffffffac';
+   c.fillRect(shape.left,shape.y-shape.height/2,shape.width,Math.max(2,shape.height*.18));
+  }
+  if(time<0){
+   c.fillStyle='#fff';c.font='bold 58px sans-serif';c.textAlign='center';
+   c.fillText(String(Math.ceil(-time/1000)),320,310);
+  }
+ }
+};
+
 function pianoConcert(owner){
  const band=[['jesus','Yisus','drums','#74e8f2'],['julisa','Julie','keys','#91aaff'],['sani','Sani','voice','#ec98df'],['tobey','Tobey','guitar','#ffc67d']];
  const instruments=[['drums','Batería','Drums'],['keys','Teclado','Keyboard'],['voice','Micrófono','Microphone'],['guitar','Guitarra','Guitar']];
@@ -109,6 +156,9 @@ async function pianoPage(v){
  const owner=state.profile.id,current=()=>state.version===v&&state.profile?.id===owner;
  let songs=[],buffer=null,ctx=null,source=null,game=null,run=null,raf=0,startedAt=0,wallStart=0,paused=false,active=false,loading=false,disposed=false,abort=null,difficulty=1,duration=0,notes=[],lastHUD='',retry=null;
  let mode='solo',duo=null,duoBusy=false,duoPolling=false,duoScheduled=false,duoEpoch=0,preparedRevision=null,dirty=false;
+ const speedKey='jj-piano-speed-'+owner;
+ let speed=1;
+ try{const value=localStorage.getItem(speedKey);if(value!==null&&PianoHighway.lead[Number(value)])speed=Number(value);}catch{}
  const duoKey='jj-piano-room-'+owner,pendingKey='jj-piano-pending-'+owner;
  try{retry=JSON.parse(localStorage.getItem(pendingKey)||'null');}catch{}
  $('#main').innerHTML=lifeHeading('Piano JJ','Piano JJ','Tu música, tu ritmo. Elige cómo quieres jugar.','Your music, your rhythm. Choose how to play.')+`
@@ -122,6 +172,7 @@ async function pianoPage(v){
  <label>${bi('Duración','Length')}<select id="piano-length"><option value="60">${say('Un minuto','One minute')}</option><option value="120">${say('Dos minutos','Two minutes')}</option><option value="600">${say('Canción completa · hasta 10 min','Full song · up to 10 min')}</option></select></label></div>
  <p class="hint">${bi('Usamos las canciones con audio de Nuestra música. Los enlaces de Spotify no se pueden reproducir en el juego.','Uses audio tracks from Our music. Spotify links cannot play inside this game.')}</p>
  <button class="btn" id="piano-prepare"></button><p id="piano-load" role="status" aria-live="polite"></p></section>
+ <label class="piano-scroll-setting">${bi('Velocidad visual de notas','Note scroll speed')}<select id="piano-scroll-speed"><option value="0">${say('Lenta','Slow')}</option><option value="1">Normal</option><option value="2">${say('Rápida','Fast')}</option></select></label>
  <details id="piano-dressing-room" class="game-panel"></details>
  <section id="piano-bets" class="game-panel" hidden></section><section id="piano-room-actions" class="game-panel" hidden></section>
  <section id="piano-stage" hidden><p id="piano-hud" aria-live="off"></p><p id="piano-live-song" translate="no"></p><div id="piano-live-band" class="piano-band-grid" aria-hidden="true"></div><div class="piano-board-wrap"><canvas id="piano-board" width="640" height="720" aria-label="${say('Notas de piano','Piano notes')}"></canvas><div id="piano-glows" aria-hidden="true"></div></div>
@@ -130,6 +181,14 @@ async function pianoPage(v){
  <details class="game-panel piano-guide"><summary>${bi('Cómo jugar y ganar JJ','How to play and earn JJ')}</summary><p>${bi('Toca D F J K o las cuatro teclas al llegar las notas a la línea. Perfecto: 100; Bien: 70; fallo: −10. C requiere 60 %, B 75 %, A 90 % y S 97 %.','Press D F J K or the four keys as notes reach the line. Perfect: 100; Good: 70; wrong: −10. C needs 60%, B 75%, A 90%, S 97%.')}</p><table class="leaderboard"><thead><tr><th>${bi('Nivel','Level')}</th><th>C / B / A / S · JJ</th></tr></thead><tbody><tr><td>${bi('Fácil','Easy')}</td><td>2 / 3 / 5 / 6</td></tr><tr><td>Normal</td><td>3 / 5 / 8 / 11</td></tr><tr><td>${bi('Difícil','Hard')}</td><td>5 / 8 / 12 / 15</td></tr></tbody></table><p>${bi('+2 JJ por mejorar tu marca. Comparte el máximo de 45 JJ y 12 partidas premiadas diarias con minijuegos. Las apuestas son aparte de esos premios.','+2 JJ for a personal best. Shares the daily cap of 45 JJ and 12 rewarded games with minigames. Wagers are separate from rewards.')}</p></details>`;
 
  pianoConcert(owner);
+ const speedInput=$('#piano-scroll-speed');
+ speedInput.value=String(speed);
+ speedInput.onchange=()=>{
+  const selected=Number(speedInput.value);
+  if(!PianoHighway.lead[selected])return;
+  speed=selected;
+  try{localStorage.setItem(speedKey,String(speed));}catch{}
+ };
 
  function message(es,en){if(!current())return;for(const id of ['piano-load','piano-room-feedback'])$('#'+id).textContent=say(es,en);}
  function settings(){return {song:$('#piano-song').value,difficulty,duration,times:notes.map(n=>n.t)};}
@@ -187,16 +246,27 @@ async function pianoPage(v){
  }
  async function refreshDuo(){if(!duo||duoBusy||duoPolling||!current())return;duoPolling=true;const epoch=duoEpoch,code=duo.code;try{const sent=performance.now(),next=await rpc('jj_piano_lobby',{p_code:code});next._rtt=performance.now()-sent;if(epoch===duoEpoch&&duo?.code===code&&!duoBusy)await acceptRoom(next,'read');}catch(e){roomError(e);}finally{duoPolling=false;}}
  function lock(){paint();}
- function draw(){if(!current()||!active||paused)return;const t=time(),canvas=$('#piano-board'),c=canvas.getContext('2d');c.fillStyle='#171425';c.fillRect(0,0,640,720);const colors=['#bb97ee','#79d7dc','#eab6ca','#e8c473'];
-  for(let lane=0;lane<4;lane++){c.fillStyle=lane%2?'#252033':'#1f1b2c';c.fillRect(lane*160+2,0,156,720);}
-  game.tick(t);for(let i=0;i<game.notes.length;i++){const n=game.notes[i];if(game.states[i]||n.t<t-200||n.t>t+1800)continue;const y=610-(n.t-t)/1800*610;c.fillStyle=colors[n.l];c.fillRect(n.l*160+15,y-14,130,28);}
-  c.fillStyle='#fff1c5';c.fillRect(0,610,640,5);c.font='bold 36px sans-serif';c.textAlign='center';if(t<0){c.fillStyle='#fff';c.fillText(String(Math.ceil(-t/1000)),320,300);}
+ function draw(){
+  if(!current()||!active||paused)return;
+  const t=time(),canvas=$('#piano-board');
+  game.tick(t);
+  PianoHighway.draw(canvas.getContext('2d'),game,t,PianoHighway.lead[speed]);
   const r=game.result(),hud=`${Math.max(0,Math.floor(t/1000))} / ${duration}s · ${r.score} pts · ${say('Rango','Rank')} ${r.grade} · ${game.combo} combo`;if(hud!==lastHUD){lastHUD=hud;$('#piano-hud').textContent=hud;}
   if(t>=duration*1000){finish();return;}raf=requestAnimationFrame(draw);
  }
  function press(lane){const t=time();if(!active||paused||t<0||t>duration*1000)return;const result=game.press(t,lane);$('#piano-feedback').textContent='';if(result!=='perfect'&&result!=='good')return;
   $('#piano-feedback').textContent=result==='perfect'?say('¡Perfecto!','Perfect!'):say('¡Bien!','Good!');
-  const hit=game.lastHit,glow=document.createElement('span');glow.className='piano-note-glow';glow.dataset.judgement=result;glow.style.left=(lane*25+15/640*100)+'%';glow.style.top=((610-(hit.t-t)/1800*610)/720*100)+'%';$('#piano-glows').append(glow);glow.addEventListener('animationend',()=>glow.remove(),{once:true});setTimeout(()=>glow.remove(),500);
+  const hit=game.lastHit,glow=document.createElement('span');
+  const shape=PianoHighway.note(lane,hit.t-t,PianoHighway.lead[speed]);
+  glow.className='piano-note-glow';
+  glow.dataset.judgement=result;
+  glow.style.left=(shape.left/640*100)+'%';
+  glow.style.width=(shape.width/640*100)+'%';
+  glow.style.top=(shape.y/720*100)+'%';
+  glow.style.height=(shape.height/720*100)+'%';
+  $('#piano-glows').append(glow);
+  glow.addEventListener('animationend',()=>glow.remove(),{once:true});
+  setTimeout(()=>glow.remove(),500);
   const b=document.querySelector(`[data-piano-lane="${lane}"]`);b.classList.remove('piano-hit');void b.offsetWidth;b.classList.add('piano-hit');b.onanimationend=()=>b.classList.remove('piano-hit');const stamp=String(Number(b.dataset.pianoFlash||0)+1);b.dataset.pianoFlash=stamp;setTimeout(()=>{if(b.dataset.pianoFlash===stamp)b.classList.remove('piano-hit');},320);
  }
  async function pause(){if(!active)return;if(duo){message('En dúo no hay pausa individual. Termina la partida para salir.','Duo games cannot pause individually. Stop the game to leave.');return;}try{if(paused){await ctx.resume();if(!current())return;paused=false;$('#piano-pause').innerHTML=bi('Pausar','Pause');raf=requestAnimationFrame(draw);}else{paused=true;cancelAnimationFrame(raf);await ctx.suspend();if(current())$('#piano-pause').innerHTML=bi('Continuar','Resume');}}catch{message('No se pudo continuar el audio. Vuelve a preparar la canción.','Audio could not resume. Prepare the song again.');}}
