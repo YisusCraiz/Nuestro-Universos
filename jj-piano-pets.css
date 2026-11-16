@@ -45,3 +45,7 @@
 #piano-live-band strong{font-size:.75rem}
 #piano-live-song{margin:.2rem auto;text-align:center;font-weight:700}
 @media(max-width:420px){#piano-dressing-room .piano-band-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.piano-scroll-setting{display:grid;gap:.35rem;margin:.75rem 0;max-width:18rem}
+#piano-board{border-color:#aa92f27d}
+@media (orientation:landscape) and (max-height:520px){#piano-board{height:48vh}#piano-stage .piano-keys button{height:44px}#piano-stage .piano-keys{margin-bottom:.45rem}#piano-live-band .piano-band-art{width:34px}}
