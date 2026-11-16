@@ -38,12 +38,19 @@ const PianoHighway={
   }
   for(let i=game.notes.length-1;i>=0;i--){
    const note=game.notes[i],remaining=note.t-time;
-   if(game.states[i]||remaining>lead||remaining<-200)continue;
+   if((game.states[i]&&game.states[i]!==4)||remaining>lead||(remaining<-200&&game.states[i]!==4))continue;
    const shape=this.note(note.l,remaining,lead);
-   c.fillStyle=this.colors[note.l];
+   if(note.kind==='hold'){
+    const tail=this.note(note.l,note.end-time,lead);
+    c.fillStyle='#7cf5c385';c.beginPath();
+    c.moveTo(tail.left,tail.y);c.lineTo(tail.left+tail.width,tail.y);
+    c.lineTo(shape.left+shape.width,shape.y);c.lineTo(shape.left,shape.y);c.fill();
+   }
+   c.fillStyle=note.kind==='flick'?'#ff9dc5':note.kind==='hold'?'#7cf5c3':this.colors[note.l];
    c.fillRect(shape.left,shape.y-shape.height/2,shape.width,shape.height);
    c.fillStyle='#ffffffac';
    c.fillRect(shape.left,shape.y-shape.height/2,shape.width,Math.max(2,shape.height*.18));
+   if(note.kind==='flick'){c.fillStyle='#401239';c.font='bold '+Math.round(shape.height)+'px sans-serif';c.textAlign='center';c.fillText('↑',shape.left+shape.width/2,shape.y+shape.height*.29);}
   }
   if(time<0){
    c.fillStyle='#fff';c.font='bold 58px sans-serif';c.textAlign='center';
@@ -164,7 +171,8 @@ async function pianoPage(v){
  $('#main').innerHTML=lifeHeading('Piano JJ','Piano JJ','Tu música, tu ritmo. Elige cómo quieres jugar.','Your music, your rhythm. Choose how to play.')+`
  <div class="piano-modes" role="group" aria-label="${say('Modo de juego','Game mode')}">
  <button id="piano-mode-solo" class="game-panel"><strong>♬ ${bi('Jugar solo','Play solo')}</strong><span>${bi('Elige canción, dificultad y empieza.','Choose a song, difficulty and start.')}</span></button>
- <button id="piano-mode-duo" class="game-panel"><strong>♡ ${bi('Jugar dos','Play together')}</strong><span>${bi('Crea o únete a una sala. Apuesta si ambos quieren.','Create or join a room. Wager if you both want to.')}</span></button></div>
+ <button id="piano-mode-duo" class="game-panel"><strong>♡ ${bi('Jugar dos','Play together')}</strong><span>${bi('Crea o únete a una sala. Apuesta si ambos quieren.','Create or join a room. Wager if you both want to.')}</span></button>
+ <button id="piano-mode-practice" class="game-panel"><strong>${bi('Practicar gestos','Practice gestures')}</strong><span>${bi('Notas largas y deslizamientos con tu música.','Long notes and flicks with your music.')}</span></button></div>
  <section class="game-panel" id="piano-room-panel" hidden><div id="piano-duo"></div><p id="piano-room-feedback" role="status" aria-live="polite"></p></section>
  <section class="game-panel" id="piano-setup"><h2>1 · ${bi('Elige tu música','Choose your music')}</h2><p id="piano-selection-hint"></p>
  <div class="piano-select-grid"><label>${bi('Nuestra música','Our music')}<select id="piano-song"><option value="">${say('Cargando canciones…','Loading songs…')}</option></select></label>
@@ -201,13 +209,14 @@ async function pianoPage(v){
  function paintDuo(){paint();}
  function paint(){
   if(!current())return;const host=duo?.host===owner,busy=active||loading||duoBusy||!!retry,editable=!busy&&(!duo||host&&!duo.starts_at);
+  $('#piano-mode-practice').setAttribute('aria-pressed',String(mode==='practice'));
   $('#piano-mode-solo').setAttribute('aria-pressed',String(mode==='solo'));$('#piano-mode-duo').setAttribute('aria-pressed',String(mode==='duo'));
-  $('#piano-mode-solo').disabled=busy;$('#piano-mode-duo').disabled=busy;
+  $('#piano-mode-practice').disabled=busy;$('#piano-mode-solo').disabled=busy;$('#piano-mode-duo').disabled=busy;
   $('#piano-room-panel').hidden=mode!=='duo';$('#piano-bets').hidden=!duo;$('#piano-room-actions').hidden=!duo;
   for(const id of ['piano-song','piano-level','piano-length'])$('#'+id).disabled=!editable||!songs.length;
-  $('#piano-selection-hint').innerHTML=retry?bi('Guarda el resultado pendiente de tu partida anterior para continuar.','Save your previous pending result to continue.'):mode==='duo'&&!duo?bi('Crea una sala o entra con un código; después el anfitrión elige la música.','Create a room or join with a code, then the host chooses music.'):duo&&!host?bi('El anfitrión elige la canción y dificultad. Tú preparas ese mismo audio y confirmas aquí.','The host chooses the song and difficulty. Prepare that same audio and confirm here.'):duo?bi('Puedes cambiar canción y dificultad antes de empezar. Después pulsa Preparar selección.','Change song and difficulty before starting, then press Prepare selection.'):bi('Sin sala ni espera: elige tus ajustes y pulsa Jugar ahora.','No room or waiting: choose settings and press Play now.');
+  $('#piano-selection-hint').innerHTML=retry?bi('Guarda el resultado pendiente de tu partida anterior para continuar.','Save your previous pending result to continue.'):mode==='practice'?bi('Verde: mantén hasta el final. Rosa con flecha: desliza hacia arriba, o usa Mayús + la tecla del carril. La puntuación es de práctica.','Green: hold to the end. Pink arrow: swipe up, or press Shift + the lane key. Practice score only.'):mode==='duo'&&!duo?bi('Crea una sala o entra con un código; después el anfitrión elige la música.','Create a room or join with a code, then the host chooses music.'):duo&&!host?bi('El anfitrión elige la canción y dificultad. Tú preparas ese mismo audio y confirmas aquí.','The host chooses the song and difficulty. Prepare that same audio and confirm here.'):duo?bi('Puedes cambiar canción y dificultad antes de empezar. Después pulsa Preparar selección.','Change song and difficulty before starting, then press Prepare selection.'):bi('Sin sala ni espera: elige tus ajustes y pulsa Jugar ahora.','No room or waiting: choose settings and press Play now.');
   const main=$('#piano-prepare');main.disabled=busy||!songs.length||(mode==='duo'&&!duo)||!!duo?.starts_at||(!host&&!!duo&&!duo.settings?.song);
-  main.innerHTML=loading?bi('Preparando audio…','Preparing audio…'):mode==='solo'?bi('▶ Jugar ahora','▶ Play now'):host?bi('2 · Preparar selección','2 · Prepare selection'):duo?.bet?.state==='offered'&&!duo.bet.guest_ok?bi(`2 · Preparar y aceptar ${duo.bet.amount} JJ`,`2 · Prepare & accept ${duo.bet.amount} JJ`):bi('2 · Preparar y confirmar','2 · Prepare & confirm');
+  main.innerHTML=loading?bi('Preparando audio…','Preparing audio…'):mode==='practice'?bi('▶ Iniciar práctica','▶ Start practice'):mode==='solo'?bi('▶ Jugar ahora','▶ Play now'):host?bi('2 · Preparar selección','2 · Prepare selection'):duo?.bet?.state==='offered'&&!duo.bet.guest_ok?bi(`2 · Preparar y aceptar ${duo.bet.amount} JJ`,`2 · Prepare & accept ${duo.bet.amount} JJ`):bi('2 · Preparar y confirmar','2 · Prepare & confirm');
   if(mode!=='duo')return;
   const root=$('#piano-duo');
   if(!duo){if(!root.querySelector('#piano-create')){root.innerHTML=`<h2>${bi('Tu sala para dos','Your room for two')}</h2><p>${bi('Crea la sala primero; después elige música y dificultad. O entra con el código de tu pareja.','Create the room first, then choose music and difficulty. Or join using your partner’s code.')}</p>${JJRooms.entry('piano')}${jjButton('piano-recover','Recuperar mi sala','Recover my room','text-button')}`;$('#piano-recover').onclick=()=>sendRoom('recover');$('#piano-create').onclick=()=>sendRoom('create');$('#piano-join-form').onsubmit=e=>{e.preventDefault();sendRoom('join',{},$('#piano-code').value);};}$('#piano-create').disabled=busy;$('#piano-join').disabled=busy;$('#piano-recover').disabled=busy;return;}
@@ -254,7 +263,10 @@ async function pianoPage(v){
   const r=game.result(),hud=`${Math.max(0,Math.floor(t/1000))} / ${duration}s · ${r.score} pts · ${say('Rango','Rank')} ${r.grade} · ${game.combo} combo`;if(hud!==lastHUD){lastHUD=hud;$('#piano-hud').textContent=hud;}
   if(t>=duration*1000){finish();return;}raf=requestAnimationFrame(draw);
  }
- function press(lane){const t=time();if(!active||paused||t<0||t>duration*1000)return;const result=game.press(t,lane);$('#piano-feedback').textContent='';if(result!=='perfect'&&result!=='good')return;
+ function press(lane,keyboardFlick=false){const t=time();if(!active||paused||t<0||t>duration*1000)return;feedback(lane,game.press(t,lane,keyboardFlick),t);}
+ function feedback(lane,result,t){if(result==='ignored')return;$('#piano-feedback').textContent='';
+  if(result==='hold')$('#piano-feedback').textContent=say('Mantén','Hold');
+  if(result==='flick')$('#piano-feedback').textContent=say('Desliza hacia arriba','Swipe up');if(result!=='perfect'&&result!=='good')return;
   $('#piano-feedback').textContent=result==='perfect'?say('¡Perfecto!','Perfect!'):say('¡Bien!','Good!');
   const hit=game.lastHit,glow=document.createElement('span');
   const shape=PianoHighway.note(lane,hit.t-t,PianoHighway.lead[speed]);
@@ -269,12 +281,12 @@ async function pianoPage(v){
   setTimeout(()=>glow.remove(),500);
   const b=document.querySelector(`[data-piano-lane="${lane}"]`);b.classList.remove('piano-hit');void b.offsetWidth;b.classList.add('piano-hit');b.onanimationend=()=>b.classList.remove('piano-hit');const stamp=String(Number(b.dataset.pianoFlash||0)+1);b.dataset.pianoFlash=stamp;setTimeout(()=>{if(b.dataset.pianoFlash===stamp)b.classList.remove('piano-hit');},320);
  }
- async function pause(){if(!active)return;if(duo){message('En dúo no hay pausa individual. Termina la partida para salir.','Duo games cannot pause individually. Stop the game to leave.');return;}try{if(paused){await ctx.resume();if(!current())return;paused=false;$('#piano-pause').innerHTML=bi('Pausar','Pause');raf=requestAnimationFrame(draw);}else{paused=true;cancelAnimationFrame(raf);await ctx.suspend();if(current())$('#piano-pause').innerHTML=bi('Continuar','Resume');}}catch{message('No se pudo continuar el audio. Vuelve a preparar la canción.','Audio could not resume. Prepare the song again.');}}
+ async function pause(){if(!active)return;if(duo){message('En dúo no hay pausa individual. Termina la partida para salir.','Duo games cannot pause individually. Stop the game to leave.');return;}try{if(paused){await ctx.resume();if(!current())return;paused=false;$('#piano-pause').innerHTML=bi('Pausar','Pause');raf=requestAnimationFrame(draw);}else{if(mode==='practice'){const t=time();for(let lane=0;lane<4;lane++)game.release(t,lane);}paused=true;cancelAnimationFrame(raf);await ctx.suspend();if(current())$('#piano-pause').innerHTML=bi('Continuar','Resume');}}catch{message('No se pudo continuar el audio. Vuelve a preparar la canción.','Audio could not resume. Prepare the song again.');}}
  function persistPending(){try{if(retry)localStorage.setItem(pendingKey,JSON.stringify(retry));else localStorage.removeItem(pendingKey);}catch{}}
  function pending(){const root=$('#piano-pending');root.innerHTML=retry?`<p>${bi('Resultado pendiente. Puedes reintentar sin duplicar el premio.','Result pending. Retry without duplicating the reward.')}</p>${jjButton('piano-retry','Guardar resultado pendiente','Save pending result')}`:'';if($('#piano-retry'))$('#piano-retry').onclick=settle;paint();}
  async function settle(){if(!retry||!current())return;const row=retry;if($('#piano-retry'))$('#piano-retry').disabled=true;try{const result=await rpc('jj_piano',{p_action:'finish',p_id:row.id,p_data:{events:row.events}});if(!current())return;retry=null;persistPending();showResult(result);await refreshDuo();JJ.dashboard=null;pending();}catch(e){if(current()&&/RUN_EXPIRED|RUN_NOT_FOUND|NOT_YOUR_RUN/.test(e.message||'')){retry=null;persistPending();pending();message('Esta partida venció. Puedes preparar otra canción.','This game expired. You can prepare another song.');return;}if(current()){$('#piano-pending').insertAdjacentHTML('afterbegin','<p>'+bi('No se confirmó. Comprueba la conexión y reintenta.','Unconfirmed. Check connection and retry.')+'</p>');if($('#piano-retry'))$('#piano-retry').disabled=false;}}}
- function showResult(r){const root=$('#piano-result');root.hidden=false;root.innerHTML=`<h2>${bi('Tu interpretación','Your performance')} · ${r.grade}</h2><p>${(r.accuracy/100).toFixed(2)} % · ${r.score} pts</p><p>${bi('Perfectos / Bien / Fallos','Perfect / Good / Misses')}: ${r.perfect} / ${r.good} / ${r.miss} · ${bi('Combo máximo','Best combo')}: ${r.combo}</p><p class="arcade-receipt">+${r.reward||0} JJ${r.improved?' · '+bi('¡Mejor marca!','New best!'):''}</p><p>${r.grade==='D'?bi('Necesitas al menos C (60 %) y terminar para ganar monedas.','Finish with at least C (60%) to earn coins.'):r.reward?bi('Premio guardado en tu saldo JJ.','Reward saved to your JJ wallet.'):bi('Alcanzaste el límite diario de premios. Tu marca se guardó.','Daily reward limit reached. Your best was saved.')}</p>`;root.scrollIntoView({block:'start'});}
- async function finish(){if(!active)return;active=false;cancelAnimationFrame(raf);stopAudio();$('#piano-stage').hidden=true;const r=game.result();if(state.demo){showResult({...r,reward:0});paint();return;}retry={id:run.id,events:game.events};persistPending();pending();await settle();}
+ function showResult(r){const root=$('#piano-result');root.hidden=false;root.innerHTML=`<h2>${bi('Tu interpretación','Your performance')} · ${r.grade}</h2><p>${(r.accuracy/100).toFixed(2)} % · ${r.score} pts</p><p>${bi('Perfectos / Bien / Fallos','Perfect / Good / Misses')}: ${r.perfect} / ${r.good} / ${r.miss} · ${bi('Combo máximo','Best combo')}: ${r.combo}</p><div ${mode==='practice'?'hidden':''}><p class="arcade-receipt">+${r.reward||0} JJ${r.improved?' · '+bi('¡Mejor marca!','New best!'):''}</p><p>${r.grade==='D'?bi('Necesitas al menos C (60 %) y terminar para ganar monedas.','Finish with at least C (60%) to earn coins.'):r.reward?bi('Premio guardado en tu saldo JJ.','Reward saved to your JJ wallet.'):bi('Alcanzaste el límite diario de premios. Tu marca se guardó.','Daily reward limit reached. Your best was saved.')}</p></div>`;root.scrollIntoView({block:'start'});}
+ async function finish(){if(!active)return;active=false;cancelAnimationFrame(raf);stopAudio();$('#piano-stage').hidden=true;const r=game.result();if(mode==='practice'||state.demo){showResult({...r,reward:0});paint();return;}retry={id:run.id,events:game.events};persistPending();pending();await settle();}
  async function prepare(){
   if(active||loading||retry)return false;const song=songs.find(s=>s.id===$('#piano-song').value);if(!song?.audio_path){message('Elige una canción con audio.','Choose a song with audio.');return false;}
   loading=true;buffer=null;paint();message('Preparando tu canción…','Preparing your song…');
@@ -288,7 +300,7 @@ async function pianoPage(v){
   finally{loading=false;paint();}
  }
  async function mainAction(){if(active||loading||duoBusy||retry)return;
-  if(mode==='solo'){if(await prepare())await start();return;}
+  if(mode!=='duo'){if(await prepare())await start();return;}
   if(!duo)return;
   if(duo.host===owner){if(await prepare()){if(await sendRoom('configure',settings()))message('Tu audio está listo. Espera la confirmación de tu pareja y pulsa Comenzar juntos.','Your audio is ready. Wait for your partner and press Start together.');}return;}
   const revision=duo.revision,betId=duo.bet?.id;
@@ -296,19 +308,44 @@ async function pianoPage(v){
   if(duo.revision!==revision||duo.bet?.id!==betId){buffer=null;message('La configuración cambió. Confirma de nuevo.','Settings changed. Confirm again.');return;}
   if(await sendRoom('ready',{revision,bet_id:duo.bet?.id||null,accept_bet:!!duo.bet&&duo.bet.state==='offered'}))message('Listo. Espera a que el anfitrión comience.','Ready. Wait for the host to start.');
  }
- async function start(){if(loading||active||!buffer||duo&&!duo.starts_at)return;loading=true;lock(true);try{await ctx.resume();if(!current())return;const id=crypto.randomUUID();run=duo?{id:duo.run,notes:duo.notes}:state.demo?{id,notes}:await rpc('jj_piano',{p_action:'start',p_id:id,p_data:{song:$('#piano-song').value,difficulty,duration,times:notes.map(n=>n.t)}});if(!current())return;
-   game=PianoEngine.game(run.notes,difficulty);$('#piano-glows').replaceChildren();$('#piano-feedback').textContent='';document.querySelectorAll('[data-piano-lane]').forEach(b=>b.classList.remove('piano-hit'));source=ctx.createBufferSource();source.buffer=buffer;source.connect(ctx.destination);const delay=duo?duo._startLocal-performance.now():3000;if(duo&&delay<300)throw Error('LATE_START');startedAt=ctx.currentTime+delay/1000;wallStart=duo?duo._startLocal:performance.now()+delay;source.start(startedAt,0,duration);active=true;paused=false;lastHUD='';$('#piano-live-song').textContent=songs.find(song=>song.id===$('#piano-song').value)?.title||'';$('#piano-stage').hidden=false;$('#piano-result').hidden=true;$('#piano-pause').innerHTML=bi('Pausar','Pause');$('#piano-pause').hidden=!!duo;document.body.classList.add('jj-rhythm-active');$('#piano-stage').scrollIntoView({block:'start'});raf=requestAnimationFrame(draw);
+ async function start(){if(loading||active||!buffer||duo&&!duo.starts_at)return;loading=true;lock(true);try{await ctx.resume();if(!current())return;const id=crypto.randomUUID();run=mode==='practice'?null:duo?{id:duo.run,notes:duo.notes}:state.demo?{id,notes}:await rpc('jj_piano',{p_action:'start',p_id:id,p_data:{song:$('#piano-song').value,difficulty,duration,times:notes.map(n=>n.t)}});if(!current())return;
+   game=mode==='practice'?PianoEngine.practice(notes,difficulty,duration):PianoEngine.game(run.notes,difficulty);$('#piano-glows').replaceChildren();$('#piano-feedback').textContent='';document.querySelectorAll('[data-piano-lane]').forEach(b=>b.classList.remove('piano-hit'));source=ctx.createBufferSource();source.buffer=buffer;source.connect(ctx.destination);const delay=duo?duo._startLocal-performance.now():3000;if(duo&&delay<300)throw Error('LATE_START');startedAt=ctx.currentTime+delay/1000;wallStart=duo?duo._startLocal:performance.now()+delay;source.start(startedAt,0,duration);active=true;paused=false;lastHUD='';$('#piano-live-song').textContent=songs.find(song=>song.id===$('#piano-song').value)?.title||'';$('#piano-stage').hidden=false;$('#piano-result').hidden=true;$('#piano-pause').innerHTML=bi('Pausar','Pause');$('#piano-pause').hidden=!!duo;document.body.classList.add('jj-rhythm-active');$('#piano-stage').scrollIntoView({block:'start'});raf=requestAnimationFrame(draw);
   }catch{message('No se pudo iniciar. Comprueba la conexión y SQL 34.','Could not start. Check connection and SQL 34.');}finally{loading=false;if(current())paint();}}
  $('#piano-prepare').onclick=mainAction;
+ $('#piano-mode-practice').onclick=()=>setMode('practice');
  $('#piano-mode-solo').onclick=()=>setMode('solo');$('#piano-mode-duo').onclick=()=>setMode('duo');
  for(const id of ['piano-song','piano-level','piano-length'])$('#'+id).onchange=()=>{if(duo&&duo.host!==owner)return;resetPrepared();paint();};
- const key=e=>{if(!active||paused||e.repeat||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||$('#modal').open)return;const lane={d:0,f:1,j:2,k:3}[e.key.toLowerCase()];if(lane!==undefined){e.preventDefault();press(lane);}};
+ const key=e=>{if(!active||paused||e.repeat||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)||$('#modal').open)return;const lane={d:0,f:1,j:2,k:3}[e.key.toLowerCase()];if(lane!==undefined){e.preventDefault();press(lane,e.shiftKey);}};
  const visibility=()=>{if(document.hidden&&active&&!paused&&!duo)pause();};
+ function practiceGesture(lane,action){
+  if(!active||paused||mode!=='practice')return;
+  const t=time();feedback(lane,game[action](t,lane),t);
+ }
+ const keyup=e=>{const lane={d:0,f:1,j:2,k:3}[e.key.toLowerCase()];if(lane!==undefined)practiceGesture(lane,'release');};
+ document.addEventListener('keyup',keyup);
  document.addEventListener('keydown',key);document.addEventListener('visibilitychange',visibility);
- document.querySelectorAll('[data-piano-lane]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();press(Number(b.dataset.pianoLane));};b.onclick=e=>{if(e.detail===0)press(Number(b.dataset.pianoLane));};});
+ document.querySelectorAll('[data-piano-lane]').forEach(b=>{
+  const lane=Number(b.dataset.pianoLane);
+  let pointer=null,y=0;
+  b.onpointerdown=e=>{
+   e.preventDefault();
+   if(mode==='practice'){
+    if(pointer!==null)return;
+    pointer=e.pointerId;y=e.clientY;b.setPointerCapture(pointer);
+   }
+   press(lane);
+  };
+  b.onpointermove=e=>{if(pointer===e.pointerId&&y-e.clientY>=22)practiceGesture(lane,'flick');};
+  b.onpointerup=b.onpointercancel=b.onlostpointercapture=e=>{
+   if(pointer!==e.pointerId)return;
+   if(e.type==='pointerup'&&y-e.clientY>=22)practiceGesture(lane,'flick');
+   practiceGesture(lane,'release');pointer=null;
+  };
+  b.onclick=e=>{if(e.detail===0){press(lane);practiceGesture(lane,'release');}};
+ });
  $('#piano-pause').onclick=pause;$('#piano-stop').onclick=async()=>{if(duo){await leaveRoom();return;}active=false;cancelAnimationFrame(raf);stopAudio();if(run&&!state.demo)rpc('jj_piano',{p_action:'cancel',p_id:run.id}).catch(()=>{});$('#piano-stage').hidden=true;paint();};
  const timer=setInterval(()=>{if(!document.hidden)refreshDuo();},1500);window.addEventListener('bb-art-ready',drawPeople);
- JJ.cleanups.push(()=>{disposed=true;active=false;abort?.abort();clearInterval(timer);cancelAnimationFrame(raf);stopAudio();ctx?.close().catch(()=>{});document.removeEventListener('keydown',key);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('bb-art-ready',drawPeople);if(duo&&!duo.closed)rpc('jj_piano_lobby',{p_action:'leave',p_code:duo.code}).catch(()=>{});if(run&&!retry&&!state.demo&&!duo)rpc('jj_piano',{p_action:'cancel',p_id:run.id}).catch(()=>{});});
+ JJ.cleanups.push(()=>{disposed=true;active=false;abort?.abort();clearInterval(timer);cancelAnimationFrame(raf);stopAudio();ctx?.close().catch(()=>{});document.removeEventListener('keydown',key);document.removeEventListener('keyup',keyup);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('bb-art-ready',drawPeople);if(duo&&!duo.closed)rpc('jj_piano_lobby',{p_action:'leave',p_code:duo.code}).catch(()=>{});if(run&&!retry&&!state.demo&&!duo)rpc('jj_piano',{p_action:'cancel',p_id:run.id}).catch(()=>{});});
  paint();try{songs=(await allSongs()).filter(s=>s.audio_path);if(!current()||disposed)return;$('#piano-song').innerHTML=songs.length?songs.map(s=>`<option value="${esc(s.id)}" translate="no">${esc(s.title)}</option>`).join(''):`<option value="">${say('No hay canciones con audio','No audio tracks available')}</option>`;if(!songs.length)message('Sube una canción a Nuestra música para empezar.','Upload a song to Our music to get started.');}catch(e){message('No se pudieron cargar tus canciones. Vuelve a abrir Piano JJ.','Songs could not load. Reopen Piano JJ.');}
  pending();paint();let saved;try{saved=localStorage.getItem(duoKey);}catch{}if(saved&&!state.demo){mode='duo';paint();await sendRoom('read',{},saved);}
 }
