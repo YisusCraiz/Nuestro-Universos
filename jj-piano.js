@@ -5,6 +5,11 @@ const pianoNavigate=navigate;
 navigate=async function(page){if(page!=='piano')return pianoNavigate(page);
  if(!state.profile)return;await loadSections();if(!sectionAllowed('piano'))return pianoNavigate('home');jjCleanup();clearTimers();state.page='piano';const v=++state.version;rememberRoute(historyRoute('piano'));shell();await pianoPage(v);};
 
+const PianoScenes={
+ neon:{name:['Azotea neón','Neon rooftop'],sky:['#352752','#191732','#080d1d'],lanes:['#14172f','#211d3b'],edge:'#988ace65'},
+ festival:{name:['Festival de faroles','Lantern festival'],sky:['#72404a','#3b243d','#140f23'],lanes:['#251a31','#322138'],edge:'#edaf886b'},
+ snow:{name:['Plaza nevada','Snowy plaza'],sky:['#49649a','#26395e','#10192e'],lanes:['#172440','#203351'],edge:'#c2e6ff78'}
+};
 const PianoHighway={
  lead:[2400,1800,1250],
  y:600,
@@ -15,11 +20,11 @@ const PianoHighway={
   const left=this.edge(lane+.085,depth),right=this.edge(lane+.915,depth);
   return {left,width:right-left,y:54+(this.y-54)*depth,height:8+20*depth};
  },
- draw(c,game,time,lead){
+ draw(c,game,time,lead,scene=PianoScenes.neon){
   const background=c.createLinearGradient(0,0,0,720);
-  background.addColorStop(0,'#352752');
-  background.addColorStop(.37,'#191732');
-  background.addColorStop(1,'#080d1d');
+  background.addColorStop(0,scene.sky[0]);
+  background.addColorStop(.37,scene.sky[1]);
+  background.addColorStop(1,scene.sky[2]);
   c.fillStyle=background;c.fillRect(0,0,640,720);
   for(let lane=0;lane<4;lane++){
    c.beginPath();
@@ -28,8 +33,8 @@ const PianoHighway={
    c.lineTo(this.edge(lane+1,1),this.y);
    c.lineTo(this.edge(lane,1),this.y);
    c.closePath();
-   c.fillStyle=lane%2?'#211d3b':'#14172f';c.fill();
-   c.strokeStyle='#988ace65';c.lineWidth=2;c.stroke();
+   c.fillStyle=scene.lanes[lane%2];c.fill();
+   c.strokeStyle=scene.edge;c.lineWidth=2;c.stroke();
    c.fillStyle=this.colors[lane];
    c.fillRect(this.edge(lane,1)+4,this.y-2,152,4);
    c.fillStyle='#d9d3ff';
@@ -74,13 +79,37 @@ function pianoConcert(owner){
  try{saved=JSON.parse(localStorage.getItem(key))||{};}catch{}
  const lineup=Object.fromEntries(band.map(([id,,instrument])=>[id,instruments.some(([value])=>value===saved.lineup?.[id])?saved.lineup[id]:instrument]));
  let skin=typeof saved.skin==='string'?saved.skin:'';
- const root=$('#piano-dressing-room'), live=$('#piano-live-band');
+ let scene=Object.hasOwn(PianoScenes,saved.scene)?saved.scene:'neon';
+ const root=$('#piano-dressing-room'), live=$('#piano-live-band'), stage=$('#piano-stage');
+ const sceneOptions=Object.entries(PianoScenes).map(([id,{name:[es,en]}])=>`<option value="${id}">${esc(say(es,en))}</option>`).join('');
  const choices=instruments.map(([value,es,en])=>`<option value="${value}">${esc(say(es,en))}</option>`).join('');
  const card=([id,name,,color],controls)=>`<div class="piano-band-member" style="--performer:${color}"><div class="piano-band-art"><canvas width="128" height="146" data-piano-performer="${id}" aria-hidden="true"></canvas><canvas width="112" height="72" data-piano-instrument-art="${id}" aria-hidden="true"></canvas></div>${controls?`<label>${name}<select data-piano-instrument="${id}">${choices}</select></label>`:`<strong>${name}</strong>`}</div>`;
- root.innerHTML=`<summary>${bi('Camerino de Nuestro Escenario','Our Stage dressing room')}</summary><div class="piano-band-grid">${band.map(member=>card(member,true)).join('')}</div><label>${bi('Tu skin para este concierto','Your outfit for this concert')}<select id="piano-concert-skin"><option value="">${say('Usar mi skin equipada','Use my equipped outfit')}</option></select></label><p id="piano-concert-status" role="status"></p><section id="piano-exclusive-shop" hidden><h3>${bi('Vestuario exclusivo de Piano JJ','Piano JJ exclusive outfits')}</h3><p id="piano-shop-balance"></p><div id="piano-shop-items" class="piano-band-grid"></div><div id="piano-shop-confirm"></div><p id="piano-shop-status" role="status"></p></section>`;
+ root.innerHTML=`<summary>${bi('Camerino de Nuestro Escenario','Our Stage dressing room')}</summary><label>${bi('Escenario del concierto','Concert stage')}<select id="piano-concert-scene">${sceneOptions}</select></label><div id="piano-concert-preview" class="piano-band-grid">${band.map(member=>card(member,true)).join('')}</div><label>${bi('Tu skin para este concierto','Your outfit for this concert')}<select id="piano-concert-skin"><option value="">${say('Usar mi skin equipada','Use my equipped outfit')}</option></select></label><p id="piano-concert-status" role="status"></p><section id="piano-exclusive-shop" hidden><h3>${bi('Vestuario exclusivo de Piano JJ','Piano JJ exclusive outfits')}</h3><p id="piano-shop-balance"></p><div id="piano-shop-items" class="piano-band-grid"></div><div id="piano-shop-confirm"></div><p id="piano-shop-status" role="status"></p></section>`;
  live.innerHTML=band.map(member=>card(member,false)).join('');
  const skinInput=$('#piano-concert-skin');
- const persist=()=>{try{localStorage.setItem(key,JSON.stringify({skin,lineup}));}catch{}};
+ const persist=()=>{try{localStorage.setItem(key,JSON.stringify({skin,lineup,scene}));}catch{}};
+ const preview=$('#piano-concert-preview'), sceneSelect=$('#piano-concert-scene');
+ function showScene(){
+  sceneSelect.value=scene;
+  stage.dataset.pianoScene=scene;
+  preview.dataset.pianoScene=scene;
+ }
+ sceneSelect.onchange=()=>{
+  if(!Object.hasOwn(PianoScenes,sceneSelect.value))return;
+  scene=sceneSelect.value;
+  showScene();
+  persist();
+ };
+ showScene();
+ const performers=[...live.querySelectorAll('.piano-band-art')];
+ const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
+ const reactions=new WeakMap();
+ function hit(lane){
+  const performer=performers[lane];
+  if(motionPreference.matches||!performer?.animate||reactions.get(performer)?.playState==='running')return;
+  const pulse=performer.animate([{transform:'translateY(0)',filter:'brightness(1)'},{transform:'translateY(-4px)',filter:'brightness(1.42)',offset:.4},{transform:'translateY(0)',filter:'brightness(1)'}],{duration:210,easing:'ease-out'});
+  reactions.set(performer,pulse);
+ }
  function draw(){
   const handle=state.profile?.handle;
   for(const [id] of band){
@@ -229,6 +258,7 @@ function pianoConcert(owner){
  window.addEventListener('bb-art-ready',draw);
  window.addEventListener('jj-wardrobe-changed',loadWardrobe);
  JJ.cleanups.push(()=>{window.removeEventListener('bb-art-ready',draw);window.removeEventListener('jj-wardrobe-changed',loadWardrobe);});
+ return {scene:()=>PianoScenes[scene],hit};
 }
 
 function pianoInstrumentSprite(canvas,instrument){
@@ -306,7 +336,7 @@ async function pianoPage(v){
  <section id="piano-result" class="game-panel" hidden></section><div id="piano-pending"></div>
  <details class="game-panel piano-guide"><summary>${bi('Cómo jugar y ganar JJ','How to play and earn JJ')}</summary><p>${bi('Toca D F J K o las cuatro teclas al llegar las notas a la línea. Perfecto: 100; Bien: 70; fallo: −10. C requiere 60 %, B 75 %, A 90 % y S 97 %.','Press D F J K or the four keys as notes reach the line. Perfect: 100; Good: 70; wrong: −10. C needs 60%, B 75%, A 90%, S 97%.')}</p><table class="leaderboard"><thead><tr><th>${bi('Nivel','Level')}</th><th>C / B / A / S · JJ</th></tr></thead><tbody><tr><td>${bi('Fácil','Easy')}</td><td>2 / 3 / 5 / 6</td></tr><tr><td>Normal</td><td>3 / 5 / 8 / 11</td></tr><tr><td>${bi('Difícil','Hard')}</td><td>5 / 8 / 12 / 15</td></tr></tbody></table><p>${bi('+2 JJ por mejorar tu marca. Comparte el máximo de 45 JJ y 12 partidas premiadas diarias con minijuegos. Las apuestas son aparte de esos premios.','+2 JJ for a personal best. Shares the daily cap of 45 JJ and 12 rewarded games with minigames. Wagers are separate from rewards.')}</p></details>`;
 
- pianoConcert(owner);
+ const concert=pianoConcert(owner);
  const speedInput=$('#piano-scroll-speed');
  speedInput.value=String(speed);
  speedInput.onchange=()=>{
@@ -387,7 +417,7 @@ async function pianoPage(v){
   if(!current()||!active||paused)return;
   const t=time(),canvas=$('#piano-board');
   game.tick(t);
-  PianoHighway.draw(canvas.getContext('2d'),game,t,PianoHighway.lead[speed]);
+  PianoHighway.draw(canvas.getContext('2d'),game,t,PianoHighway.lead[speed],concert.scene());
   const r=game.result(),hud=`${Math.max(0,Math.floor(t/1000))} / ${duration}s · ${r.score} pts · ${say('Rango','Rank')} ${r.grade} · ${game.combo} combo`;if(hud!==lastHUD){lastHUD=hud;$('#piano-hud').textContent=hud;}
   if(t>=duration*1000){finish();return;}raf=requestAnimationFrame(draw);
  }
@@ -395,6 +425,7 @@ async function pianoPage(v){
  function feedback(lane,result,t){if(result==='ignored')return;$('#piano-feedback').textContent='';
   if(result==='hold')$('#piano-feedback').textContent=say('Mantén','Hold');
   if(result==='flick')$('#piano-feedback').textContent=say('Desliza hacia arriba','Swipe up');if(result!=='perfect'&&result!=='good')return;
+  concert.hit(lane);
   $('#piano-feedback').textContent=result==='perfect'?say('¡Perfecto!','Perfect!'):say('¡Bien!','Good!');
   const hit=game.lastHit,glow=document.createElement('span');
   const shape=PianoHighway.note(lane,hit.t-t,PianoHighway.lead[speed]);
