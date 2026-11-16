@@ -24,6 +24,7 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 @media(max-width:580px){.club{grid-template-columns:1fr;min-height:0}.chibi-stage{width:clamp(83px,25vw,118px)}.club p{margin-top:6px}.club{gap:10px;padding-block:15px}.score{padding:7px}.score .chibi-face{width:25px}}
 .world-selector{margin:12px 0}.world-selector h2{font:700 1.12rem Georgia;color:var(--gold);margin:0 0 8px}.world-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(143px,1fr));gap:7px}.world-choices button{text-align:left}.world-choices small{display:block;color:var(--muted);margin-top:3px;font-size:.77rem}.world-choices [aria-pressed=true],.skin-filters [aria-pressed=true]{border-color:var(--gold);background:#37465a}.shop-trigger{margin-top:9px}.skin-filters{display:flex;flex-wrap:wrap;gap:7px}.skin-filters button{padding:6px 8px}#shop{width:min(720px,calc(100% - 24px));max-height:85dvh;overflow:auto;color:var(--ink);background:#182c41;border:1px solid #66829e;border-radius:17px;padding:16px}#shop::backdrop{background:#0c1422af}.shop-heading{margin-bottom:12px}.shop-heading h2{margin:0;color:var(--gold);font:700 1.5rem Georgia}.shop-heading p{color:var(--muted);margin:4px 0 0}#shopStatus{margin:9px 0;color:var(--gold);font-size:.87rem}#shopStatus:empty{display:none}.skin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-top:9px}.skin-card{display:grid;justify-items:center;gap:6px;text-align:center;padding:10px 6px;border:1px solid #688096;border-radius:12px;background:#21384e}.skin-card.rarity-1{border-color:#7aaff5;background:#253f62}.skin-card.rarity-2{border-color:#ce9df6;background:#3e315e}.skin-card small{color:#d9e6f5}.skin-card button{font-size:.82rem;padding:7px}.skin-ball{display:grid;place-items:center;width:46px;aspect-ratio:1;border-radius:50%;color:#202738;font:bold 20px Georgia;box-shadow:0 3px 9px #101924;background:radial-gradient(circle at 30% 27%,var(--l),var(--m) 57%,var(--d))}.track{flex-wrap:wrap}.table-wrap table{min-width:max-content}@media(max-width:550px){.world-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.world-choices strong{font-size:.85rem}.world-choices small{font-size:.68rem}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .golf-people{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;color:var(--muted);font-size:.8rem}.golf-people span{border:1px solid var(--line);padding:5px 9px;border-radius:20px}.golf-people i{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#8b9bb1}.golf-people .golf-online{background:#80dfad;box-shadow:0 0 6px #80dfad80}.skin-sample{width:88px;height:82px;background:#14253a80;border:0;box-shadow:none}
+#wager{width:min(590px,calc(100% - 22px));max-height:85dvh;overflow:auto;color:var(--ink);background:#182c41;border:1px solid #7fa4c2;border-radius:16px;padding:16px}#wager::backdrop{background:#0c1422af}#wagerDetails{padding:10px 12px;margin:12px 0;background:#21394e;border-radius:10px}#wagerDetails h3{margin:0;color:var(--gold)}#wagerDetails p{margin:6px 0}#wagerBreakdown{font-size:.8rem;color:var(--muted)}#wagerActions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}#wagerStatus:empty,#wagerScores:empty,#wagerBreakdown:empty{display:none}#wagerStatus{color:var(--gold)}
 </style>
 <main>
 <header><div><h1>Golf J×J</h1><p>Yisus & Julie · Nuestro Universo</p></div><button class="signature" id="language" lang="en">English</button></header>
@@ -46,6 +47,7 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <button id="farMode" type="button"><strong data-en="Distance challenge">Reto a distancia</strong><small data-en="Play separately, then trade score codes">Jueguen por separado y comparen por código</small></button>
 <button id="practiceMode" type="button"><strong data-en="Practice a hole">Practicar un hoyo</strong><small data-en="Pick a course and retry freely">Elige un campo y repítelo a tu ritmo</small></button>
 </div>
+<button id="wagerLobby" class="shop-trigger" type="button" data-en="JJ Wagers">Apuestas JJ</button>
 <button id="shopLobby" type="button" data-en="Ball Album · Shop and equip" class="shop-trigger">Álbum de bolas · Tienda y equipamiento</button>
 <section id="records" class="records" hidden><h2 data-en="Personal bests on this device">Mejores rondas en este dispositivo</h2><div id="recordList"></div></section>
 <details class="guide"><summary data-en="How to play">Cómo jugar</summary><ol>
@@ -55,7 +57,7 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 </ol></details>
 </section>
 <section id="game" hidden>
-<div class="controls"><button id="back" data-en="Back to club">Volver al club</button><label id="whoLabel" hidden><span data-en="Playing as">Juegas como</span> <select id="who"><option>Yisus</option><option>Julie</option></select></label><label id="courseLabel" hidden><span data-en="Hole">Hoyo</span> <select id="coursePick"></select></label><button id="shopGame" type="button" data-en="Ball skins">Skins de bola</button><button id="sound" type="button" aria-pressed="false"></button><button class="reset" id="reset" data-en="Restart">Reiniciar</button></div>
+<div class="controls"><button id="back" data-en="Back to club">Volver al club</button><label id="whoLabel" hidden><span data-en="Playing as">Juegas como</span> <select id="who"><option>Yisus</option><option>Julie</option></select></label><label id="courseLabel" hidden><span data-en="Hole">Hoyo</span> <select id="coursePick"></select></label><button id="wagerGame" hidden type="button" data-en="View wager">Ver apuesta</button><button id="shopGame" type="button" data-en="Ball skins">Skins de bola</button><button id="sound" type="button" aria-pressed="false"></button><button class="reset" id="reset" data-en="Restart">Reiniciar</button></div>
 <section class="arena" aria-label="Partida">
 <div class="row" id="scores"></div>
 <div class="bar"><div><div class="track" id="track"></div><strong id="label" tabindex="-1"></strong><span id="turn" aria-live="polite"></span></div><label><span id="powerLabel">Potencia · 0%</span><progress id="power" max="100" value="0"></progress></label></div>
@@ -73,20 +75,32 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <div class="aim-controls"><button id="aimMode" type="button" aria-pressed="false">Cambiar a toque para apuntar</button><label id="aimControl" hidden><span data-en="Power">Fuerza</span> <input id="aimForce" type="range" min="5" max="100" value="55"></label><button id="fire" data-en="Shoot" class="primary" type="button" hidden disabled>Golpear</button></div>
 <p id="tip"></p>
 </section>
-<section id="result" hidden><div class="result-title"><div id="resultFaces" aria-hidden="true"></div><h2 id="headline" tabindex="-1"></h2></div><div id="roundNotes" class="round-notes"></div><div class="table-wrap" id="detail"></div><div id="remote" hidden><p data-en="Send your code to the other player, then paste theirs here to compare scores.">Mándale tu código a tu rival y pega aquí el suyo para comparar la ronda.</p><input id="code" readonly aria-label="Tu código"><button id="copy">Copiar código</button><input id="rival" maxlength="20" placeholder="Código rival" aria-label="Código rival"><button id="compare" data-en="Compare" class="primary">Comparar</button></div><p id="verdict" aria-live="polite" hidden></p><button id="again" class="primary">Jugar revancha</button></section>
+<section id="result" hidden><div class="result-title"><div id="resultFaces" aria-hidden="true"></div><h2 id="headline" tabindex="-1"></h2></div><div id="roundNotes" class="round-notes"></div><div class="table-wrap" id="detail"></div><div id="remote" hidden><p data-en="Send your code to the other player, then paste theirs here to compare scores.">Mándale tu código a tu rival y pega aquí el suyo para comparar la ronda.</p><input id="code" readonly aria-label="Tu código"><button id="copy">Copiar código</button><input id="rival" maxlength="20" placeholder="Código rival" aria-label="Código rival"><button id="compare" data-en="Compare" class="primary">Comparar</button></div><p id="verdict" aria-live="polite" hidden></p><button id="wagerResult" class="primary" hidden data-en="Open wager scores">Abrir marcador de apuesta</button> <button id="again" class="primary">Jugar revancha</button></section>
 </section>
 <dialog id="shop" aria-labelledby="shopTitle">
  <header class="shop-heading"><div><h2 id="shopTitle" data-en="Golf Ball Album">Álbum de bolas</h2><p id="shopWallet"></p></div><button id="closeShop" type="button" data-en="Close">Cerrar</button></header>
  <div id="skinFilters" class="skin-filters"></div>
  <p id="shopStatus" role="status"></p><div id="skinGrid" class="skin-grid"></div>
 </dialog>
+<dialog id="wager" aria-labelledby="wagerTitle">
+<header class="shop-heading"><div><h2 id="wagerTitle" data-en="JJ Wagers">Apuestas JJ</h2><p id="wagerBalance"></p></div><button id="wagerClose" data-en="Close">Cerrar</button></header>
+<p data-en="Both players must agree to the stake and confirm the scores. The winner takes the pot. A draw, cancellation or expiry returns the coins.">Ambos aceptan la cantidad y confirman los resultados. Quien gana se lleva el bote. En empate, anulación o vencimiento se devuelven las monedas.</p>
+<section id="wagerOffer" hidden><form id="wagerForm">
+<p><strong data-en="Selected circuit">Circuito elegido</strong> · <span id="wagerCircuit"></span></p>
+<label><span data-en="JJ per player">JJ por jugador</span> <input id="wagerStake" type="number" min="1" max="1000" step="1" value="25" required></label>
+<button type="submit" class="primary" data-en="Offer wager">Proponer apuesta</button>
+</form></section>
+<section id="wagerDetails" hidden><h3 id="wagerMatchTitle"></h3><p id="wagerInfo"></p><p id="wagerScores"></p><p id="wagerBreakdown"></p><div id="wagerActions"></div></section>
+<p id="wagerStatus" role="status"></p><button id="wagerRefresh" type="button" data-en="Refresh wager">Actualizar apuesta</button>
+</dialog>
 </main>
 <script src="golf-courses.js?v=12"></script>
-<script src="golf-art.js?v=12"></script>
+<script src="golf-art.js?v=14"></script>
 <script src="../config.js"></script>
 <script src="../assets/supabase.js"></script>
 <script src="golf-shop.js?v=13"></script>
 <script src="golf-style.js?v=13"></script>
+<script src="golf-wager.js?v=14"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esText=new WeakMap();
@@ -162,7 +176,7 @@ $('sound').onclick=async()=>{
 
 function translatePage(){
  document.documentElement.lang=tr('es','en');
- records();soundLabel();renderWorlds();renderGolfPeople();if($("shop").open)renderShop();
+ records();soundLabel();renderWorlds();renderGolfPeople();if($("shop").open)renderShop();renderWager();
  document.querySelectorAll('[data-en]').forEach(node=>{
   if(!esText.has(node))esText.set(node,node.textContent);
   node.textContent=tr(esText.get(node),node.dataset.en);
@@ -188,6 +202,8 @@ $('language').onclick=()=>{
 function reset(){
  players=mode==='local'?[0,1]:[$('who').selectedIndex];
  $('whoLabel').hidden=mode==='local';
+ $('who').disabled=Boolean(golfWagerId);
+ $('wagerGame').hidden=!golfWagerId;
  $('courseLabel').hidden=mode!=='practice';
  $('again').textContent=mode==='practice'?tr('Repetir hoyo','Retry hole'):tr('Jugar revancha','Play again');
  hole=mode==='practice'?$('coursePick').selectedIndex:0;
@@ -295,7 +311,9 @@ function finishRound(focus=true){
  $('roundNotes').replaceChildren();
  const leaders=players.length===2 && total[0]!==total[1]?[total[0]<total[1]?0:1]:players;
  $('resultFaces').replaceChildren(...leaders.map(portrait));
- $('result').hidden=false;$('remote').hidden=mode!=='far';
+ $('result').hidden=false;$('remote').hidden=mode!=='far'||Boolean(golfWagerId);
+ $('wagerResult').hidden=!golfWagerId;
+ $('again').hidden=Boolean(golfWagerId);
  if(mode==='practice'){
   $('headline').textContent=shots[p]===1?tr('¡Hoyo en uno!','Hole in one!'):tr('¡Hoyo completado!','Hole complete!');
   $('detail').textContent=courseName(hole)+' · '+shots[p]+tr(' golpes',' strokes')+' · Par '+courses[hole].par;
@@ -336,8 +354,8 @@ $('copy').onclick=async()=>{
  try{await navigator.clipboard.writeText(code.value);$('copy').textContent=tr('Copiado','Copied');setTimeout(()=>$('copy').textContent=tr('Copiar código','Copy code'),1200);}
  catch{code.focus();code.select();$('copy').textContent=tr('Seleccionado','Selected');setTimeout(()=>$('copy').textContent=tr('Copiar código','Copy code'),1200);}
 };
-function startGame(choice){
- mode=choice;
+function startGame(choice,wagerId=null){
+ golfWagerId=wagerId;mode=choice;
  courses=choice==='practice'||circuit==='A'?catalog:catalog.filter(course=>worlds[course.world].id===circuit);
  $('lobby').hidden=true;$('game').hidden=false;
  reset();$('label').focus();syncGolfPeople();
@@ -346,7 +364,7 @@ $('localMode').onclick=()=>startGame('local');
 $('farMode').onclick=()=>startGame('far');
 $('practiceMode').onclick=()=>startGame('practice');
 $('back').onclick=()=>{
- moving=false;drag=null;target=null;$('game').hidden=true;$('lobby').hidden=false;syncGolfPeople();
+ moving=false;drag=null;target=null;golfWagerId=null;$('game').hidden=true;$('lobby').hidden=false;syncGolfPeople();
  $(mode==='practice'?'practiceMode':mode==='far'?'farMode':'localMode').focus();
 };
 $('who').onchange=$('coursePick').onchange=$('reset').onclick=reset;
@@ -501,7 +519,7 @@ function frame(time){
 }
 $('shopLobby').onclick=$('shopGame').onclick=openGolfShop;
 $('closeShop').onclick=()=>$('shop').close();
-loadBests();translatePage();reset();readGolfShop();requestAnimationFrame(frame);
+bindGolfWager();loadBests();translatePage();reset();readGolfShop();requestAnimationFrame(frame);
 setInterval(syncGolfPeople,20000);
 document.addEventListener('visibilitychange',syncGolfPeople);
 window.addEventListener('online',syncGolfPeople);
