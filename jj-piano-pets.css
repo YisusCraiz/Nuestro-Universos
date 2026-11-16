@@ -49,3 +49,5 @@
 .piano-scroll-setting{display:grid;gap:.35rem;margin:.75rem 0;max-width:18rem}
 #piano-board{border-color:#aa92f27d}
 @media (orientation:landscape) and (max-height:520px){#piano-board{height:48vh}#piano-stage .piano-keys button{height:44px}#piano-stage .piano-keys{margin-bottom:.45rem}#piano-live-band .piano-band-art{width:34px}}
+
+#piano-stage .piano-keys button{touch-action:none}
