@@ -1,5 +1,5 @@
 'use strict';
-const VsItems=[['bombitas','💣','Bombitas JJ','Bombitas JJ'],['cards','▣','Última carta JJ · tipo UNO','Last Card JJ · UNO-style'],['playingcards','♠','Baraja inglesa','Playing cards'],['pool','🎱','Billar JJ','Pool JJ'],['golf','⛳','Golf J×J','Golf J×J'],['tictactoe','✕ ◯','Juego del gato','Tic-tac-toe'],['wands','🪄','Duelo de varitas','Wand duel'],['secretpuzzle','🧩','Puzle secreto','Secret puzzle'],['truth','♠','Verdad o reto','Truth or dare']];
+const VsItems=[['bombitas','💣','Bombitas JJ','Bombitas JJ'],['cards','▣','Última carta JJ · tipo UNO','Last Card JJ · UNO-style'],['playingcards','♠','Baraja inglesa','Playing cards'],['pool','🎱','Billar JJ','Pool JJ'],['golf','⛳','Golf J×J','Golf J×J'],['piano','♬','Piano JJ','Piano JJ'],['tictactoe','✕ ◯','Juego del gato','Tic-tac-toe'],['wands','🪄','Duelo de varitas','Wand duel'],['secretpuzzle','🧩','Puzle secreto','Secret puzzle'],['truth','♠','Verdad o reto','Truth or dare']];
 menus.splice(menus.findIndex(m=>m[0]==='games')+1,0,['vs','⚔','Vs']);
 menus.push(['casino','♦','Casino'],['pool','🎱','Billar JJ']);
 UniverseGroups.games=UniverseGroups.games.filter(id=>!VsItems.some(([key])=>id===key));
@@ -47,15 +47,13 @@ function openUniverseGolf(){
  $('#golf-heading').focus();
 }
 const vsNavigate=navigate;let vsRequest=0,vsLanding=false;
-navigate=async function(page){if(!state.profile)return;const req=++vsRequest;if(!vsLanding){vsLanding=true;if(JJRooms.code('pool'))page='pool';}
- if(!['vs','casino','pool','puzzles'].includes(page)){await vsNavigate(page);if(req===vsRequest&&state.page==='games'){
-  document.querySelectorAll('[data-universe-route]').forEach(b=>{if(VsItems.some(([id])=>id===b.dataset.universeRoute))b.remove();});
+navigate=async function(page){if(!state.profile)return;if(page==='puzzles')page='games';const req=++vsRequest;if(!vsLanding){vsLanding=true;if(JJRooms.code('pool'))page='pool';}
+ if(!['vs','casino','pool'].includes(page)){await vsNavigate(page);if(req===vsRequest&&state.page==='games'){
   const intro=$('#main .page-heading p');if(intro)intro.innerHTML=bi('Juega a tu ritmo y gana unas monedas. Los juegos con sala están en Vs.','Play at your pace and earn a few coins. Room games are in Vs.');
-  $('#main').insertAdjacentHTML('afterbegin',`<p class="game-panel">${bi('Minijuegos clásicos: 3 JJ por terminar; +3 JJ al mejorar tu propio récord del período. Piano tiene su propia tabla de premios y comparte los límites. Hasta 12 partidas premiadas y 45 JJ al día. Las partidas de prueba no dan monedas.','Classic minigames: 3 JJ for finishing; +3 JJ for improving your own best this period. Piano has its own pay table and shares the limits. Up to 12 rewarded games and 45 JJ per day. Demo games do not award coins.')}</p>`);
+  $('#main').insertAdjacentHTML('afterbegin',`<p class="game-panel">${bi('Minijuegos clásicos: 3 JJ por terminar; +3 JJ al mejorar tu propio récord del período. Hasta 12 partidas premiadas y 45 JJ al día. Las partidas de prueba no dan monedas.','Classic minigames: 3 JJ for finishing; +3 JJ for improving your own best this period. Up to 12 rewarded games and 45 JJ per day. Demo games do not award coins.')}</p>`);
  }return;}
  try{await loadSections();if(req!==vsRequest)return;if(!sectionAllowed(page))return vsNavigate('home');jjCleanup();clearTimers();state.page=page;const v=++state.version;rememberRoute(historyRoute(page));shell();window.scrollTo(0,0);
   if(page==='vs'){$('#main').innerHTML=lifeHeading('Vs','Vs','Una sala para dos. Elige el juego, comparte el código y acepta las reglas.','A room for two. Choose a game, share the code and accept the rules.')+(state.demo?'':vsMinecraftCard())+universeCards(VsItems.filter(([id])=>vsAllowed(vsItemSection(id))));bindUniverseCards();}
-  else if(page==='puzzles'){$('#main').innerHTML=lifeHeading('Sopas y laberintos','Word searches & mazes','Un reto a tu ritmo.','A challenge at your pace.')+universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze']]);bindUniverseCards();}
   else if(page==='casino')await casinoPage(v);else await poolPage(v);
  }catch(e){if(req===vsRequest){console.error(e);$('#main').innerHTML='<p>'+bi('No se pudo abrir. Comprueba la conexión y las actualizaciones SQL 32 y 33.','Could not open. Check your connection and SQL updates 32 and 33.')+'</p>';}}
 };

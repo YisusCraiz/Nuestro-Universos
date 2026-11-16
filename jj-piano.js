@@ -1,8 +1,8 @@
 'use strict';
-menus.push(['piano','♬','Piano JJ']);UniverseGroups.games.push('piano');
+menus.push(['piano','♬','Piano JJ']);
 const pianoVisibility=paintSectionVisibility;paintSectionVisibility=function(){pianoVisibility();document.querySelectorAll('[data-nav="piano"]').forEach(b=>b.hidden=true);};
 const pianoNavigate=navigate;
-navigate=async function(page){if(page!=='piano'){await pianoNavigate(page);if(state.page==='games'&&sectionAllowed('piano')){$('#main').insertAdjacentHTML('afterbegin',universeCards([['piano','♬','Piano JJ','Piano JJ']]));bindUniverseCards();}return;}
+navigate=async function(page){if(page!=='piano')return pianoNavigate(page);
  if(!state.profile)return;await loadSections();if(!sectionAllowed('piano'))return pianoNavigate('home');jjCleanup();clearTimers();state.page='piano';const v=++state.version;rememberRoute(historyRoute('piano'));shell();await pianoPage(v);};
 async function pianoPage(v){
  const owner=state.profile.id,current=()=>state.version===v&&state.profile?.id===owner;

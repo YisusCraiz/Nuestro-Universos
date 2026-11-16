@@ -1,7 +1,6 @@
 'use strict';
 // Keep legacy routes for saved links, game preparation and notification targets.
 const UniverseGroups={games:['games','puzzles','secretpuzzle','truth','bombitas'],musicas:['music','playlists','videos']};
-menus.find(m=>m[0]==='games')[2]='Games';
 menus.push(['musicas','♫','Musicas'],['comics','▤','Comics'],['news','✦','Noticias']);
 const universeAllowed=sectionAllowed;
 sectionAllowed=function(page){if(page==='novios')return false;if(page==='games')return UniverseGroups.games.some(universeAllowed);if(page==='musicas')return UniverseGroups.musicas.some(universeAllowed);return universeAllowed(page);};
@@ -11,7 +10,10 @@ function universeCards(items){return `<div class="universe-grid">${items.map(([i
 function bindUniverseCards(){document.querySelectorAll('[data-universe-route]').forEach(b=>b.onclick=()=>{const id=b.dataset.universeRoute;if(id==='golf')return openUniverseGolf();if(['wordsearch','maze'].includes(id))return startPuzzle(id);if(id==='tictactoe')return tttPage();if(id==='wands'){jjCleanup();clearTimers();return duoPage('wands',++state.version).catch(lifeError);}return navigate(id);});}
 const universeNavigate=navigate;
 navigate=async function(page){if(!state.profile)return;if(page==='novios')page='profile';if(!['games','musicas','comics','news'].includes(page))return universeNavigate(page);try{await loadSections();if(!sectionAllowed(page))return universeNavigate('home');jjCleanup();clearTimers();state.page=page;const v=++state.version;rememberRoute(historyRoute(page));shell();window.scrollTo(0,0);
- if(page==='games'){if(universeAllowed('games'))await games(v);else document.querySelector('#main').innerHTML='';if(v!==state.version)return;$('#main').insertAdjacentHTML('afterbegin',lifeHeading('Games','Games','Todos nuestros juegos en un solo lugar. Elige una aventura.','All our games in one place. Choose an adventure.')+universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze'],['tictactoe','✕ ◯','Juego del gato','Tic-tac-toe'],['wands','🪄','Duelo de varitas','Wand duel'],['secretpuzzle','🧩','Puzle secreto','Secret puzzle'],['truth','♠','Verdad o reto','Truth or dare'],['bombitas','💣','Bombitas JJ','Bombitas JJ']].filter(([id])=>sectionAllowed(['wordsearch','maze','tictactoe','wands'].includes(id)?'puzzles':id))));bindUniverseCards();}
+ if(page==='games'){if(universeAllowed('games'))await games(v);else $('#main').innerHTML=lifeHeading('Un ratito para jugar','A little time to play','Juega a tu ritmo.','Play at your pace.');if(v!==state.version)return;if(sectionAllowed('puzzles')){
+   $('#main .page-heading').insertAdjacentHTML('afterend',universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze']]));
+   bindUniverseCards();
+  }}
  else if(page==='musicas'){$('#main').innerHTML=`<section class="page-heading music-hero"><h1>${bi('Música','Music')}</h1><p>${bi('La banda sonora de Jesús y Julissa','Jesús and Julissa’s soundtrack')}</p></section><div class="music-hub">`+universeCards([['music','♫','Nuestra música','Our music'],['playlists','☷','Playlists','Playlists'],['videos','▷','Videoclips','Music videos']].filter(([id])=>sectionAllowed(id)))+'</div>';bindUniverseCards();}
  else if(page==='comics')await universeComics(v);else await universeNews(v);
  }catch(e){console.error(e);$('#main').innerHTML=`<p>${page==='news'?bi('No se pudo cargar el tablón. Comprueba tu conexión.','Could not load the announcement board. Check your connection.'):bi('No se pudo cargar. Comprueba la conexión y aplica SQL 27 para Comics y títulos.','Could not load. Check your connection and apply SQL 27 for Comics and titles.')}</p>${jjButton('universe-retry','Reintentar','Retry')}`;$('#universe-retry').onclick=()=>navigate(page);}};
