@@ -36,6 +36,52 @@ contentPage=async function(kind, version) {
   const current=()=>state.version===version&&state.profile?.id===user;
   root.innerHTML='<div class="page-heading"><h1>Cartas3DJJ</h1><p>'+say('Tus cartas creadas por Yuki','Your cards from Yuki')+'</p></div><div id="cards-3d-gallery"></div>';
   const gallery=root.querySelector('#cards-3d-gallery');
+
+  if(state.profile.handle==='jesus') {
+    const panel=document.createElement('details');
+    panel.className='game-panel';
+    panel.innerHTML='<summary>'+say('Cargar mi carta de prueba','Upload my test card')+'</summary><form class="stack" id="cards-3d-upload"><label>'+say('Título','Title')+'<input name="title" value="A Little Something" maxlength="120" required></label><label>'+say('Ilustración del frente','Front artwork')+'<input name="front" type="file" accept="image/png,image/jpeg,image/webp" required></label><label>'+say('QR original del reverso','Original QR for the back')+'<input name="qr" type="file" accept="image/png,image/jpeg,image/webp" required></label><button type="submit" class="btn">'+say('Guardar en mis cartas','Save to my cards')+'</button><p role="status"></p></form>';
+    gallery.before(panel);
+    const form=panel.querySelector('form');
+    const submit=form.querySelector('button');
+    const status=form.querySelector('[role="status"]');
+    form.onsubmit=async event=>{
+      event.preventDefault();
+      if(submit.disabled||!current()) return;
+      const {title,front,qr}=form.elements;
+      const cardTitle=title.value.trim();
+      const frontFile=front.files[0];
+      const qrFile=qr.files[0];
+      const types=['image/png','image/jpeg','image/webp'];
+      if(!cardTitle||![frontFile,qrFile].every(file=>file?.size>0&&types.includes(file.type))) {
+        status.textContent=say('Escribe un título y elige dos imágenes PNG, JPG o WebP.','Enter a title and choose two PNG, JPG, or WebP images.');
+        return;
+      }
+      submit.disabled=true;
+      status.textContent=say('Guardando tu carta…','Saving your card…');
+      const id=crypto.randomUUID();
+      const prefix=user+'/'+id;
+      const frontPath=prefix+'/front';
+      const qrPath=prefix+'/qr';
+      const storage=db.storage.from('jj-cards-3d');
+      try {
+        for(const [path,file] of [[frontPath,frontFile],[qrPath,qrFile]]) {
+          const upload=await storage.upload(path,file,{contentType:file.type,upsert:false});
+          if(upload.error) throw upload.error;
+        }
+        const result=await db.from('jj_cards_3d').insert({id,recipient_id:user,title:cardTitle,front_path:frontPath,qr_path:qrPath});
+        if(result.error) throw result.error;
+      } catch(error) {
+        try { await storage.remove([frontPath,qrPath]); } catch { /* Keep the original upload error. */ }
+        console.error(error);
+        if(current()) status.textContent=say('No pudimos guardar la carta. Inténtalo otra vez.','Could not save your card. Please try again.');
+        return;
+      } finally {
+        submit.disabled=false;
+      }
+      if(current()) await navigate(cards3DPage);
+    };
+  }
   const {data,error}=await db.from('jj_cards_3d').select('id,title,front_path,qr_path').eq('recipient_id',user).order('created_at',{ascending:false});
   if(!current()) return;
   if(error) throw error;
