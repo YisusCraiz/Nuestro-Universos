@@ -20,10 +20,18 @@ function vsMinecraftCard(){
   <a class="btn" href="${esc(url.href)}" target="_blank" rel="noopener noreferrer">${bi('Entrar al mundo','Join our world')}</a>
  </section>`;
 }
+window.addEventListener('message',event=>{
+ if(event.origin!==window.location.origin)return;
+ const frame=$('#universe-golf-frame');
+ if(!frame||event.source!==frame.contentWindow||event.data?.type!=='jj-golf-chat-draft')return;
+ const code=event.data.code;
+ if(typeof code!=='string'||!/^[A-F0-9]{10}$/.test(code))return;
+ window.openUniverseChat?.(code);
+});
 function openUniverseGolf(){
  if(state.page!=='vs'||!sectionAllowed('vs'))return navigate('vs');
  const url=new URL('games/golf-jxj.html',document.baseURI);
- url.searchParams.set('v','15');
+ url.searchParams.set('v','16');
  url.searchParams.set('lang',document.documentElement.lang==='en'?'en':'es');
  const href=esc(url.href);
  jjCleanup();
@@ -36,12 +44,14 @@ function openUniverseGolf(){
     <p class="hint">${bi('Yisus y Julie · 12 hoyos en cuatro mundos','Yisus and Julie · 12 holes across four worlds')}</p>
    </div>
    <div>
+    <button class="btn" id="golf-chat" type="button">${bi('Chat de Nuestro Universo','Our Universe chat')}</button>
     <button class="btn" id="golf-back" type="button">${bi('Volver a VS','Back to VS')}</button>
     <a class="btn" href="${href}" target="_blank" rel="noopener">${bi('Abrir en otra pestaña','Open in a new tab')}</a>
    </div>
   </header>
-  <iframe class="universe-golf-frame" src="${href}" title="Golf J×J"></iframe>
+  <iframe id="universe-golf-frame" class="universe-golf-frame" src="${href}" title="Golf J×J"></iframe>
  </section>`;
+ $('#golf-chat').onclick=()=>window.openUniverseChat?.();
  $('#golf-back').onclick=()=>navigate('vs');
  window.scrollTo(0,0);
  $('#golf-heading').focus();
