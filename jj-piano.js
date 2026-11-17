@@ -307,21 +307,37 @@ async function pianoPage(v){
  try{const value=localStorage.getItem(speedKey);if(value!==null&&PianoHighway.lead[Number(value)])speed=Number(value);}catch{}
  const duoKey='jj-piano-room-'+owner,pendingKey='jj-piano-pending-'+owner;
  try{retry=JSON.parse(localStorage.getItem(pendingKey)||'null');}catch{}
- $('#main').innerHTML=lifeHeading('Piano JJ','Piano JJ','Tu música, tu ritmo. Elige cómo quieres jugar.','Your music, your rhythm. Choose how to play.')+`
+ $('#main').innerHTML=`
+ <header class="piano-menu-hero">
+  <div><h1>Piano JJ</h1><p>${bi('Elige cómo jugar','Choose how to play')}</p></div>
+  <div class="piano-menu-cast" aria-hidden="true">${['jesus','julisa','sani','tobey'].map(id=>`<img src="assets/piano-band/${id}.webp" alt="">`).join('')}</div>
+ </header>
  <div class="piano-modes" role="group" aria-label="${say('Modo de juego','Game mode')}">
- <button id="piano-mode-solo" class="game-panel"><strong>♬ ${bi('Jugar solo','Play solo')}</strong><span>${bi('Elige canción, dificultad y empieza.','Choose a song, difficulty and start.')}</span></button>
- <button id="piano-mode-duo" class="game-panel"><strong>♡ ${bi('Jugar dos','Play together')}</strong><span>${bi('Crea o únete a una sala. Apuesta si ambos quieren.','Create or join a room. Wager if you both want to.')}</span></button>
- <button id="piano-mode-practice" class="game-panel"><strong>${bi('Practicar gestos','Practice gestures')}</strong><span>${bi('Notas largas y deslizamientos con tu música.','Long notes and flicks with your music.')}</span></button></div>
- <section class="game-panel" id="piano-room-panel" hidden><div id="piano-duo"></div><p id="piano-room-feedback" role="status" aria-live="polite"></p></section>
- <section class="game-panel" id="piano-setup"><h2>1 · ${bi('Elige tu música','Choose your music')}</h2><p id="piano-selection-hint"></p>
- <div class="piano-select-grid"><label>${bi('Nuestra música','Our music')}<select id="piano-song"><option value="">${say('Cargando canciones…','Loading songs…')}</option></select></label>
- <label>${bi('Dificultad','Difficulty')}<select id="piano-level"><option value="1">${say('Fácil','Easy')}</option><option value="2">${say('Normal','Normal')}</option><option value="3">${say('Difícil','Hard')}</option></select></label>
- <label>${bi('Duración','Length')}<select id="piano-length"><option value="60">${say('Un minuto','One minute')}</option><option value="120">${say('Dos minutos','Two minutes')}</option><option value="600">${say('Canción completa · hasta 10 min','Full song · up to 10 min')}</option></select></label></div>
- <label id="piano-duo-gestures-label" hidden><span>${bi('Gestos en dúo · práctica sin apuestas','Duo gestures · practice without wagers')}</span><input type="checkbox" id="piano-duo-gestures"></label>
- <p class="hint">${bi('Usamos las canciones con audio de Nuestra música. Los enlaces de Spotify no se pueden reproducir en el juego.','Uses audio tracks from Our music. Spotify links cannot play inside this game.')}</p>
- <button class="btn" id="piano-prepare"></button><button type="button" class="btn secondary" id="piano-invite-tobey" hidden>${bi('Duelo privado con Tobey','Private duel with Tobey')}</button><button type="button" class="btn secondary" id="piano-invite-four" hidden>${bi('Sala privada para cuatro','Private room for four')}</button><a class="btn secondary" id="piano-join-four-member" href="piano-tobey.html?group=1&amp;member=1" hidden>${bi('Entrar al concierto para cuatro','Join the four-player concert')}</a><p id="piano-load" role="status" aria-live="polite"></p></section>
- <label class="piano-scroll-setting">${bi('Velocidad visual de notas','Note scroll speed')}<select id="piano-scroll-speed"><option value="0">${say('Lenta','Slow')}</option><option value="1">Normal</option><option value="2">${say('Rápida','Fast')}</option></select></label>
- <details id="piano-dressing-room" class="game-panel"></details>
+  <button id="piano-mode-solo" type="button" class="game-panel"><span class="piano-mode-icon" aria-hidden="true">♫</span><strong>${bi('Jugar solo','Play solo')}</strong><span>${bi('Elige una canción e intenta superar tu marca.','Choose a song and beat your best.')}</span></button>
+  <button id="piano-mode-duo" type="button" class="game-panel"><span class="piano-mode-icon" aria-hidden="true">♬</span><strong>${bi('Multijugador','Multiplayer')}</strong><span>${bi('Juega en dúo o abre una sala privada.','Play together or open a private room.')}</span></button>
+  <button id="piano-mode-practice" type="button" class="game-panel"><span class="piano-mode-icon" aria-hidden="true">↑</span><strong>${bi('Practicar gestos','Practice gestures')}</strong><span>${bi('Ensaya notas largas y deslizamientos.','Learn long notes and flicks.')}</span></button>
+ </div>
+ <section class="game-panel piano-menu-panel" id="piano-room-panel" hidden><div id="piano-duo"></div><p id="piano-room-feedback" role="status" aria-live="polite"></p></section>
+ <section class="game-panel piano-menu-panel" id="piano-setup"><h2>${bi('Canción y dificultad','Song and difficulty')}</h2><p id="piano-selection-hint"></p>
+  <div class="piano-select-grid">
+   <label>${bi('Nuestra música','Our music')}<select id="piano-song"><option value="">${say('Cargando canciones…','Loading songs…')}</option></select></label>
+   <label>${bi('Dificultad','Difficulty')}<select id="piano-level"><option value="1">${say('Fácil','Easy')}</option><option value="2">${say('Normal','Normal')}</option><option value="3">${say('Difícil','Hard')}</option></select></label>
+   <label id="piano-length-field">${bi('Duración','Length')}<select id="piano-length"><option value="60">${say('Un minuto','One minute')}</option><option value="120">${say('Dos minutos','Two minutes')}</option><option value="600">${say('Canción completa · hasta 10 min','Full song · up to 10 min')}</option></select></label>
+  </div>
+  <label id="piano-duo-gestures-label" hidden><input type="checkbox" id="piano-duo-gestures"><span>${bi('Gestos en dúo · práctica sin apuestas','Duo gestures · practice without wagers')}</span></label>
+  <div class="piano-launch-row"><button type="button" class="btn" id="piano-prepare"></button></div>
+  <p id="piano-load" role="status" aria-live="polite"></p>
+ </section>
+ <section id="piano-private-menu" class="game-panel piano-menu-panel" hidden>
+  <h2>${bi('Salas privadas','Private rooms')}</h2>
+  <div class="piano-private-actions">
+   <button type="button" class="piano-invite-card" id="piano-invite-tobey" hidden><strong>${bi('Duelo con Tobey','Duel with Tobey')}</strong><span>${bi('2 jugadores · enlace y PIN para Tobey','2 players · link and PIN for Tobey')}</span></button>
+   <button type="button" class="piano-invite-card" id="piano-invite-four" hidden><strong>${bi('Concierto para cuatro','Four-player concert')}</strong><span>${bi('Julie entra con su cuenta. Sani y Tobey reciben invitación.','Julie joins with her account. Sani and Tobey get invitations.')}</span></button>
+   <a class="piano-invite-card" id="piano-join-four-member" href="piano-tobey.html?group=1&amp;member=1" hidden><strong>${bi('Entrar al concierto para cuatro','Join the four-player concert')}</strong><span>${bi('Usa tu cuenta de Nuestro Universo.','Use your Nuestro Universo account.')}</span></a>
+  </div>
+ </section>
+ <details class="game-panel piano-menu-panel piano-display-settings"><summary>${bi('Ajustes de las notas','Note settings')}</summary><label class="piano-scroll-setting">${bi('Velocidad visual de notas','Note scroll speed')}<select id="piano-scroll-speed"><option value="0">${say('Lenta','Slow')}</option><option value="1">Normal</option><option value="2">${say('Rápida','Fast')}</option></select></label></details>
+ <details id="piano-dressing-room" class="game-panel piano-menu-panel"></details>
  <section id="piano-bets" class="game-panel" hidden></section><section id="piano-room-actions" class="game-panel" hidden></section>
  <section id="piano-stage" hidden><p id="piano-hud" aria-live="off"></p><p id="piano-live-song" translate="no"></p><div id="piano-live-band" class="piano-band-grid" aria-hidden="true"></div><div class="piano-board-wrap"><canvas id="piano-board" width="640" height="720" aria-label="${say('Notas de piano','Piano notes')}"></canvas><div id="piano-glows" aria-hidden="true"></div><div class="piano-track-touch" aria-hidden="true">${[0,1,2,3].map(lane=>`<span data-piano-track-lane="${lane}"></span>`).join('')}</div></div>
  <div class="piano-keys">${['D','F','J','K'].map((k,i)=>`<button data-piano-lane="${i}" aria-label="${say('Tecla','Key')} ${k}">${k}</button>`).join('')}</div><div class="row">${jjButton('piano-pause','Pausar','Pause','btn secondary')}${jjButton('piano-stop','Terminar partida','Stop game','text-button')}</div><p id="piano-feedback" role="status"></p></section>
@@ -363,7 +379,7 @@ async function pianoPage(v){
   $('#piano-duo-gestures-label').hidden=!duo;
   duoGestures.disabled=!editable;$('#piano-room-actions').hidden=!duo;
   for(const id of ['piano-song','piano-level','piano-length'])$('#'+id).disabled=!editable||!songs.length;
-  $('#piano-selection-hint').innerHTML=retry?bi('Guarda el resultado pendiente de tu partida anterior para continuar.','Save your previous pending result to continue.'):mode==='practice'?bi('Verde: mantén hasta el final. Rosa con flecha: desliza hacia arriba, o usa Mayús + la tecla del carril. La puntuación es de práctica.','Green: hold to the end. Pink arrow: swipe up, or press Shift + the lane key. Practice score only.'):mode==='duo'&&!duo?bi('Crea una sala o entra con un código; después el anfitrión elige la música.','Create a room or join with a code, then the host chooses music.'):duo&&!host?bi('El anfitrión elige la canción y dificultad. Tú preparas ese mismo audio y confirmas aquí.','The host chooses the song and difficulty. Prepare that same audio and confirm here.'):duo?bi('Puedes cambiar canción y dificultad antes de empezar. Después pulsa Preparar selección.','Change song and difficulty before starting, then press Prepare selection.'):bi('Sin sala ni espera: elige tus ajustes y pulsa Jugar ahora.','No room or waiting: choose settings and press Play now.');
+  $('#piano-selection-hint').innerHTML=retry?bi('Guarda el resultado pendiente de tu partida anterior para continuar.','Save your previous pending result to continue.'):mode==='practice'?bi('Verde: mantén hasta el final. Rosa con flecha: desliza hacia arriba, o usa Mayús + la tecla del carril. La puntuación es de práctica.','Green: hold to the end. Pink arrow: swipe up, or press Shift + the lane key. Practice score only.'):mode==='duo'&&!duo?bi('Para un dúo, crea una sala o entra con un código. Para invitar a Tobey o abrir el concierto, elige la música aquí.','For a duo, create a room or join with a code. For a private invitation, choose music here.'):duo&&!host?bi('El anfitrión elige la canción y dificultad. Tú preparas ese mismo audio y confirmas aquí.','The host chooses the song and difficulty. Prepare that same audio and confirm here.'):duo?bi('Puedes cambiar canción y dificultad antes de empezar. Después pulsa Preparar selección.','Change song and difficulty before starting, then press Prepare selection.'):bi('Sin sala ni espera: elige tus ajustes y pulsa Jugar ahora.','No room or waiting: choose settings and press Play now.');
   if(duo&&(sharedPractice()||duoGestures.checked))$('#piano-selection-hint').innerHTML+=` <span>${bi('Mantén las notas verdes y desliza las flechas rosas. En PC usa Mayús + la tecla del carril para deslizar.','Hold green notes and flick pink arrows. On PC, use Shift + the lane key to flick.')}</span>`;
   const invitation=$('#piano-invite-tobey');
   invitation.hidden=state.demo||state.profile?.handle!=='jesus'||mode!=='duo'||!!duo;
@@ -372,8 +388,13 @@ async function pianoPage(v){
   groupInvitation.hidden=invitation.hidden;
   groupInvitation.disabled=invitation.disabled;
   $('#piano-join-four-member').hidden=state.demo||state.profile?.handle!=='julisa'||mode!=='duo'||busy;
-  if(!invitation.hidden)$('#piano-song').disabled=busy||!songs.length;
-  const main=$('#piano-prepare');main.disabled=busy||!songs.length||(mode==='duo'&&!duo)||!!duo?.starts_at||(!host&&!!duo&&!duo.settings?.song);
+  const joinConcert=$('#piano-join-four-member');
+  $('#piano-private-menu').hidden=invitation.hidden&&joinConcert.hidden;
+  $('#piano-setup').hidden=mode==='duo'&&!duo&&invitation.hidden&&!retry;
+  $('#piano-setup').classList.toggle('piano-private-selection',!invitation.hidden);
+  $('#piano-length-field').hidden=!invitation.hidden;
+  if(!invitation.hidden)for(const id of ['piano-song','piano-level'])$('#'+id).disabled=busy||!songs.length;
+  const main=$('#piano-prepare');main.hidden=mode==='duo'&&!duo;main.disabled=busy||!songs.length||(mode==='duo'&&!duo)||!!duo?.starts_at||(!host&&!!duo&&!duo.settings?.song);
   main.innerHTML=loading?bi('Preparando audio…','Preparing audio…'):mode==='practice'?bi('▶ Iniciar práctica','▶ Start practice'):mode==='solo'?bi('▶ Jugar ahora','▶ Play now'):host?bi('2 · Preparar selección','2 · Prepare selection'):duo?.bet?.state==='offered'&&!duo.bet.guest_ok?bi(`2 · Preparar y aceptar ${duo.bet.amount} JJ`,`2 · Prepare & accept ${duo.bet.amount} JJ`):bi('2 · Preparar y confirmar','2 · Prepare & confirm');
   if(mode!=='duo')return;
   const root=$('#piano-duo');
