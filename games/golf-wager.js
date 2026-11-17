@@ -75,6 +75,11 @@ function renderWager(){
    catch{wagerText('Código: '+w.code,'Code: '+w.code);}
    $('wagerStatus').textContent=tr(...wagerMessage);
   },true));
+  if(window.parent!==window){
+   actions.append(wagerButton('Pasar al chat','Share in chat',()=>{
+    window.parent.postMessage({type:'jj-golf-chat-draft',code:w.code},window.location.origin);
+   }));
+  }
  }
  if(w.state==='offer'&&!host&&!w.coded){
   actions.append(wagerButton('Aceptar '+w.stake+' JJ','Accept '+w.stake+' JJ',()=>{
