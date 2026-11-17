@@ -1,7 +1,7 @@
 'use strict';
 
 let golfShop, golfClient, golfShopBusy=false, golfShopLoaded=false, skinFilter='all';
-let golfShopMessage=null;
+let golfShopMessage=null, pendingSkin=null;
 const skinRarities=[['Común','Common'],['Rara','Rare'],['Épica','Epic']];
 
 function shopMessage(es,en){
@@ -27,17 +27,22 @@ async function readGolfShop(){
 function skinButton(skin,owned,catalogItem){
  const button=document.createElement('button');
  const equipped=golfShop?.equipped?.[golfShop.handle]===skin.id;
- const available=skin.id==='classic'||catalogItem?.available;
+ const available=Boolean(catalogItem?.available);
+ const missing=available&&golfShop?Math.max(0,catalogItem.price-golfShop.coins):0;
+ const confirming=pendingSkin===skin.id&&!owned&&!missing&&available;
  button.type='button';
- button.textContent=equipped?tr('Equipada','Equipped'):owned?tr('Equipar','Equip'):available?tr('Comprar','Buy'):catalogItem?tr('Fuera de temporada','Out of season'):tr('Vista previa','Preview');
- button.disabled=!golfShopLoaded||!golfShop||golfShopBusy||equipped||(!owned&&(!available||golfShop.coins<catalogItem.price));
+ button.textContent=equipped?tr('Equipada','Equipped'):owned?tr('Equipar','Equip'):missing?tr('Te faltan '+missing+' JJ','Need '+missing+' more JJ'):confirming?tr('Confirmar · '+catalogItem.price+' JJ','Confirm · '+catalogItem.price+' JJ'):available?tr('Comprar','Buy'):catalogItem?tr('Fuera de temporada','Out of season'):tr('Vista previa','Preview');
+ button.disabled=!golfShopLoaded||!golfShop||golfShopBusy||equipped||(!owned&&(!available||missing>0));
+ if(confirming)button.id='confirmGolfSkin';
  button.onclick=async()=>{
-  if(golfShopBusy)return;
-  if(!owned&&!window.confirm(tr('¿Comprar '+skin.names[0]+' por '+catalogItem.price+' JJ?','Buy '+skin.names[1]+' for '+catalogItem.price+' JJ?')))return;
+  if(button.disabled||golfShopBusy)return;
+  if(!owned&&!confirming){pendingSkin=skin.id;renderShop();$('confirmGolfSkin')?.focus();return;}
+  pendingSkin=null;
   golfShopBusy=true;renderShop();
   try{
    golfShop=await shopRpc(owned?'equip':'buy',skin.id);
    if(golfShop)shopMessage('Bola equipada.','Ball equipped.');
+   else shopMessage('Vuelve a entrar con tu perfil para continuar.','Sign in with your profile again to continue.');
   }catch(error){
    const msg=String(error?.message);
    if(msg.includes('INSUFFICIENT_COINS'))shopMessage('Te faltan monedas JJ.','You need more JJ coins.');
@@ -66,9 +71,15 @@ function renderShop(){
   meta.textContent=tr(...skinRarities[skin.rarity])+(!owned&&item?' · '+item.price+' JJ':'');
   const effect=document.createElement('small');
   effect.textContent=skin.colors?tr(...golfEffects[skin.world].slice(0,2)):tr('Acabado clásico','Classic finish');
-  card.append(ball,title,meta,effect,skinButton(skin,owned,item));return card;
+  const action=skinButton(skin,owned,item);
+  card.append(ball,title,meta,effect,action);
+  if(action.id==='confirmGolfSkin'){
+   const cancel=document.createElement('button');cancel.type='button';cancel.textContent=tr('Cancelar','Cancel');
+   cancel.onclick=()=>{pendingSkin=null;renderShop();};card.append(cancel);
+  }
+  return card;
  }));
 }
 function openGolfShop(){
- golfShopMessage=null;$('shop').showModal();readGolfShop();
+ golfShopMessage=null;pendingSkin=null;$('shop').showModal();readGolfShop();
 }
