@@ -25,6 +25,7 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 .world-selector{margin:12px 0}.world-selector h2{font:700 1.12rem Georgia;color:var(--gold);margin:0 0 8px}.world-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(143px,1fr));gap:7px}.world-choices button{text-align:left}.world-choices small{display:block;color:var(--muted);margin-top:3px;font-size:.77rem}.world-choices [aria-pressed=true],.skin-filters [aria-pressed=true]{border-color:var(--gold);background:#37465a}.shop-trigger{margin-top:9px}.skin-filters{display:flex;flex-wrap:wrap;gap:7px}.skin-filters button{padding:6px 8px}#shop{width:min(720px,calc(100% - 24px));max-height:85dvh;overflow:auto;color:var(--ink);background:#182c41;border:1px solid #66829e;border-radius:17px;padding:16px}#shop::backdrop{background:#0c1422af}.shop-heading{margin-bottom:12px}.shop-heading h2{margin:0;color:var(--gold);font:700 1.5rem Georgia}.shop-heading p{color:var(--muted);margin:4px 0 0}#shopStatus{margin:9px 0;color:var(--gold);font-size:.87rem}#shopStatus:empty{display:none}.skin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-top:9px}.skin-card{display:grid;justify-items:center;gap:6px;text-align:center;padding:10px 6px;border:1px solid #688096;border-radius:12px;background:#21384e}.skin-card.rarity-1{border-color:#7aaff5;background:#253f62}.skin-card.rarity-2{border-color:#ce9df6;background:#3e315e}.skin-card small{color:#d9e6f5}.skin-card button{font-size:.82rem;padding:7px}.skin-ball{display:grid;place-items:center;width:46px;aspect-ratio:1;border-radius:50%;color:#202738;font:bold 20px Georgia;box-shadow:0 3px 9px #101924;background:radial-gradient(circle at 30% 27%,var(--l),var(--m) 57%,var(--d))}.track{flex-wrap:wrap}.table-wrap table{min-width:max-content}@media(max-width:550px){.world-choices{grid-template-columns:repeat(2,minmax(0,1fr))}.world-choices strong{font-size:.85rem}.world-choices small{font-size:.68rem}.skin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .golf-people{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;color:var(--muted);font-size:.8rem}.golf-people span{border:1px solid var(--line);padding:5px 9px;border-radius:20px}.golf-people i{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#8b9bb1}.golf-people .golf-online{background:#80dfad;box-shadow:0 0 6px #80dfad80}.skin-sample{width:88px;height:82px;background:#14253a80;border:0;box-shadow:none}
 #wager{width:min(590px,calc(100% - 22px));max-height:85dvh;overflow:auto;color:var(--ink);background:#182c41;border:1px solid #7fa4c2;border-radius:16px;padding:16px}#wager::backdrop{background:#0c1422af}#wagerDetails{padding:10px 12px;margin:12px 0;background:#21394e;border-radius:10px}#wagerDetails h3{margin:0;color:var(--gold)}#wagerDetails p{margin:6px 0}#wagerBreakdown{font-size:.8rem;color:var(--muted)}#wagerActions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}#wagerStatus:empty,#wagerScores:empty,#wagerBreakdown:empty{display:none}#wagerStatus{color:var(--gold)}
+.golf-contact{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:650}.golf-contact input{width:auto;accent-color:var(--gold)}.golf-contact-note{color:var(--muted);font-size:.8rem;margin:0 0 10px}
 </style>
 <main>
 <header><div><h1>Golf J×J</h1><p>Yisus & Julie · Nuestro Universo</p></div><button class="signature" id="language" lang="en">English</button></header>
@@ -42,6 +43,8 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <h2 id="world-heading" data-en="Choose a circuit">Elige un circuito</h2>
 <div id="worldChoices" class="world-choices"></div>
 </section>
+<label class="golf-contact"><input id="ballContact" type="checkbox"> <span data-en="Ball collisions">Choque entre bolas</span></label>
+<p class="golf-contact-note" data-en="In local duels, both players’ balls can bump. Other modes use a gray practice ball.">En duelo local se empujan las dos bolas. En los demás modos hay una bola gris de práctica.</p>
 <div class="mode-grid">
 <button id="localMode" type="button"><strong data-en="Play together">Duelo en casa</strong><small data-en="Take turns on one screen">Turnos en la misma pantalla</small></button>
 <button id="farMode" type="button"><strong data-en="Distance challenge">Reto a distancia</strong><small data-en="Play separately, then trade score codes">Jueguen por separado y comparen por código</small></button>
@@ -118,6 +121,10 @@ const limits=(v,min,max)=>Math.max(min,Math.min(max,v));
 let hole,turn,players,balls,tally,shots,done,moving,drag,notice,last,elapsed,lastPower,target;
 let tapAim=matchMedia('(pointer: coarse)').matches;
 let mode='local', checkpoint=false, soundOn=false, audio;
+let contactEnabled=false, practiceBall=null, contactNotice='';
+const contactKey='golf-jxj-ball-contact';
+try{$('ballContact').checked=localStorage.getItem(contactKey)==='on';}catch{}
+$('ballContact').onchange=()=>{try{localStorage.setItem(contactKey,$('ballContact').checked?'on':'off');}catch{}};
 
 const strokes=list=>list.reduce((total,score)=>total+score,0);
 const recordKey=()=> 'golf-jxj-tours-'+circuit;
@@ -214,8 +221,18 @@ function reset(){
  nextHole();
 }
 function nextHole(){
- const [x,y]=courses[hole].start;
+ const course=courses[hole], [x,y]=course.start;
  balls=names.map(()=>({x,y,vx:0,vy:0}));
+ practiceBall=null;
+ if(contactEnabled){
+  const dx=course.cup[0]-x,dy=course.cup[1]-y,length=Math.hypot(dx,dy);
+  const nx=-dy/length,ny=dx/length;
+  if(players.length===2){
+   balls.forEach((ball,i)=>{const spacing=i===0?-17:17;ball.x+=nx*spacing;ball.y+=ny*spacing;});
+  }else{
+   practiceBall={x:x+nx*36,y:y+ny*36,vx:0,vy:0};
+  }
+ }
  shots=[0,0];turn=players[hole%players.length];moving=false;drag=null;target=null;notice='';lastPower=0;
  update();
 }
@@ -357,7 +374,7 @@ $('copy').onclick=async()=>{
  catch{code.focus();code.select();$('copy').textContent=tr('Seleccionado','Selected');setTimeout(()=>$('copy').textContent=tr('Copiar código','Copy code'),1200);}
 };
 function startGame(choice,wagerId=null){
- golfWagerId=wagerId;mode=choice;
+ golfWagerId=wagerId;mode=choice;contactEnabled=$('ballContact').checked;
  courses=choice==='practice'||circuit==='A'?catalog:catalog.filter(course=>worlds[course.world].id===circuit);
  $('lobby').hidden=true;$('game').hidden=false;
  reset();$('label').focus();syncGolfPeople();
@@ -383,6 +400,11 @@ function shoot(x,y){
  if(d<5)return;
  const b=balls[turn],speed=Math.min(125,d)*7.6;
  b.fromX=b.x;b.fromY=b.y;
+ if(contactEnabled){
+  const other=contactBall();
+  if(other){other.fromX=other.x;other.fromY=other.y;other.shotStatus=null;}
+  b.shotStatus=null;contactNotice='';
+ }
  b.vx=x/d*speed;b.vy=y/d*speed;
  playTones([230]);shots[turn]++;moving=true;elapsed=0;lastPower=100*Math.min(1,d/125);notice='';target=null;
 }
@@ -452,8 +474,57 @@ function roll(b,c,dt){
  const decay=Math.exp(-(c.sand.some(inside)?4.1:c.ice.some(inside)?0.44:1.02)*dt);b.vx*=decay;b.vy*=decay;
  return speed<9?'stopped':'rolling';
 }
+function contactBall(){
+ if(practiceBall)return practiceBall;
+ const other=players.find(p=>p!==turn&&tally[p].length<=hole);
+ return other===undefined?null:balls[other];
+}
+function bumpBalls(a,b){
+ const dx=b.x-a.x,dy=b.y-a.y,distance=Math.hypot(dx,dy);
+ if(distance>=2*radius||distance===0)return false;
+ const nx=dx/distance,ny=dy/distance;
+ const approach=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+ if(approach<=0)return false;
+ const overlap=(2*radius-distance)/2;
+ a.x-=nx*overlap;a.y-=ny*overlap;b.x+=nx*overlap;b.y+=ny*overlap;
+ const impulse=approach*.91;
+ a.vx-=nx*impulse;a.vy-=ny*impulse;b.vx+=nx*impulse;b.vy+=ny*impulse;
+ return true;
+}
+function contactRoll(ball,course,dt,isShooter){
+ if(ball.shotStatus)return;
+ const status=roll(ball,course,dt);
+ if(status==='rolling')return;
+ ball.vx=ball.vy=0;
+ if(status==='stopped')return;
+ ball.shotStatus=status;
+ if(status==='water'||ball===practiceBall){
+  ball.x=ball.fromX;ball.y=ball.fromY;
+ }
+ if(status==='water'&&isShooter){
+  shots[turn]=mode==='practice'?shots[turn]+1:Math.min(10,shots[turn]+1);
+  contactNotice=tr('Agua · +1 golpe','Water · +1 stroke');
+ }
+}
+function collisionPhysics(dt){
+ const shooter=balls[turn],other=contactBall(),course=courses[hole];
+ contactRoll(shooter,course,dt,true);
+ if(other){
+  contactRoll(other,course,dt,false);
+  if(!shooter.shotStatus&&!other.shotStatus)bumpBalls(shooter,other);
+ }
+ if(elapsed<=5.5&&[shooter,other].some(ball=>ball&&Math.hypot(ball.vx,ball.vy)>0))return;
+ if(other)other.vx=other.vy=0;
+ if(other&&other!==practiceBall&&other.shotStatus==='cup'){
+  const partner=players.find(p=>p!==turn);
+  tally[partner].push(Math.max(1,shots[partner]));
+  if(!contactNotice&&shooter.shotStatus!=='cup')contactNotice=names[partner]+tr(' embocó tras el choque',' holed out after the collision');
+ }
+ finishShot(shooter.shotStatus==='cup',contactNotice||undefined);
+}
 function physics(dt){
  elapsed+=dt;
+ if(contactEnabled){collisionPhysics(dt);return;}
  const status=roll(balls[turn],courses[hole],dt);
  if(status==='water'){
   const ball=balls[turn];ball.x=ball.fromX;ball.y=ball.fromY;
@@ -478,6 +549,7 @@ function draw(time){
  }
  ctx.drawImage(backdrop,0,0);
  if(done||checkpoint)return;
+ if(practiceBall){circle(practiceBall.x+2,practiceBall.y+4,radius,'#1826387a');circle(practiceBall.x,practiceBall.y,radius,'#b2bdcd');circle(practiceBall.x-3,practiceBall.y-4,3,'#e7edf5');}
  const order=players.filter(p=>p!==turn).concat(turn);
  for(const p of order){
   if(tally[p].length<=hole)drawGolfPlayer(ctx,balls[p],p,time);
@@ -498,13 +570,14 @@ function draw(time){
   if(len>=5){
    const line=Math.min(len,125),dx=aim.x/len,dy=aim.y/len;
    const preview={...b,vx:dx*line*7.6,vy:dy*line*7.6};
+   const obstacle=contactEnabled?contactBall():null;
    let lastDot={x:b.x,y:b.y};
    for(let i=0;i<180;i++){
     const state=roll(preview,c,tick);
     if(Math.hypot(preview.x-lastDot.x,preview.y-lastDot.y)>=14){
      circle(preview.x,preview.y,2.4,'#ffedba');lastDot={x:preview.x,y:preview.y};
     }
-    if(state!=='rolling')break;
+    if(state!=='rolling'||(obstacle&&Math.hypot(preview.x-obstacle.x,preview.y-obstacle.y)<2*radius))break;
    }
    if(target){
     ctx.beginPath();ctx.arc(target.x,target.y,7,0,Math.PI*2);ctx.strokeStyle='#ffe1a0';ctx.stroke();
