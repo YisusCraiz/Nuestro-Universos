@@ -31,7 +31,7 @@ window.addEventListener('message',event=>{
 function openUniverseGolf(){
  if(state.page!=='vs'||!sectionAllowed('vs'))return navigate('vs');
  const url=new URL('games/golf-jxj.html',document.baseURI);
- url.searchParams.set('v','16');
+ url.searchParams.set('v','17');
  url.searchParams.set('lang',document.documentElement.lang==='en'?'en':'es');
  const href=esc(url.href);
  jjCleanup();
