@@ -47,7 +47,8 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <button id="farMode" type="button"><strong data-en="Distance challenge">Reto a distancia</strong><small data-en="Play separately, then trade score codes">Jueguen por separado y comparen por código</small></button>
 <button id="practiceMode" type="button"><strong data-en="Practice a hole">Practicar un hoyo</strong><small data-en="Pick a course and retry freely">Elige un campo y repítelo a tu ritmo</small></button>
 </div>
-<button id="wagerLobby" class="shop-trigger" type="button" data-en="JJ Wagers">Apuestas JJ</button>
+<button id="wagerLobby" class="shop-trigger" type="button" data-en="Create match">Crear partida</button>
+<button id="wagerJoinLobby" class="shop-trigger" data-en="Join with code">Unirse con código</button>
 <button id="shopLobby" type="button" data-en="Ball Album · Shop and equip" class="shop-trigger">Álbum de bolas · Tienda y equipamiento</button>
 <section id="records" class="records" hidden><h2 data-en="Personal bests on this device">Mejores rondas en este dispositivo</h2><div id="recordList"></div></section>
 <details class="guide"><summary data-en="How to play">Cómo jugar</summary><ol>
@@ -83,13 +84,14 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
  <p id="shopStatus" role="status"></p><div id="skinGrid" class="skin-grid"></div>
 </dialog>
 <dialog id="wager" aria-labelledby="wagerTitle">
-<header class="shop-heading"><div><h2 id="wagerTitle" data-en="JJ Wagers">Apuestas JJ</h2><p id="wagerBalance"></p></div><button id="wagerClose" data-en="Close">Cerrar</button></header>
+<header class="shop-heading"><div><h2 id="wagerTitle" data-en="Golf rooms">Salas de golf</h2><p id="wagerBalance"></p></div><button id="wagerClose" data-en="Close">Cerrar</button></header>
 <p data-en="Both players must agree to the stake and confirm the scores. The winner takes the pot. A draw, cancellation or expiry returns the coins.">Ambos aceptan la cantidad y confirman los resultados. Quien gana se lleva el bote. En empate, anulación o vencimiento se devuelven las monedas.</p>
 <section id="wagerOffer" hidden><form id="wagerForm">
-<p><strong data-en="Selected circuit">Circuito elegido</strong> · <span id="wagerCircuit"></span></p>
-<label><span data-en="JJ per player">JJ por jugador</span> <input id="wagerStake" type="number" min="1" max="1000" step="1" value="25" required></label>
-<button type="submit" class="primary" data-en="Offer wager">Proponer apuesta</button>
+<p><label><span data-en="Circuit">Circuito</span> <select id="wagerCircuit"></select></label></p>
+<label><span data-en="JJ per player (0 for no wager)">JJ por jugador (0 sin apuesta)</span> <input id="wagerStake" type="number" min="0" max="1000" step="1" value="0" required></label>
+<button type="submit" class="primary" data-en="Create room">Crear sala</button>
 </form></section>
+<form id="wagerJoin" hidden><label><span data-en="Room code">Código de sala</span> <input id="wagerCodeInput" autocomplete="off" spellcheck="false" maxlength="10" required></label> <button class="primary" type="submit" data-en="Join room">Entrar a la sala</button></form>
 <section id="wagerDetails" hidden><h3 id="wagerMatchTitle"></h3><p id="wagerInfo"></p><p id="wagerScores"></p><p id="wagerBreakdown"></p><div id="wagerActions"></div></section>
 <p id="wagerStatus" role="status"></p><button id="wagerRefresh" type="button" data-en="Refresh wager">Actualizar apuesta</button>
 </dialog>
@@ -99,8 +101,8 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <script src="../config.js"></script>
 <script src="../assets/supabase.js"></script>
 <script src="golf-shop.js?v=13"></script>
-<script src="golf-style.js?v=13"></script>
-<script src="golf-wager.js?v=14"></script>
+<script src="golf-style.js?v=15"></script>
+<script src="golf-wager.js?v=15"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esText=new WeakMap();
