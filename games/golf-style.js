@@ -18,7 +18,7 @@ async function syncGolfPeople(){
  try{
   const {data:{session}}=await golfClient.auth.getSession();
   if(!session){golfPeople=null;return;}
-  const active=!$('game').hidden&&!done&&!document.hidden;
+  const active=!document.hidden;
   const {data,error}=await golfClient.rpc('jj_golf_presence',{p_session:presenceId,p_action:active?'ping':'leave'});
   golfPeople=error?null:data;
  }catch{golfPeople=null;}
