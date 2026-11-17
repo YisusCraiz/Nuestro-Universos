@@ -35,6 +35,22 @@ async function send(sticker=null){if(busy||!ensureLive())return;const text=form.
 form.onsubmit=e=>{e.preventDefault();send();};form.elements.file.onchange=()=>{audio=null;q('#mini-chat-attachment').textContent=form.elements.file.files[0]?.name||'';};
 q('#mini-chat-sticker').onclick=async()=>{const box=q('#mini-chat-stickers');box.hidden=!box.hidden;if(box.hidden)return;const gen=generation;box.textContent='Cargando stickers…';try{const d=await affectionCall();if(gen!==generation)return;adoptAffection(d);box.replaceChildren();for(let i=0;i<12;i++){const b=document.createElement('button');b.type='button';b.innerHTML=chibi(i);b.setAttribute('aria-label',stickerNames[i%6][0]);b.onclick=()=>send({builtin:i});box.append(b);}for(const s of d.stickers){const b=document.createElement('button');b.type='button';const img=document.createElement('img');img.src=await mediaUrl(s.path);if(gen!==generation)return;img.alt=s.title;b.append(img);b.onclick=()=>send({path:s.path});box.append(b);}}catch{if(gen===generation)box.textContent='No se pudieron cargar los stickers.';}};
 q('#mini-chat-record').onclick=async()=>{if(recording?.state==='recording'){stopRecording();return;}if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status('Este navegador no permite grabar. Puedes adjuntar un audio.');return;}const gen=generation;try{const mic=await navigator.mediaDevices.getUserMedia({audio:true});if(gen!==generation||!open||recording?.state==='recording'){mic.getTracks().forEach(t=>t.stop());return;}stream=mic;const chunks=[];recording=new MediaRecorder(stream);recording.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};recording.onstop=()=>{if(gen!==generation)return;const mime=recording.mimeType.split(';')[0];audio=new File(chunks,'nota-de-voz.'+(mime==='audio/mp4'?'m4a':mime==='audio/ogg'?'ogg':'webm'),{type:mime});q('#mini-chat-attachment').textContent='Nota de voz lista para enviar';q('#mini-chat-record').textContent='🎙 Grabar';status('');};recording.start();q('#mini-chat-record').textContent='⏹ Detener';status('Grabando · máximo 2 minutos');const current=recording;setTimeout(()=>{if(recording===current)stopRecording();},120000);}catch{stopRecording();status('No se pudo abrir el micrófono. Revisa el permiso o adjunta un audio.');}};
+window.openUniverseChat=function(golfCode){
+ sync();
+ if(!owner)return;
+ toggle(true);
+ const draft=form.elements.text;
+ if(golfCode){
+  if(pending||busy){status('Termina el envío pendiente antes de añadir el código.');return;}
+  const invite='Golf J×J · Código de sala / Room code: '+golfCode;
+  if(!draft.value.split('\n').includes(invite)){
+   const added=draft.value.trimEnd()+(draft.value.trimEnd()?'\n':'')+invite;
+   if(added.length>draft.maxLength){status('El mensaje está lleno. Hay que acortarlo para añadir el código.');draft.focus();return;}
+   draft.value=added;
+  }
+ }
+ draft.focus();
+};
 const priorShell=shell;shell=function(){priorShell();sync();};const priorLogout=logout;logout=async function(){reset();root.hidden=true;return priorLogout();};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopRecording();else read();});setInterval(read,4000);sync();
 })();
