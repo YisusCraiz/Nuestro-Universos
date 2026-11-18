@@ -26,12 +26,28 @@ summary{cursor:pointer;padding:.55rem 0;color:#f9dcff}
 main[data-theme=christmas] article{background:#162c29;border-color:#bd9470}
 main[data-theme=anniversary] article{background:#14264b;border-color:#bf9bd8}
 a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4ff;outline-offset:2px}
+.gift-languages{display:inline-flex;gap:.25rem;flex-wrap:wrap}
+.gift-languages button[aria-pressed=true],#openGift{background:#ead2fa;color:#24172e;font-weight:700}
+#gift{background:radial-gradient(ellipse at 5% 0%,#26365c,transparent 70%),#131e39;border-color:#8793bf;padding:clamp(1rem,4vw,1.75rem);scroll-margin:1rem}
+main[data-theme=christmas] #gift{background:radial-gradient(ellipse at 5% 0%,#2b5148,transparent 73%),#122824;border-color:#af9879}
+main[data-theme=anniversary] #gift{background:radial-gradient(ellipse at 5% 0%,#433361,transparent 73%),#191c39;border-color:#b495c5}
+.gift-actions button[aria-pressed=true]{background:#ead2fa;color:#24172e}
+#gift h2,#senderNote,.gift-file strong,#draftFiles li{overflow-wrap:anywhere}
+.gift-from{display:flex;gap:.85rem;align-items:center;padding:.75rem 0;border-bottom:1px solid #ffffff30}
+.gift-from small,.gift-from strong{display:block}.gift-from small{color:#dbc9ea}.gift-from p{margin:0;color:#e8dff3}
+.sender-mark{display:grid;place-items:center;flex:0 0 2.65rem;min-height:2.65rem;background:#e5caef;color:#211834;border-radius:50%;font-weight:750}
+#attachmentLinks{padding:0;background:none;border:0}
+.gift-file{margin:.7rem 0;background:#0d162c;border:1px solid #485578;border-radius:.8rem;padding:.75rem;min-width:0}
+.gift-file img{display:block;width:100%;max-height:19rem;object-fit:contain;background:#080e21;border-radius:.5rem;margin-bottom:.65rem}
+.gift-actions{display:flex;flex-wrap:wrap;gap:.4rem;margin:.55rem 0}.gift-actions a,.gift-actions button{margin:0}
+.gift-actions a{display:inline-flex;align-items:center;border:1px solid #9c8cba;border-radius:.55rem;padding:.4rem .65rem;text-decoration:none}
+.gift-file small{display:block;color:#d1c6e1}
 </style>
 <script src="config.js"></script>
 <script src="assets/supabase.js"></script>
 <main id="page">
 <a id="home" class="back-link" href="./#volver-regalos" data-t="back">← Atrás</a>
-<button id="language" type="button">English</button>
+<span class="gift-languages"><button id="langEs" type="button">Español</button><button id="langEn" type="button">English</button></span>
 <h1 id="heading">JXJ</h1>
 <p id="status" role="status"></p>
 <form id="login" hidden>
@@ -54,10 +70,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
  </form></details>
 </section>
 <article id="gift" hidden>
+ <div class="gift-from" id="senderBlock" hidden><span class="sender-mark" id="senderMark" aria-hidden="true"></span><div><small data-t="sentBy"></small><strong id="senderName"></strong><p id="senderNote"></p></div></div>
  <h2 id="title"></h2>
  <button id="openGift" type="button" data-t="open" hidden></button>
  <p id="letter"></p>
- <ul id="attachmentLinks" hidden></ul>
+ <section id="attachmentLinks" hidden aria-label="JXJ"></section>
  <p id="coinsReceived" hidden></p>
  <p id="cardNote" hidden data-t="cardNote"></p>
 </article>
@@ -74,6 +91,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
    <p id="coinBalance"></p>
    <p data-t="coinsHint"></p>
   </div>
+  <label><span data-t="signature"></span><input name="sender_note" maxlength="80" data-placeholder="signatureExample"></label>
   <label><span data-t="title"></span><input required name="title" maxlength="120"></label>
   <label><span data-t="letter"></span><textarea required name="body" rows="6" maxlength="16000"></textarea></label>
   <label><span data-t="theme"></span><select name="theme"><option value="anniversary" data-t="anniversary"></option><option value="christmas" data-t="christmas"></option><option value="surprise" data-t="surprise"></option></select></label>
@@ -96,6 +114,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4
 'use strict';
 const $ = id => document.getElementById(id);
 const tr = {
+ sentBy:['Un regalo de','A gift from'], signature:['Dedicatoria en el sobre (opcional)','Envelope note (optional)'],
+ signatureExample:['P. ej. De tu compañero de aventuras','E.g. From your adventure partner'],
+ fileHeading:['Dentro del regalo','Inside your gift'], image:['Imagen','Image'], pdf:['PDF','PDF'],
+ download:['Descargar','Download'], viewFile:['Abrir','Open'], addComic:['Guardar PDF en Cómics','Save PDF to Comics'],
+ addPages:['Guardar imágenes como páginas de cómic','Save images as comic pages'],
+ savedComic:['Guardado en tus Cómics','Saved to your Comics'], openComics:['Ir a Cómics','Go to Comics'],
  coins:['Monedas JJ para regalar','JJ coins to gift'],
  coinsHint:['Al habilitar el regalo se apartan las monedas. Si lo deshabilitas antes del canje, vuelven a tu saldo.','Coins are set aside when you enable the gift. Disable it before redemption to get them back.'],
  availableCoins:['Saldo disponible','Available balance'],
@@ -137,6 +161,7 @@ let lang = params.get('lang') === 'en' || (!params.has('lang') && (code || navig
 let selected = null, scanner = null, generation = 0, pending = false;
 let view = params.get('view') === 'create' && !code ? 'create' : 'scan';
 let account = null;
+let displayedGift=null;
 let savedFiles=[], pickedFiles=[];
 const uploads=new WeakMap();
 const bucket = 'jj-secret-gifts';
@@ -158,11 +183,19 @@ function language() {
   const received=$('coinsReceived');
   if (!received.hidden) received.textContent=t('receivedCoins')+': '+received.dataset.amount;
   if (!$('openGift').hidden) $('title').textContent = t('sealed');
-  $('language').textContent = lang ? 'Español' : 'English';
+  $('langEs').setAttribute('aria-pressed',String(!lang));
+  $('langEn').setAttribute('aria-pressed',String(Boolean(lang)));
+  document.querySelectorAll('[data-placeholder]').forEach(node=>node.placeholder=t(node.dataset.placeholder));
+  document.querySelectorAll('[data-file-text]').forEach(node=>node.textContent=t(node.dataset.fileText));
   if (scanner) $('scan').textContent = t('stop');
   status($('status').dataset.key || '');
 }
-$('language').onclick = () => {lang = 1-lang; language(); if (account) {drawLists(); drawDraftFiles();}};
+function chooseLanguage(value){
+  lang=value;language();
+  if(account){drawLists();drawDraftFiles();}
+}
+$('langEs').onclick=()=>chooseLanguage(0);
+$('langEn').onclick=()=>chooseLanguage(1);
 language();
 function script(url) {
   if (!cachedScripts.has(url)) cachedScripts.set(url,new Promise((resolve,reject) => {
@@ -191,7 +224,12 @@ async function run(task) {
   } finally { pending = false; }
 }
 async function showGift(gift) {
+  displayedGift=gift;
   $('page').dataset.theme = gift.theme;
+  $('senderBlock').hidden=!gift.sender;
+  $('senderName').textContent=gift.sender || '';
+  $('senderMark').textContent=gift.sender?.[0] || '';
+  $('senderNote').textContent=gift.sender_note || '';
   $('gift').hidden = false;
   $('openGift').hidden = gift.redeemed !== false;
   $('title').textContent = gift.title || t('sealed');
@@ -202,22 +240,93 @@ async function showGift(gift) {
   $('coinsReceived').textContent=t('receivedCoins')+': '+(gift.coins || 0);
   const list=$('attachmentLinks');
   list.replaceChildren();
-  list.hidden=true;
   const files=attachmentsFor(gift);
-  const results=await Promise.all(files.map(file=>client.storage.from(bucket).createSignedUrl(file.path,300)));
-  results.forEach(({data,error},index)=>{
-    if(error)return;
-    const row=document.createElement('li');
-    const link=document.createElement('a');
-    link.href=data.signedUrl;
-    link.target='_blank';
-    link.rel='noopener noreferrer';
-    link.textContent=files[index].name || t('attachment')+' '+(index+1);
-    row.append(link);
+  list.hidden=!files.length;
+  if(files.length)list.append(fileText('h3','fileHeading'));
+  if(files.some(file=>fileKind(file)==='image'))list.append(comicPicker(gift.id,'images','addPages'));
+  for(const [index,file] of files.entries()){
+    const kind=fileKind(file);
+    const row=document.createElement('article');
+    row.className='gift-file';
+    const name=file.name && !/^file_[a-f0-9]{20,}/i.test(file.name) ? file.name : '';
+    const label=document.createElement('strong');
+    if(name)label.textContent=name;
+    else {
+      const text=fileText('span',kind);
+      label.append(text,' '+(index+1));
+    }
+    row.append(label);
+    const actions=document.createElement('div');
+    actions.className='gift-actions';
+    row.append(actions);
+    for(const action of ['viewFile','download']){
+      const button=fileText('button',action);
+      button.type='button';
+      button.onclick=()=>run(async()=>{
+        const result=await client.storage.from(bucket).createSignedUrl(file.path,300,action==='download'?{download:name || defaultFileName(file,index)}:undefined);
+        if(result.error)throw result.error;
+        if(action==='download')download(result.data.signedUrl,name || defaultFileName(file,index));
+        else location.assign(result.data.signedUrl);
+      });
+      actions.append(button);
+    }
+    if(kind==='pdf')row.append(comicPicker(gift.id,file.path,'addComic'));
     list.append(row);
-  });
-  list.hidden=!list.children.length;
-  if(results.some(result=>result.error))status('error');
+    if(kind==='image'){
+      void client.storage.from(bucket).createSignedUrl(file.path,300).then(({data,error})=>{
+        if(error||displayedGift!==gift||!row.isConnected)return;
+        const img=document.createElement('img');
+        img.src=data.signedUrl;
+        img.alt=name || label.textContent;
+        img.loading='lazy';
+        img.onerror=()=>img.remove();
+        row.prepend(img);
+      }).catch(()=>{});
+    }
+  }
+  $('gift').scrollIntoView({block:'start'});
+}
+function fileKind(file){
+  if(file.mime?.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name || ''))return 'image';
+  if(file.mime==='application/pdf' || /\.pdf$/i.test(file.name || ''))return 'pdf';
+  return 'attachment';
+}
+function defaultFileName(file,index){
+  const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf','audio/mpeg':'mp3','audio/wav':'wav','video/mp4':'mp4'};
+  const extension=extensions[file.mime] || file.name?.match(/\.([a-z0-9]{1,5})$/i)?.[1] || (fileKind(file)==='pdf'?'pdf':'');
+  return 'JXJ-'+(index+1)+(extension?'.'+extension:'');
+}
+function fileText(tag,key){
+  const node=document.createElement(tag);
+  node.dataset.fileText=key;
+  node.textContent=t(key);
+  return node;
+}
+function comicPicker(id,selection,key){
+  const block=document.createElement('details');
+  block.append(fileText('summary',key));
+  const actions=document.createElement('div');
+  actions.className='gift-actions';
+  const saved=document.createElement('small');
+  const open=fileText('a','openComics');
+  open.hidden=true;
+  for(const [code,label] of [['es','Español'],['en','English']]){
+    const button=document.createElement('button');
+    button.type='button';
+    button.textContent=label;
+    button.onclick=()=>run(async()=>{
+      const {error}=await client.rpc('jj_received_comics_api',{p_gift:id,p_selection:selection,p_language:code});
+      if(error)throw error;
+      actions.querySelectorAll('button').forEach(node=>node.setAttribute('aria-pressed',String(node===button)));
+      saved.dataset.fileText='savedComic';saved.textContent=t('savedComic');
+      open.href='./#volver-regalos=comics&comic-lang='+code;
+      open.hidden=false;
+    });
+    actions.append(button);
+  }
+  actions.append(open);
+  block.append(actions,saved);
+  return block;
 }
 function giftUrl(value) {
   return new URL('#'+new URLSearchParams({gift:value,lang:'en'}),location.href).href;
@@ -320,6 +429,7 @@ function edit(gift) {
   fields.recipient.value = gift?.for_self ? 'self' : 'partner';
   fields.coins.value=gift?.coins || 0;
   updateCoinField();
+  fields.sender_note.value = gift?.sender_note || '';
   fields.title.value = gift?.title || '';
   fields.body.value = gift?.body || '';
   fields.code.value = gift?.code || '';
@@ -421,7 +531,7 @@ $('draft').onsubmit = event => {
       }
     }
     const gift = await rpc('save',{
-      id:selected?.id,recipient:f.recipient.value,title:f.title.value,body:f.body.value,code:f.code.value,theme:f.theme.value,
+      id:selected?.id,recipient:f.recipient.value,sender_note:f.sender_note.value,title:f.title.value,body:f.body.value,code:f.code.value,theme:f.theme.value,
       attachments,coins:Number(f.coins.value || 0),card:f.card.value,opens_at:f.date.value ? new Date(f.date.value).toISOString() : null,enabled:f.enabled.checked
     });
     edit(gift);
