@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
+<title>Yuki · Memoria privada</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#171322;color:#f9f1ff}
+body{max-width:780px;margin:0 auto;padding:20px}h1{color:#f5d5ff}p{line-height:1.5}
+.panel{background:#292039;border:1px solid #58456a;border-radius:18px;padding:20px;margin:16px 0}
+textarea,select,button,input{font:inherit;border-radius:10px;padding:11px}textarea,select,input{background:#171322;color:white;border:1px solid #77678c;box-sizing:border-box;width:100%}
+textarea{min-height:100px;resize:vertical}button{background:#9d79d7;color:#161021;border:0;cursor:pointer;margin:4px 5px 4px 0}
+button.secondary{background:#423650;color:white}button.danger{background:#a94564;color:white}
+button:disabled{opacity:.5;cursor:wait}button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #f0baff;outline-offset:2px}@media(max-width:520px){body{padding:12px}.panel{padding:14px}button{min-height:44px}article textarea{min-height:125px}}label{display:block;margin:12px 0 6px}
+small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats span{padding:8px 12px;background:#3a2d4d;border-radius:12px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.toolbar select{max-width:240px}article{border-top:1px solid #574769;padding:15px 0;overflow-wrap:anywhere}
+.status{font-weight:bold}#notice{min-height:1.5em}a{color:#e2b9ff}
+</style>
+<script src="config.js"></script><script src="assets/supabase.js"></script></head>
+<body><a href="./">← Nuestro Universo</a><h1>✧ Memoria de Yuki</h1>
+<p>Los recuerdos no se sincronizan automáticamente desde ChatGPT. Pega únicamente el recuerdo que deseas proponer. <strong>Se guardará como propuesta pendiente y no se utilizará hasta que la apruebes individualmente.</strong></p>
+<p class="muted">Esta página requiere tu sesión de Supabase y verifica el perfil de Yisus. Nadie más puede consultar tus propuestas. La conexión con Gemini se activará después de completar las pruebas de privacidad.</p>
+<section class="panel"><h2>Nuevo recuerdo pendiente</h2>
+<label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
+<small id="memory-count">0 / 4000 caracteres</small><label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
+<button id="propose">Guardar para revisar</button></section>
+<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><small id="load-info" class="muted" aria-live="polite"></small><div class="toolbar"><label for="search">Buscar</label><input id="search" type="search" placeholder="Buscar en mis recuerdos" autocomplete="off" aria-label="Buscar recuerdos"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><button id="refresh" class="secondary" type="button">Actualizar recuerdos</button><p id="notice" role="status" aria-live="polite"></p><div id="items"></div><button id="more" class="secondary" type="button" hidden>Cargar más recuerdos</button></section>
+<script>
+(async()=>{
+ const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter'),search=document.getElementById('search');
+ const memoryInput=document.getElementById('memory');
+ memoryInput.addEventListener('input',()=>{document.getElementById('memory-count').textContent=memoryInput.value.length+' / 4000 caracteres';});
+ search.addEventListener('input',()=>render(cached));
+ let cached=[];
+ let pageSize=100;
+ let loadRevision=0;
+ const hasUnsavedEdits=()=>[...items.querySelectorAll('article')].some(card=>{const area=card.querySelector('textarea'),level=card.querySelector('select');return area&&(area.value!==area.defaultValue||level&&level.value!==level.dataset.original)});
+ const more=document.getElementById('more');
+ more.onclick=async()=>{if(more.disabled||!sessionActive)return;if(hasUnsavedEdits()&&!confirm('Hay cambios sin guardar. Cargar más recuerdos descartará esas ediciones. ¿Continuar?'))return;const previousSize=pageSize;pageSize+=100;more.disabled=true;try{if(await load()!==true)pageSize=previousSize;}catch(e){pageSize=previousSize;say('No se pudieron cargar más recuerdos: '+e.message);}finally{more.disabled=false;}};
+ const refresh=document.getElementById('refresh');
+ refresh.onclick=async()=>{if(refresh.disabled)return;if(hasUnsavedEdits()&&!confirm('Hay cambios sin guardar. Actualizar descartará esas ediciones. ¿Continuar?'))return;refresh.disabled=true;try{if(await load()===true)say('Recuerdos actualizados.')}catch(e){say('No se pudo actualizar: '+e.message)}finally{refresh.disabled=false;}};
+ let sessionActive=true;
+ const requireSession=async()=>{
+  if(!sessionActive)throw Error('La sesión cambió. Vuelve a iniciar sesión.');
+  let currentUser,error;
+  try{({data:{user:currentUser},error}=await db.auth.getUser());}
+  catch(e){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}
+  if(!sessionActive||error||!currentUser||currentUser.id!==user.id){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('La sesión ya no corresponde a Yisus.');}
+ };
+ filter.onchange=()=>render(cached);
+ const say=(s)=>notice.textContent=s;
+ // Do not retain sensitive draft text in session history when leaving the panel.
+ const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];memoryInput.value='';document.getElementById('memory-count').textContent='0 / 4000 caracteres';search.value='';filter.value='all';pageSize=100;more.hidden=true;more.disabled=true;refresh.disabled=true;};
+ const config=window.UNIVERSE_CONFIG;
+ if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo iniciar Supabase.');return;}
+ const db=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
+ const {data:{user},error:authError}=await db.auth.getUser();
+ if(authError||!user){say('Inicia sesión en Nuestro Universo antes de abrir esta página.');document.getElementById('propose').disabled=true;return;}
+ const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',user.id).single();
+ if(profileError||profile?.handle!=='jesus'){say('Este panel de importación está reservado para Yisus.');document.getElementById('propose').disabled=true;return;}
+ async function load(){
+  const revision=++loadRevision;
+  await requireSession();
+  const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(pageSize+1);
+  if(!sessionActive||revision!==loadRevision)return false;
+  let latestUser,latestError;
+  try{({data:{user:latestUser},error:latestError}=await db.auth.getUser());}catch(e){if(revision===loadRevision){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}return false;}
+  if(revision!==loadRevision)return false;
+  if(latestError||latestUser?.id!==user.id||!sessionActive){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('La sesión cambió mientras se cargaban los recuerdos.');return false;}
+  if(error||!Array.isArray(data)){items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];more.hidden=true;say('No se pudo cargar la memoria. Comprueba la conexión o la instalación de la tabla.');return false;}
+  say('Tus recuerdos solo están disponibles para tu cuenta.');
+  more.hidden=data.length<=pageSize;
+  cached=data.slice(0,pageSize);
+  document.getElementById('load-info').textContent=more.hidden?'Mostrando '+cached.length+' recuerdos cargados.':'Mostrando los primeros '+cached.length+' recuerdos. Hay más por cargar; los contadores y la búsqueda solo incluyen los cargados.';
+  render(cached);
+  return true;
+ }
+ function render(data){
+  items.replaceChildren();stats.replaceChildren();
+  for(const [key,label] of [['pending','Pendientes'],['approved','Aprobados'],['rejected','Rechazados']]){
+   const count=document.createElement('span');count.textContent=label+': '+data.filter(x=>x.status===key).length;stats.append(count);
+  }
+  const query=search.value.trim().toLocaleLowerCase();
+  const shown=data.filter(x=>(filter.value==='all'||x.status===filter.value)&&(!query||x.memory_text.toLocaleLowerCase().includes(query)));
+  if(!shown.length){items.textContent=data.length?'No hay recuerdos que coincidan con la búsqueda o el filtro.':'Todavía no hay propuestas.';return;}
+  for(const entry of shown){
+   const card=document.createElement('article'),heading=document.createElement('p'),edit=document.createElement('textarea'),level=document.createElement('select');
+   heading.className='status';heading.textContent=entry.status==='pending'?'Pendiente de aprobación':entry.status==='approved'?'Aprobado':'Rechazado';
+   const stamp=document.createElement('small');
+   stamp.textContent=entry.status==='approved'&&entry.approved_at?' · Aprobado el '+new Date(entry.approved_at).toLocaleString('es-MX'):' · Creado el '+new Date(entry.created_at).toLocaleString('es-MX');
+   heading.append(stamp);
+   edit.value=entry.memory_text;edit.maxLength=4000;
+   for(const [value,label] of [['private','Solo yo'],['shared','Compartido (sin acceso de Julie aún)'],['surprise','Sorpresa protegida']]){
+    const opt=document.createElement('option');opt.value=value;opt.textContent=label;level.append(opt);
+   }
+   level.value=entry.visibility;
+   level.dataset.original=entry.visibility;edit.defaultValue=entry.memory_text;
+   card.append(heading,edit,level);
+   const actions=document.createElement('div');
+   const action=(title,kind,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=title;b.className=kind||'';b.onclick=async()=>{if(b.disabled)return;b.disabled=true;try{await requireSession();const changed=await fn();if(changed!==false&&sessionActive)await load()}catch(e){if(sessionActive){const conflict=/no se actualizó|no se aprobó|no se pudo revocar|no se eliminó/i.test(e.message);if(conflict){if((edit.value.trim()!==entry.memory_text||level.value!==entry.visibility)&&!confirm('Este recuerdo cambió en otra sesión. Recargar descartará tus cambios sin guardar. ¿Quieres recargar?')){say('El recuerdo cambió en otra sesión. Conservamos tu borrador local; cópialo antes de actualizar la lista.')}else try{await load();say('El recuerdo cambió en otra sesión. Se cargó su versión actual. Revisa los datos antes de intentarlo de nuevo.')}catch(refreshError){say('No se pudo actualizar la lista: '+refreshError.message)}}else say('No se pudo guardar: '+e.message)}}finally{b.disabled=false}};actions.append(b)};
+   const update=async(status)=>{const text=edit.value.trim();if(!text)throw Error('El texto no puede estar vacío.');
+    const {data:updated,error}=await db.from('yuki_memory_proposals').update({memory_text:text,visibility:level.value,status}).eq('id',entry.id).eq('owner_id',user.id).eq('status',entry.status).eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');
+    if(error)throw error;
+    if(!updated?.length)throw Error('El recuerdo no se actualizó. Puede haber cambiado la sesión o haber sido eliminado.');
+   };
+   action('Guardar cambios','secondary',async()=>{
+    const changed=edit.value.trim()!==entry.memory_text||level.value!==entry.visibility;
+    if(!changed){say('No hay cambios que guardar.');return false;}
+    if(entry.status==='approved'&&!confirm('Modificar un recuerdo aprobado revocará su aprobación hasta que lo revises otra vez. ¿Continuar?'))return false;
+    await update(entry.status);
+   });
+   if(entry.status==='pending')action('Aprobar','',async()=>{if(edit.value.trim()!==entry.memory_text||level.value!==entry.visibility)throw Error('Primero guarda los cambios y revisa el recuerdo antes de aprobarlo.');if(!confirm('¿Aprobar individualmente este recuerdo? Solo se guardará en tu cuenta; Gemini y Julie aún no tendrán acceso.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'approved'}).eq('id',entry.id).eq('owner_id',user.id).eq('status','pending').eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('No se aprobó el recuerdo: puede haber cambiado desde la última carga.');});
+   if(entry.status==='approved')action('Revocar aprobación','secondary',async()=>{if(!confirm('¿Revocar la aprobación? Este recuerdo dejará de estar disponible para futuras consultas de Gemini.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'pending'}).eq('id',entry.id).eq('owner_id',user.id).eq('status','approved').eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('No se pudo revocar la aprobación: el recuerdo pudo haber cambiado desde la última carga.');});
+   if(entry.status!=='rejected')action('Rechazar','secondary',async()=>{if(!confirm('¿Rechazar este recuerdo? No estará disponible como recuerdo aprobado.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'rejected'}).eq('id',entry.id).eq('owner_id',user.id).eq('status',entry.status).eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('El recuerdo no se actualizó. Puede haber cambiado desde la última carga.');});
+   if(entry.status==='rejected')action('Volver a pendiente','secondary',async()=>{if(!confirm('¿Devolver este recuerdo a pendiente para revisarlo otra vez? No se aprobará automáticamente.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'pending'}).eq('id',entry.id).eq('owner_id',user.id).eq('status','rejected').eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('El recuerdo no se actualizó. Puede haber cambiado desde la última carga.');});
+   action('Eliminar','danger',async()=>{if(!confirm('¿Eliminar este recuerdo?'))return false;const {data:deleted,error}=await db.from('yuki_memory_proposals').delete().eq('id',entry.id).eq('owner_id',user.id).eq('status',entry.status).eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!deleted?.length)throw Error('No se eliminó ningún recuerdo. Comprueba tu sesión.')});
+   card.append(actions);items.append(card);
+  }
+ }
+ document.getElementById('propose').onclick=async()=>{
+  const btn=document.getElementById('propose'),text=document.getElementById('memory').value.trim();
+  if(btn.disabled)return;
+  if(!text){say('Escribe un recuerdo primero.');return;}
+  if(text.length>4000){say('El recuerdo supera el límite de 4000 caracteres.');return;}
+  btn.disabled=true;
+  try{await requireSession();}catch(e){say(e.message);btn.disabled=false;return;}
+  let error;
+  try{({error}=await db.from('yuki_memory_proposals').insert({owner_id:user.id,memory_text:text,visibility:document.getElementById('visibility').value,status:'pending'}));}
+  catch(e){btn.disabled=false;say('No se pudo conectar para guardar el recuerdo.');return;}
+  btn.disabled=false;
+  if(!sessionActive){clearSensitive();return;}
+  if(error){if(sessionActive)say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
+  if(!sessionActive)return;
+  memoryInput.value='';memoryInput.dispatchEvent(new Event('input'));await load();
+ };
+ db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
+ await load();
+})();
+</script></body></html>
