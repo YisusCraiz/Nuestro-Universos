@@ -2,11 +2,41 @@
 const CONTENT={posts:new Map(),translations:new Map(),working:false,queued:false};
 canDeleteMusic=()=>false;
 confirmDeleteMusic=p=>deletionDialog('post',p);
+function songDownloadButton(post){
+  if(post.kind!=='music'||!post.audio_path)return '';
+  return `<button type="button" class="text-button" data-download-song="${esc(post.id)}">${bi('Descargar canción','Download song')}</button>`;
+}
+
+async function downloadSong(button,post){
+  if(post?.kind!=='music'||!post.audio_path||!state.profile||!ensureLive())return;
+  const owner=state.profile.id;
+  const extension=post.audio_path.match(/\.[a-z0-9]{1,6}$/i)?.[0]||'';
+  const title=post.title.replace(/[<>:"/\\|?*\x00-\x1f]/g,' ').slice(0,100).trim().replace(/\.+$/,'')||say('Canción','Song');
+  const name=title.toLowerCase().endsWith(extension.toLowerCase())?title:title+extension;
+  button.disabled=true;
+  try{
+    const {data,error}=await db.storage.from('universe').createSignedUrl(post.audio_path,300);
+    if(error)throw error;
+    if(state.profile?.id!==owner||!button.isConnected)return;
+    const url=new URL(data.signedUrl);
+    url.searchParams.set('download',name);
+    window.location.assign(url.href);
+  }catch{
+    if(state.profile?.id===owner&&button.isConnected)toast(say('No se pudo descargar la canción. Inténtalo de nuevo.','Could not download the song. Try again.'));
+  }finally{
+    button.disabled=false;
+  }
+}
+
 const lifePostCard=postCard;
-postCard=function(p){CONTENT.posts.set(p.id,p);const html=lifePostCard(p).replace('<h3 translate="no">',`<h3 translate="no" data-post-text="${p.id}" data-field="title">`).replace('<p translate="no">',`<p translate="no" data-post-text="${p.id}" data-field="body" data-short="true">`);return html.replace('</article>',`<div class="card-body post-controls">${p.author_id===state.profile.id?`<button class="text-button" data-edit-post="${p.id}">${bi('Editar','Edit')}</button>`:''}<button class="text-button" data-request-post="${p.id}">${bi('Solicitar eliminación','Request deletion')}</button><span class="translation-note" data-translation-note="${p.id}"></span></div></article>`);};
+postCard=function(p){CONTENT.posts.set(p.id,p);const html=lifePostCard(p).replace('<h3 translate="no">',`<h3 translate="no" data-post-text="${p.id}" data-field="title">`).replace('<p translate="no">',`<p translate="no" data-post-text="${p.id}" data-field="body" data-short="true">`);return html.replace('</article>',`<div class="card-body post-controls">${songDownloadButton(p)}${p.author_id===state.profile.id?`<button class="text-button" data-edit-post="${p.id}">${bi('Editar','Edit')}</button>`:''}<button class="text-button" data-request-post="${p.id}">${bi('Solicitar eliminación','Request deletion')}</button><span class="translation-note" data-translation-note="${p.id}"></span></div></article>`);};
+document.addEventListener('click',e=>{
+  const download=e.target.closest('[data-download-song]');
+  if(download)downloadSong(download,CONTENT.posts.get(download.dataset.downloadSong));
+});
 document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-post]'),del=e.target.closest('[data-request-post]');if(edit)editPostForm(CONTENT.posts.get(edit.dataset.editPost));if(del)deletionDialog('post',CONTENT.posts.get(del.dataset.requestPost));});
 const lifeOpenPost=openPost;
-openPost=async function(p){CONTENT.posts.set(p.id,p);const promise=lifeOpenPost(p);const root=$('#modal-body');const title=$('h2[translate=no]',root),body=$('p[translate=no]',root);if(title){title.dataset.postText=p.id;title.dataset.field='title';}if(body){body.dataset.postText=p.id;body.dataset.field='body';body.insertAdjacentHTML('afterend',`<p class="translation-note" data-translation-note="${p.id}"></p>`);}await promise;queueTranslations();};
+openPost=async function(p){CONTENT.posts.set(p.id,p);const promise=lifeOpenPost(p);const root=$('#modal-body');const title=$('h2[translate=no]',root),body=$('p[translate=no]',root);if(title){title.dataset.postText=p.id;title.dataset.field='title';title.insertAdjacentHTML('afterend',songDownloadButton(p));}if(body){body.dataset.postText=p.id;body.dataset.field='body';body.insertAdjacentHTML('afterend',`<p class="translation-note" data-translation-note="${p.id}"></p>`);}await promise;queueTranslations();};
 const lifePlaylistPage=playlistPage;
 playlistPage=async function(v){await lifePlaylistPage(v);if(v!==state.version)return;document.querySelectorAll('[data-listen]').forEach(b=>{const del=document.createElement('button');del.className='text-button';del.innerHTML=bi('Solicitar eliminación','Request deletion');b.parentElement.append(del);del.onclick=async()=>{try{const {data,error}=await db.from('playlists').select('*').eq('id',b.dataset.listen).single();if(error)throw error;await deletionDialog('playlist',data);}catch(e){lifeError(e);}};});};
 function editPostForm(p){if(!p||p.author_id!==state.profile.id)return;publicationForm(p.kind,p);}
