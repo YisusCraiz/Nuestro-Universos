@@ -1,0 +1,14 @@
+{
+  "name": "Nuestro Mundo · Minecraft Java 1.21.4",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": { "version": "21", "installMaven": false, "installGradle": false }
+  },
+  "forwardPorts": [42622],
+  "portsAttributes": {
+    "42622": { "label": "Minecraft · proxy web", "onAutoForward": "silent" },
+    "25565": { "label": "Minecraft TCP interno", "onAutoForward": "ignore" }
+  },
+  "otherPortsAttributes": { "onAutoForward": "ignore" },
+  "postCreateCommand": "npm ci"
+}
