@@ -343,6 +343,14 @@ async function scenario(name,handle,expected){
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
   assert.equal(window.document.getElementById('propose').disabled,true,'submission disabled on sign-out');
   assert.equal(window.document.getElementById('items').children.length,0,'items cleared on sign-out');
+  const queriesAfterSignout=proposalsQueried;
+  const actionsAfterSignout=mutations.length;
+  window.document.getElementById('refresh').click();
+  window.document.getElementById('more').click();
+  window.document.getElementById('propose').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(proposalsQueried,queriesAfterSignout,'signed-out controls cannot query private memories');
+  assert.equal(mutations.length,actionsAfterSignout,'signed-out controls cannot mutate memories');
  }
  assert.deepEqual(errors.map(e=>e.message),[],name+': browser script errors');
  window.close();
