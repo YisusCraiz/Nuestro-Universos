@@ -65,7 +65,9 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  async function load(){
   const revision=++loadRevision;
   await requireSession();
-  const {data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(pageSize+1);
+  let data,error;
+  try{({data,error}=await db.from('yuki_memory_proposals').select('id,memory_text,visibility,status,created_at,approved_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(pageSize+1));}
+  catch(e){if(sessionActive&&revision===loadRevision){say('No se pudo cargar la memoria. Revisa la conexión e inténtalo de nuevo.');}return false;}
   if(!sessionActive||revision!==loadRevision)return false;
   let latestUser,latestError;
   try{({data:{user:latestUser},error:latestError}=await db.auth.getUser());}catch(e){if(revision===loadRevision){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}return false;}
