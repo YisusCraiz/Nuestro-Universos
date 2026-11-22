@@ -43,3 +43,10 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - Filtra `owner_id` con el UUID del JWT, `status='approved'`, y limita a 20 registros. Se usa el cliente con JWT del usuario y RLS; no se usa el cliente administrador para leer propuestas.
 - Por defecto el interruptor está apagado; este cambio en la rama no despliega la Edge Function. No habilitar hasta confirmar consentimiento para enviar recuerdos a Gemini y completar pruebas reales de ambas cuentas, revocación y ausencia de filtraciones.
 - La función ya tenía un sistema **anterior y separado** de recuerdos (`yuki_chat_memories` / `yuki_memories`). Este cambio no modifica sus políticas ni los permisos de recuerdos compartidos preexistentes.
+
+## Refuerzos de seguridad y errores de red (noviembre 2026)
+- Guardar recuerdos captura el texto y la privacidad en el momento de envío, y conserva un borrador nuevo escrito mientras la petición anterior sigue en curso.
+- Al invalidarse la sesión durante una operación, los botones de creación, actualización y paginación permanecen bloqueados; no deben mostrar éxitos tardíos.
+- La carga de recuerdos contempla tanto respuestas fallidas como excepciones de red. Una reconexión se prueba desde el panel sin reutilizar permisos de otra sesión.
+- Las pruebas DOM incluyen intentos de usar controles después del cierre de sesión y verifican que no haya consultas ni mutaciones posteriores.
+- Las pruebas DOM con Supabase simulado y las pruebas SQL de aislamiento no reemplazan un recorrido real con dos sesiones de navegador.
