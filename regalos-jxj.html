@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>JXJ</title>
+<style>
+[hidden]{display:none!important}*{box-sizing:border-box}
+body{margin:0;background:#080e21;color:#f9f2fd;font:16px/1.5 system-ui}
+main{width:min(42rem,100%);margin:auto;padding:1.25rem}
+section,form,article{background:#131e39;border:1px solid #485578;border-radius:1rem;padding:1rem;margin:1rem 0}
+label{display:block;margin-top:.55rem}input,select,textarea{display:block;width:100%;background:#0b1328;color:inherit;border:1px solid #7a88ab;border-radius:.5rem;padding:.65rem;font:inherit}
+input[type=checkbox]{display:inline;width:auto}button,a{color:#f9dcff}button{background:#303962;padding:.6rem .85rem;border:1px solid #9c8cba;border-radius:.55rem;font:inherit;margin:.25rem;cursor:pointer}
+ .back-link{display:inline-flex;align-items:center;min-height:2.75rem;padding:0 .8rem;border:1px solid #9c8cba;border-radius:.55rem;text-decoration:none}
+button:disabled{opacity:.55}#letter{white-space:pre-wrap;overflow-wrap:anywhere}
+#giftNav{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
+#giftNav button{flex:1 1 8rem;margin:0;min-height:3rem}
+#giftNav button[aria-pressed=true],#scan{background:#e8cffa;color:#211834;border-color:#e8cffa;font-weight:700}
+#scan{width:100%;min-height:3rem;margin:0 0 .75rem}
+summary{cursor:pointer;padding:.55rem 0;color:#f9dcff}
+#items,#managedItems{display:grid;gap:.4rem}
+#items button,#managedItems button{text-align:left;margin:0}
+#giftLink{overflow-wrap:anywhere}
+#qr,#bars{background:#fff;padding:12px;width:max-content;max-width:100%}#bars{height:auto}#camera{max-width:100%}
+main[data-theme=christmas] article{background:#162c29;border-color:#bd9470}
+main[data-theme=anniversary] article{background:#14264b;border-color:#bf9bd8}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #f1c4ff;outline-offset:2px}
+.gift-languages{display:inline-flex;gap:.25rem;flex-wrap:wrap}
+.gift-languages button[aria-pressed=true],#openGift{background:#ead2fa;color:#24172e;font-weight:700}
+#gift{background:radial-gradient(ellipse at 5% 0%,#26365c,transparent 70%),#131e39;border-color:#8793bf;padding:clamp(1rem,4vw,1.75rem);scroll-margin:1rem}
+main[data-theme=christmas] #gift{background:radial-gradient(ellipse at 5% 0%,#2b5148,transparent 73%),#122824;border-color:#af9879}
+main[data-theme=anniversary] #gift{background:radial-gradient(ellipse at 5% 0%,#433361,transparent 73%),#191c39;border-color:#b495c5}
+.gift-actions button[aria-pressed=true]{background:#ead2fa;color:#24172e}
+#gift h2,#senderNote,.gift-file strong,#draftFiles li{overflow-wrap:anywhere}
+.gift-from{display:flex;gap:.85rem;align-items:center;padding:.75rem 0;border-bottom:1px solid #ffffff30}
+.gift-from small,.gift-from strong{display:block}.gift-from small{color:#dbc9ea}.gift-from p{margin:0;color:#e8dff3}
+.sender-mark{display:grid;place-items:center;flex:0 0 2.65rem;min-height:2.65rem;background:#e5caef;color:#211834;border-radius:50%;font-weight:750}
+#attachmentLinks{padding:0;background:none;border:0}
+.gift-file{margin:.7rem 0;background:#0d162c;border:1px solid #485578;border-radius:.8rem;padding:.75rem;min-width:0}
+.gift-file img{display:block;width:100%;max-height:19rem;object-fit:contain;background:#080e21;border-radius:.5rem;margin-bottom:.65rem}
+.gift-actions{display:flex;flex-wrap:wrap;gap:.4rem;margin:.55rem 0}.gift-actions a,.gift-actions button{margin:0}
+.gift-actions a{display:inline-flex;align-items:center;border:1px solid #9c8cba;border-radius:.55rem;padding:.4rem .65rem;text-decoration:none}
+.gift-file small{display:block;color:#d1c6e1}
+</style>
+<script src="config.js"></script>
+<script src="assets/supabase.js"></script>
+<main id="page">
+<a id="home" class="back-link" href="./#volver-regalos" data-t="back">← Atrás</a>
+<span class="gift-languages"><button id="langEs" type="button">Español</button><button id="langEn" type="button">English</button></span>
+<h1 id="heading">JXJ</h1>
+<p id="status" role="status"></p>
+<form id="login" hidden>
+ <label><span data-t="profile"></span><select name="profile"><option value="julisa">Julie</option><option value="jesus">Yisus</option></select></label>
+ <label><span data-t="password"></span><input required name="password" type="password" autocomplete="current-password"></label>
+ <button data-t="login"></button>
+</form>
+<nav id="giftNav" hidden aria-label="JXJ">
+ <button type="button" data-view="scan" data-t="scanTab" aria-controls="entry"></button>
+ <button type="button" data-view="mine" data-t="gifts" aria-controls="collection"></button>
+ <button type="button" data-view="create" data-t="createTab" aria-controls="editor" hidden></button>
+</nav>
+<section id="entry" hidden>
+ <h2 data-t="scanTab"></h2>
+ <p data-t="scanHint"></p>
+ <button id="scan" type="button" data-t="scan"></button><div id="camera"></div>
+ <details><summary data-t="manual"></summary><form id="lookup">
+  <label><span data-t="code"></span><input name="code" required maxlength="36" autocomplete="off" autocapitalize="characters"></label>
+  <button data-t="find"></button>
+ </form></details>
+</section>
+<article id="gift" hidden>
+ <div class="gift-from" id="senderBlock" hidden><span class="sender-mark" id="senderMark" aria-hidden="true"></span><div><small data-t="sentBy"></small><strong id="senderName"></strong><p id="senderNote"></p></div></div>
+ <h2 id="title"></h2>
+ <button id="openGift" type="button" data-t="open" hidden></button>
+ <p id="letter"></p>
+ <section id="attachmentLinks" hidden aria-label="JXJ"></section>
+ <p id="coinsReceived" hidden></p>
+ <p id="cardNote" hidden data-t="cardNote"></p>
+</article>
+<section id="collection" hidden><h2 data-t="gifts"></h2><div id="items"></div></section>
+<section id="editor" hidden>
+ <h2 data-t="editor"></h2>
+ <p data-t="createHint"></p>
+ <button id="newGift" type="button" data-t="new"></button>
+ <details><summary data-t="manage"></summary><div id="managedItems"></div></details>
+ <form id="draft">
+  <label><span data-t="recipient"></span><select name="recipient"><option value="partner" id="giftPartner"></option><option value="self" data-t="self"></option></select></label>
+  <div id="giftCoins">
+   <label><span data-t="coins"></span><input name="coins" type="number" min="0" step="1" max="2147483647" value="0" inputmode="numeric"></label>
+   <p id="coinBalance"></p>
+   <p data-t="coinsHint"></p>
+  </div>
+  <label><span data-t="signature"></span><input name="sender_note" maxlength="80" data-placeholder="signatureExample"></label>
+  <label><span data-t="title"></span><input required name="title" maxlength="120"></label>
+  <label><span data-t="letter"></span><textarea required name="body" rows="6" maxlength="16000"></textarea></label>
+  <label><span data-t="theme"></span><select name="theme"><option value="anniversary" data-t="anniversary"></option><option value="christmas" data-t="christmas"></option><option value="surprise" data-t="surprise"></option></select></label>
+  <label><span data-t="custom"></span><input name="code" maxlength="36" pattern="[A-Za-z0-9\\-]{6,36}" autocomplete="off"></label>
+  <label><span data-t="card"></span><input name="card" placeholder="nu-001"></label>
+  <label><span data-t="addFiles"></span><input name="file" type="file" multiple accept="image/png,image/jpeg,image/webp,application/pdf,audio/mpeg,audio/wav,video/mp4"></label>
+  <ul id="draftFiles" hidden></ul>
+  <label><span data-t="date"></span><input type="datetime-local" name="date"></label>
+  <label><input name="enabled" type="checkbox"> <span data-t="enabled"></span></label>
+  <button data-t="save"></button>
+ </form>
+ <section id="print" hidden><h3 data-t="print"></h3><output id="printedCode"></output><br><a id="giftLink"></a>
+  <p id="printStatus" role="status"></p><div id="qr"></div><svg id="bars" aria-label="Code 128"></svg>
+  <button id="downloadQr" type="button" data-t="downloadQr" disabled></button>
+  <button id="downloadBars" type="button" data-t="downloadBars" disabled></button>
+ </section>
+</section>
+</main>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const tr = {
+ sentBy:['Un regalo de','A gift from'], signature:['Dedicatoria en el sobre (opcional)','Envelope note (optional)'],
+ signatureExample:['P. ej. De tu compañero de aventuras','E.g. From your adventure partner'],
+ fileHeading:['Dentro del regalo','Inside your gift'], image:['Imagen','Image'], pdf:['PDF','PDF'],
+ download:['Descargar','Download'], viewFile:['Abrir','Open'], addComic:['Guardar PDF en Cómics','Save PDF to Comics'],
+ addPages:['Guardar imágenes como páginas de cómic','Save images as comic pages'],
+ savedComic:['Guardado en tus Cómics','Saved to your Comics'], openComics:['Ir a Cómics','Go to Comics'],
+ coins:['Monedas JJ para regalar','JJ coins to gift'],
+ coinsHint:['Al habilitar el regalo se apartan las monedas. Si lo deshabilitas antes del canje, vuelven a tu saldo.','Coins are set aside when you enable the gift. Disable it before redemption to get them back.'],
+ availableCoins:['Saldo disponible','Available balance'],
+ receivedCoins:['Monedas JJ recibidas','JJ coins received'],
+ insufficientCoins:['Tu saldo disponible no alcanza para este regalo.','Your available balance is too low for this gift.'],
+ invalidCoins:['Elige una cantidad válida y envía las monedas a la otra persona.','Enter a valid amount and send the coins to the other person.'],
+ back:['← Atrás','← Back'],
+ scanTab:['Escáner JXJ','JXJ Scanner'], createTab:['Crear regalos','Create gifts'],
+ scanHint:['Apunta la cámara al QR o al código de barras.','Point your camera at the QR or barcode.'],
+ manual:['Escribir el código','Enter code manually'],
+ createHint:['Elige a quién va dirigido. Guarda el regalo para descargar sus códigos.','Choose a recipient and save the gift to download its codes.'],
+ manage:['Editar regalos preparados','Edit prepared gifts'],
+ recipient:['Destinatario','Recipient'], self:['Mi cuenta','My account'], noDrafts:['Todavía no has preparado regalos.','You have not created any gifts yet.'],
+ profile:['Perfil','Profile'], password:['Contraseña','Password'], login:['Iniciar sesión','Sign in'],
+ heading:['Regalos secretos','Secret gifts'], code:['Código del regalo','Gift code'], find:['Buscar regalo','Find gift'],
+ scan:['Escanear QR o código de barras','Scan QR or barcode'], stop:['Cerrar cámara','Close camera'],
+ open:['Abrir mi regalo','Open my gift'], attachment:['Archivo adjunto','Attachment'],
+ cardNote:['Carta entregada en Álbum JJ.','Card delivered to Album JJ.'], gifts:['Mis regalos','My gifts'],
+ editor:['Preparar un regalo','Prepare a gift'], new:['Nuevo borrador','New draft'],
+ title:['Título','Title'], letter:['Carta o mensaje','Letter or message'], theme:['Tema','Theme'],
+ anniversary:['Aniversario','Anniversary'], christmas:['Navidad','Christmas'], surprise:['Sorpresa','Surprise'],
+ custom:['Código manual personalizado (opcional)','Custom manual code (optional)'], card:['ID de carta de Álbum JJ (opcional)','Album JJ card ID (optional)'],
+ addFiles:['Añadir archivos adjuntos','Add attachments'], remove:['Quitar','Remove'],
+ fileTooLarge:['Cada archivo debe pesar como máximo 20 MB.','Each attachment must be 20 MB or less.'], date:['Abrir a partir de (hora local)','Available from (local time)'],
+ enabled:['Habilitar el canje con el código','Enable redemption with the code'], save:['Guardar','Save'],
+ print:['Códigos para imprimir','Printable codes'], downloadQr:['Descargar QR PNG','Download QR PNG'],
+ downloadBars:['Descargar barras SVG','Download barcode SVG'], sealed:['Un regalo para ti','A gift for you'],
+ unavailable:['Este regalo todavía no está disponible.','This gift is not available yet.'],
+ error:['No se pudo completar. Revisa la conexión y los datos.','Could not complete. Check your connection and the details.'],
+ invalid:['Revisa el código y el ID de carta. El código debe ser único.','Check the code and card ID. The code must be unique.'],
+ saved:['Guardado.','Saved.'], cameraError:['La cámara no está disponible. Puedes escribir el código.','Camera unavailable. You can type the code.'],
+ printError:['No se cargaron los generadores. El enlace y el código siguen disponibles.','Generators did not load. The link and code are still available.'],
+ empty:['Aún no hay regalos abiertos.','No opened gifts yet.'], draft:['Borrador','Draft'], ready:['Habilitado','Enabled'], claimed:['Abierto','Opened']
+};
+const params = new URLSearchParams(location.hash.slice(1));
+$('home').href = './#'+new URLSearchParams({ 'volver-regalos': params.get('from') || 'home' });
+let code = params.get('gift') || '';
+let lang = params.get('lang') === 'en' || (!params.has('lang') && (code || navigator.language.startsWith('en'))) ? 1 : 0;
+let selected = null, scanner = null, generation = 0, pending = false;
+let view = params.get('view') === 'create' && !code ? 'create' : 'scan';
+let account = null;
+let displayedGift=null;
+let savedFiles=[], pickedFiles=[];
+const uploads=new WeakMap();
+const bucket = 'jj-secret-gifts';
+const config = window.UNIVERSE_CONFIG;
+const client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
+const cachedScripts = new Map();
+const t = key => tr[key][lang];
+function status(key) {
+  $('status').dataset.key = key;
+  $('status').textContent = key ? t(key) : '';
+}
+function language() {
+  document.documentElement.lang = lang ? 'en' : 'es';
+  document.querySelectorAll('[data-t]').forEach(node => {node.textContent = t(node.dataset.t);});
+  if (account) {
+    $('heading').textContent = t('heading');
+    showBalance();
+  }
+  const received=$('coinsReceived');
+  if (!received.hidden) received.textContent=t('receivedCoins')+': '+received.dataset.amount;
+  if (!$('openGift').hidden) $('title').textContent = t('sealed');
+  $('langEs').setAttribute('aria-pressed',String(!lang));
+  $('langEn').setAttribute('aria-pressed',String(Boolean(lang)));
+  document.querySelectorAll('[data-placeholder]').forEach(node=>node.placeholder=t(node.dataset.placeholder));
+  document.querySelectorAll('[data-file-text]').forEach(node=>node.textContent=t(node.dataset.fileText));
+  if (scanner) $('scan').textContent = t('stop');
+  status($('status').dataset.key || '');
+}
+function chooseLanguage(value){
+  lang=value;language();
+  if(account){drawLists();drawDraftFiles();}
+}
+$('langEs').onclick=()=>chooseLanguage(0);
+$('langEn').onclick=()=>chooseLanguage(1);
+language();
+function script(url) {
+  if (!cachedScripts.has(url)) cachedScripts.set(url,new Promise((resolve,reject) => {
+    const tag = document.createElement('script');
+    tag.src = url;
+    tag.onload = resolve;
+    tag.onerror = () => {cachedScripts.delete(url); tag.remove(); reject(new Error('LIBRARY'));};
+    document.head.append(tag);
+  }));
+  return cachedScripts.get(url);
+}
+async function rpc(action,data={}) {
+  const r = await client.rpc('jj_secret_gifts_api',{p_action:action,p_data:data});
+  if (r.error) throw r.error;
+  return r.data;
+}
+async function run(task) {
+  if (pending) return;
+  pending = true;
+  status('');
+  try { await task(); }
+  catch (error) {
+    status(error.message === 'INSUFFICIENT_GIFT_COINS' ? 'insufficientCoins' :
+      error.message === 'INVALID_GIFT_COINS' ? 'invalidCoins' : error.message === 'GIFT_UNAVAILABLE' ? 'unavailable' :
+      ['23505','23503','23514'].includes(error.code) ? 'invalid' : 'error');
+  } finally { pending = false; }
+}
+async function showGift(gift) {
+  displayedGift=gift;
+  $('page').dataset.theme = gift.theme;
+  $('senderBlock').hidden=!gift.sender;
+  $('senderName').textContent=gift.sender || '';
+  $('senderMark').textContent=gift.sender?.[0] || '';
+  $('senderNote').textContent=gift.sender_note || '';
+  $('gift').hidden = false;
+  $('openGift').hidden = gift.redeemed !== false;
+  $('title').textContent = gift.title || t('sealed');
+  $('letter').textContent = gift.body || '';
+  $('cardNote').hidden = !gift.card;
+  $('coinsReceived').hidden = !gift.coins;
+  $('coinsReceived').dataset.amount=gift.coins || 0;
+  $('coinsReceived').textContent=t('receivedCoins')+': '+(gift.coins || 0);
+  const list=$('attachmentLinks');
+  list.replaceChildren();
+  const files=attachmentsFor(gift);
+  list.hidden=!files.length;
+  if(files.length)list.append(fileText('h3','fileHeading'));
+  if(files.some(file=>fileKind(file)==='image'))list.append(comicPicker(gift.id,'images','addPages'));
+  for(const [index,file] of files.entries()){
+    const kind=fileKind(file);
+    const row=document.createElement('article');
+    row.className='gift-file';
+    const name=file.name && !/^file_[a-f0-9]{20,}/i.test(file.name) ? file.name : '';
+    const label=document.createElement('strong');
+    if(name)label.textContent=name;
+    else {
+      const text=fileText('span',kind);
+      label.append(text,' '+(index+1));
+    }
+    row.append(label);
+    const actions=document.createElement('div');
+    actions.className='gift-actions';
+    row.append(actions);
+    for(const action of ['viewFile','download']){
+      const button=fileText('button',action);
+      button.type='button';
+      button.onclick=()=>run(async()=>{
+        const result=await client.storage.from(bucket).createSignedUrl(file.path,300,action==='download'?{download:name || defaultFileName(file,index)}:undefined);
+        if(result.error)throw result.error;
+        if(action==='download')download(result.data.signedUrl,name || defaultFileName(file,index));
+        else location.assign(result.data.signedUrl);
+      });
+      actions.append(button);
+    }
+    if(kind==='pdf')row.append(comicPicker(gift.id,file.path,'addComic'));
+    list.append(row);
+    if(kind==='image'){
+      void client.storage.from(bucket).createSignedUrl(file.path,300).then(({data,error})=>{
+        if(error||displayedGift!==gift||!row.isConnected)return;
+        const img=document.createElement('img');
+        img.src=data.signedUrl;
+        img.alt=name || label.textContent;
+        img.loading='lazy';
+        img.onerror=()=>img.remove();
+        row.prepend(img);
+      }).catch(()=>{});
+    }
+  }
+  $('gift').scrollIntoView({block:'start'});
+}
+function fileKind(file){
+  if(file.mime?.startsWith('image/') || /\.(jpg|jpeg|png|webp)$/i.test(file.name || ''))return 'image';
+  if(file.mime==='application/pdf' || /\.pdf$/i.test(file.name || ''))return 'pdf';
+  return 'attachment';
+}
+function defaultFileName(file,index){
+  const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf','audio/mpeg':'mp3','audio/wav':'wav','video/mp4':'mp4'};
+  const extension=extensions[file.mime] || file.name?.match(/\.([a-z0-9]{1,5})$/i)?.[1] || (fileKind(file)==='pdf'?'pdf':'');
+  return 'JXJ-'+(index+1)+(extension?'.'+extension:'');
+}
+function fileText(tag,key){
+  const node=document.createElement(tag);
+  node.dataset.fileText=key;
+  node.textContent=t(key);
+  return node;
+}
+function comicPicker(id,selection,key){
+  const block=document.createElement('details');
+  block.append(fileText('summary',key));
+  const actions=document.createElement('div');
+  actions.className='gift-actions';
+  const saved=document.createElement('small');
+  const open=fileText('a','openComics');
+  open.hidden=true;
+  for(const [code,label] of [['es','Español'],['en','English']]){
+    const button=document.createElement('button');
+    button.type='button';
+    button.textContent=label;
+    button.onclick=()=>run(async()=>{
+      const {error}=await client.rpc('jj_received_comics_api',{p_gift:id,p_selection:selection,p_language:code});
+      if(error)throw error;
+      actions.querySelectorAll('button').forEach(node=>node.setAttribute('aria-pressed',String(node===button)));
+      saved.dataset.fileText='savedComic';saved.textContent=t('savedComic');
+      open.href='./#volver-regalos=comics&comic-lang='+code;
+      open.hidden=false;
+    });
+    actions.append(button);
+  }
+  actions.append(open);
+  block.append(actions,saved);
+  return block;
+}
+function giftUrl(value) {
+  return new URL('#'+new URLSearchParams({gift:value,lang:'en'}),location.href).href;
+}
+function download(href,name) {
+  const anchor = document.createElement('a');
+  anchor.href = href;
+  anchor.download = name;
+  anchor.click();
+}
+async function printable(value) {
+  const job = ++generation;
+  const url = giftUrl(value);
+  $('giftLink').href = url;
+  $('giftLink').textContent = url;
+  $('printedCode').textContent = value;
+  $('print').hidden = false;
+  $('printStatus').textContent = '';
+  $('qr').replaceChildren();
+  $('bars').replaceChildren();
+  $('downloadQr').disabled = true;
+  $('downloadBars').disabled = true;
+  try {
+    await Promise.all([
+      script('https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'),
+      script('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js')
+    ]);
+    if (job !== generation) return;
+    new QRCode($('qr'),{text:url,width:384,height:384,correctLevel:QRCode.CorrectLevel.M});
+    JsBarcode($('bars'),value,{format:'CODE128',width:2,height:75,margin:16});
+    $('downloadQr').onclick = () => {
+      const raw = $('qr').querySelector('canvas');
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0,0,480,480);
+      ctx.drawImage(raw,48,48);
+      download(canvas.toDataURL('image/png'),'JXJ-'+value+'-QR.png');
+    };
+    $('downloadBars').onclick = () => {
+      const file = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString($('bars'))],{type:'image/svg+xml'}));
+      download(file,'JXJ-'+value+'-Code128.svg');
+      setTimeout(() => URL.revokeObjectURL(file),1000);
+    };
+    $('downloadQr').disabled = !$('qr').querySelector('canvas');
+    $('downloadBars').disabled = false;
+  } catch { if (job === generation) $('printStatus').textContent = t('printError'); }
+}
+function attachmentsFor(gift){
+  return gift?.attachments ?? (gift?.attachment ? [{path:gift.attachment}] : []);
+}
+function drawDraftFiles(){
+  const list=$('draftFiles');
+  list.replaceChildren();
+  function append(file,index,files){
+    const row=document.createElement('li');
+    const remove=document.createElement('button');
+    remove.type='button';
+    remove.textContent=t('remove');
+    const label=file.name || t('attachment')+' '+(index+1);
+    remove.setAttribute('aria-label',t('remove')+' '+label);
+    remove.onclick=()=>{if(!pending){files.splice(index,1);drawDraftFiles();}};
+    row.append(label,' ',remove);
+    list.append(row);
+  }
+  savedFiles.forEach((file,index)=>append(file,index,savedFiles));
+  pickedFiles.forEach((file,index)=>append(file,index,pickedFiles));
+  list.hidden=!list.children.length;
+}
+$('draft').elements.file.onchange=event=>{
+  for(const file of event.target.files){
+    if(file.size>20*1024*1024){status('fileTooLarge');continue;}
+    if(!pickedFiles.some(item=>item.name===file.name&&item.size===file.size&&item.lastModified===file.lastModified))pickedFiles.push(file);
+  }
+  event.target.value='';
+  drawDraftFiles();
+};
+function showBalance(){
+  $('coinBalance').textContent=account?.balance == null ? '' : t('availableCoins')+': '+account.balance+' JJ';
+}
+function updateCoinField(){
+  const fields=$('draft').elements;
+  const self=fields.recipient.value==='self';
+  $('giftCoins').hidden=self;
+  fields.coins.disabled=self;
+  if(self)fields.coins.value=0;
+}
+$('draft').elements.recipient.onchange=updateCoinField;
+function edit(gift) {
+  selected = gift;
+  const form = $('draft');
+  form.reset();
+  savedFiles=[...attachmentsFor(gift)];
+  pickedFiles=[];
+  drawDraftFiles();
+  const fields = form.elements;
+  fields.code.disabled = Boolean(gift);
+  fields.recipient.disabled = Boolean(gift);
+  fields.recipient.value = gift?.for_self ? 'self' : 'partner';
+  fields.coins.value=gift?.coins || 0;
+  updateCoinField();
+  fields.sender_note.value = gift?.sender_note || '';
+  fields.title.value = gift?.title || '';
+  fields.body.value = gift?.body || '';
+  fields.code.value = gift?.code || '';
+  fields.card.value = gift?.card || '';
+  fields.theme.value = gift?.theme || 'anniversary';
+  fields.enabled.checked = Boolean(gift?.enabled);
+  if (gift?.opens_at) {
+    const date = new Date(gift.opens_at);
+    fields.date.value = new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  }
+  $('draft').hidden = Boolean(gift?.redeemed_at);
+  if (gift) void printable(gift.code);
+  else {generation++; $('print').hidden = true;}
+}
+$('newGift').onclick = () => edit(null);
+function renderView() {
+  const page = !account.creator && view === 'create' ? 'scan' : view;
+  $('giftNav').hidden = false;
+  $('entry').hidden = page !== 'scan';
+  $('editor').hidden = page !== 'create';
+  $('collection').hidden = page !== 'mine';
+  for (const button of $('giftNav').querySelectorAll('[data-view]')) {
+    button.hidden = button.dataset.view === 'create' && !account.creator;
+    button.setAttribute('aria-pressed', String(button.dataset.view === page));
+  }
+}
+function drawList(container, entries, managed) {
+  const root = $(container);
+  root.replaceChildren();
+  if (!entries.length) root.textContent = t(managed ? 'noDrafts' : 'empty');
+  for (const item of entries) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = item.title + (managed ? ' · '+t(item.redeemed_at ? 'claimed' : item.enabled ? 'ready' : 'draft') : '');
+    button.onclick = () => managed ? edit(item) : run(() => showGift(item));
+    root.append(button);
+  }
+}
+function drawLists() {
+  drawList('items',account.mine,false);
+  drawList('managedItems', account.creator ? account.gifts : [],true);
+}
+$('giftNav').onclick = event => {
+  const button = event.target.closest('[data-view]');
+  if (!button || pending || !account || button.hidden) return;
+  view = button.dataset.view;
+  $('gift').hidden = true;
+  status('');
+  renderView();
+  if (view !== 'scan') void stopScan().catch(() => status('cameraError'));
+};
+async function refresh() {
+  const [data,mine] = await Promise.all([rpc('list'),rpc('mine')]);
+  account = {...data,creator:data.creator ?? data.admin,mine};
+  showBalance();
+  $('giftPartner').textContent = data.admin ? 'Julie' : 'Yisus';
+  if (!account.creator && view === 'create') view = 'scan';
+  $('heading').textContent = t('heading');
+  renderView();
+  drawLists();
+}
+async function lookup(value) {
+  const normalized = value.trim().toUpperCase();
+  if (!/^[A-Z0-9-]{6,36}$/.test(normalized)) throw new Error('GIFT_UNAVAILABLE');
+  $('gift').hidden = true;
+  const gift = await rpc('preview',{code:normalized});
+  code = normalized;
+  await showGift(gift);
+}
+$('lookup').onsubmit = event => {
+  event.preventDefault();
+  run(() => lookup($('lookup').elements.code.value));
+};
+$('openGift').onclick = () => run(async () => {
+  const gift = await rpc('redeem',{code});
+  await showGift(gift);
+  await refresh();
+});
+$('draft').onsubmit = event => {
+  event.preventDefault();
+  run(async () => {
+    const f = $('draft').elements;
+    const attachments=[...savedFiles];
+    const files=[...pickedFiles];
+    if (files.length) {
+      const login = await client.auth.getUser();
+      if (login.error) throw login.error;
+      const owner=login.data.user.id;
+      for (const file of files) {
+        let uploaded=uploads.get(file);
+        if (!uploaded || !uploaded.path.startsWith(owner+'/')) {
+          const path=owner+'/'+crypto.randomUUID();
+          const result=await client.storage.from(bucket).upload(path,file,{contentType:file.type});
+          if (result.error) throw result.error;
+          uploaded={path,name:file.name};
+          uploads.set(file,uploaded);
+        }
+        attachments.push(uploaded);
+      }
+    }
+    const gift = await rpc('save',{
+      id:selected?.id,recipient:f.recipient.value,sender_note:f.sender_note.value,title:f.title.value,body:f.body.value,code:f.code.value,theme:f.theme.value,
+      attachments,coins:Number(f.coins.value || 0),card:f.card.value,opens_at:f.date.value ? new Date(f.date.value).toISOString() : null,enabled:f.enabled.checked
+    });
+    edit(gift);
+    await refresh();
+    status('saved');
+  });
+};
+async function stopScan() {
+  if (!scanner) return;
+  const active = scanner;
+  scanner = null;
+  if (active.isScanning) await active.stop();
+  active.clear();
+  $('scan').textContent = t('scan');
+}
+$('scan').onclick = async () => {
+  $('scan').disabled = true;
+  try {
+    if (scanner) {await stopScan(); return;}
+    await script('https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js');
+    scanner = new Html5Qrcode('camera',{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_128]});
+    await scanner.start({facingMode:'environment'},{fps:8},async decoded => {
+      if (!scanner) return;
+      await stopScan();
+      let value = decoded;
+      try {
+        const link = new URL(decoded);
+        if (link.origin !== location.origin || link.pathname !== location.pathname) throw new Error('INVALID_QR');
+        value = new URLSearchParams(link.hash.slice(1)).get('gift') || '';
+      } catch { if (!/^[A-Z0-9-]{6,36}$/i.test(decoded)) {status('unavailable'); return;} }
+      $('lookup').elements.code.value = value;
+      run(() => lookup(value));
+    });
+    if (scanner && view !== 'scan') await stopScan();
+    if (scanner) $('scan').textContent = t('stop');
+  } catch {await stopScan().catch(() => {}); status('cameraError');}
+  finally {$('scan').disabled = false;}
+};
+async function start() {
+  const info = await client.auth.getSession();
+  if (info.error) throw info.error;
+  $('login').hidden = Boolean(info.data.session);
+  if (!info.data.session) return;
+  await refresh();
+  if (code) await lookup(code);
+}
+$('login').onsubmit = event => {
+  event.preventDefault();
+  run(async () => {
+    const f = $('login').elements;
+    try {
+      const result = await client.auth.signInWithPassword({email:config.loginEmails[f.profile.value],password:f.password.value});
+      if (result.error) throw result.error;
+      await start();
+    } finally {f.password.value='';}
+  });
+};
+run(start);
+</script>
+</html>

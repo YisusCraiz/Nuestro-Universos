@@ -27,7 +27,7 @@
     'No se pudo cerrar la sesión. Inténtalo de nuevo.':'Could not sign out. Please try again.',
     'Vista de prueba · las publicaciones y los récords no se guardan.':'Demo · posts and records are not saved.',
     'Cambiar perfil':'Switch profile','NUESTRO PEQUEÑO MUNDO':'OUR LITTLE WORLD','Menú principal':'Main menu',
-    'Inicio':'Home','Ruleta de caramelos':'Candy wheel','Nuestra música':'Our music','Recuerdos':'Memories',
+    'Regalos JXJ':'JXJ Gifts','Inicio':'Home','Ruleta de caramelos':'Candy wheel','Nuestra música':'Our music','Recuerdos':'Memories',
     'Cartitas':'Little letters','Flores amarillas':'Yellow flowers','Minijuegos':'Mini games','¿Novios?':'Be my girlfriend?',
     'Tu lugar favorito ♡':'Your happy place ♡','Cerrar sesión':'Sign out','Salir':'Sign out',
     'Desde aquel 1 de agosto':'Since that August 1','Este rinconcito todavía tiene candado ♡':'This little corner is still locked ♡',

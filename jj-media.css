@@ -109,6 +109,24 @@
 .retro-controls { display: flex; align-items: center; gap: 10px; }
 .retro-toggle { background: #ffedf4; color: #632344; border: 1px solid #a86580; border-radius: 9px; width: 40px; height: 38px; flex-shrink: 0; cursor: pointer; }
 .retro-controls .retro-progress { flex: 1; width: 100%; min-width: 0; padding: 0; accent-color: #9c4971; cursor: pointer; }
+.retro-volume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  font-size: .875rem;
+}
+.retro-volume input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  accent-color: #9c4971;
+  cursor: pointer;
+}
+.retro-volume-level { min-width: 4ch; text-align: end; font-variant-numeric: tabular-nums; }
 .retro-time { font-size: .76rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 @media (max-width: 480px) {
   .music-track-card .image-button, .music-track-card .cover-placeholder { aspect-ratio: 1.6; }

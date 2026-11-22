@@ -54,4 +54,26 @@ function startMemory(version){const start=$('#start-memory');start.disabled=true
 let reactionTimer=null;
 function startReaction(version){const target=$('#reaction-target');const start=$('#start-reaction');start.disabled=true;target.disabled=false;target.classList.remove('ready');target.textContent='Espera al amarillo…';$('#reaction-status').textContent='Todavía no…';let readyAt=0;reactionTimer=later(()=>{readyAt=performance.now();target.classList.add('ready');target.textContent='¡Ahora! Pulsa ♡';$('#reaction-status').textContent='¡Ya!';},1800+Math.random()*3000);target.onclick=async()=>{target.disabled=true;clearTimeout(reactionTimer);target.classList.remove('ready');if(!readyAt){target.textContent='Un poquito antes de tiempo';$('#reaction-status').textContent='Sin récord esta vez. Vuelve a intentarlo.';}else{const elapsed=Math.round(performance.now()-readyAt);target.textContent=`${elapsed} ms`;if(elapsed<80||elapsed>10000)$('#reaction-status').textContent='Intento fuera de tiempo. Vamos otra vez.';else await finishGame('reaction',elapsed,version);}if(version===state.version){start.disabled=false;start.textContent='Intentar otra vez';}};}
 if(document.modelContext?.registerTool){try{Promise.resolve(document.modelContext.registerTool({name:'navigate_universe',title:'Abrir un rincón de nuestro universo',description:'Navega a una sección para el perfil ya autenticado. No inicia sesión ni publica contenido.',inputSchema:{type:'object',properties:{section:{type:'string',enum:[...menus.map(x=>x[0]),'playlists','puzzles','truth','missions','season','profile','calendar','goals','approvals','affection','videos','secretpuzzle','gifts','live']}},required:['section'],additionalProperties:false},annotations:{readOnlyHint:false},execute:async({section})=>{if(!state.profile)throw Error('Primero inicia sesión desde la página.');if(!menus.some(x=>x[0]===section))throw Error('Sección desconocida');if(section==='novios'&&state.profile.handle!=='jesus')throw Error('No autorizado');await navigate(section);return {section:state.page};}})).catch(()=>{});}catch{}}
-dateGate();
+async function returnFromGifts(page,comicLanguage){
+  history.replaceState(history.state,'',location.pathname+location.search);
+  let profile;
+  try{
+    if(db){
+      const {data:{user},error}=await db.auth.getUser();
+      if(!error&&user){
+        const result=await db.from('profiles').select('*').eq('id',user.id).single();
+        if(!result.error&&Object.hasOwn(names,result.data.handle))profile=result.data;
+      }
+    }
+  }catch{/* The regular sign-in flow handles an unavailable session. */}
+  if(!profile){dateGate();return;}
+  state.demo=false;
+  state.profile=profile;
+  window.UniverseI18n.profile(profile.handle);
+  if(page==='comics'&&['es','en'].includes(comicLanguage)&&typeof comicLanguageFilter!=='undefined')comicLanguageFilter=comicLanguage;
+  await navigate(page!=='regalos-jxj'&&menus.some(([id])=>id===page)?page:'home');
+}
+const giftsReturn=new URLSearchParams(location.hash.slice(1));
+if(giftsReturn.has('volver-regalos')){
+  window.addEventListener('DOMContentLoaded',()=>returnFromGifts(giftsReturn.get('volver-regalos'),giftsReturn.get('comic-lang')),{once:true});
+}else dateGate();

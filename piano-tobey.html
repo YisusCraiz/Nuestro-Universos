@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Piano JJ · Tobey</title>
+<link rel="stylesheet" href="piano-tobey.css?v=banda-en-escena-1">
+<link rel="stylesheet" href="jj-piano-motion.css?v=banda-en-escena-1">
+<script defer src="config.js"></script>
+<script defer src="assets/supabase.js"></script>
+<script defer src="jj-piano-engine.js?v=nuestro-escenario-3"></script>
+<script defer src="jj-piano-instruments.js?v=banda-en-escena-1"></script>
+<script defer src="piano-tobey.js?v=banda-en-escena-1"></script>
+</head>
+<body>
+<main>
+ <header><p class="eyebrow">PIANO JJ</p><h1 id="duel-title">Yisus <span>vs</span> Tobey</h1></header>
+ <div id="duel-cast" class="duel-cast"><img src="assets/piano-band/jesus.webp" alt="Yisus"><img src="assets/piano-band/tobey.webp" alt="Tobey"></div>
+ <p id="status" role="status"></p>
+ <form id="claim" hidden>
+  <label for="pin">Invitation PIN</label>
+  <input id="pin" inputmode="numeric" autocomplete="off" pattern="[0-9]{6}" maxlength="6" required>
+  <button>Open invitation</button>
+ </form>
+ <section id="invitation" hidden>
+  <label for="invite-url">Enlace para Tobey</label>
+  <div class="copy-row"><input id="invite-url" readonly><button id="copy" type="button">Copiar</button></div>
+  <p>PIN <strong id="invite-pin"></strong></p>
+ </section>
+ <section id="group-invites" hidden></section>
+ <p id="group-status" role="status" hidden></p>
+ <button id="action" type="button" hidden></button>
+ <section id="track" hidden>
+  <p id="score" aria-live="off"></p>
+  <canvas id="lanes" width="640" height="500" aria-label="Four note lanes"></canvas>
+  <div id="keys" aria-label="Play notes">
+   <button type="button" data-lane="0">D</button><button type="button" data-lane="1">F</button>
+   <button type="button" data-lane="2">J</button><button type="button" data-lane="3">K</button>
+  </div>
+ </section>
+ <section id="results" hidden aria-live="polite">
+  <h2 id="result-title"></h2><p id="result-scores"></p>
+ </section>
+ <button id="exit" type="button" hidden>Leave duel</button>
+ <a id="back" href="./" hidden>Volver a Nuestro Universo</a>
+</main>
+</body>
+</html>

@@ -1,5 +1,15 @@
 'use strict';
 // This surface is outside #app and #modal: section changes never destroy playback.
+const jjVolumeKey='jj-player-volume';
+let jjVolume=100;
+try {
+  const savedVolume=localStorage.getItem(jjVolumeKey);
+  if(savedVolume!==null && /^\d{1,3}$/.test(savedVolume) && Number(savedVolume)<=100) jjVolume=Number(savedVolume);
+} catch { /* Playback still works when browser storage is unavailable. */ }
+
+const volumeProbe=document.createElement('audio');
+volumeProbe.volume=0.5;
+const jjVolumeSupported=volumeProbe.volume===0.5;
 const JJPlayer={queue:[],index:0,request:0,audio:null,owner:null};
 const playerDock=document.createElement('section');playerDock.id='jj-player';playerDock.hidden=true;
 playerDock.innerHTML=`<div class="player-heading"><span class="player-cover" id="jj-player-cover" aria-hidden="true">♫</span><strong id="jj-player-title" translate="no"></strong><button id="jj-player-stop" class="text-button">${bi('Detener y cerrar','Stop and close')} ×</button></div><div id="jj-player-media"></div><div id="jj-player-queue" class="row"></div><p id="jj-player-status" class="hint" role="status"></p>`;
@@ -14,10 +24,29 @@ function attachJJAudio(audio,title){
     <button type="button" class="retro-toggle" aria-label="${say('Reproducir','Play')}">▶</button>
     <input class="retro-progress" type="range" min="0" max="1" step="0.1" value="0" disabled aria-label="${say('Posición de reproducción','Playback position')}">
     <span class="retro-time">0:00</span>
-  </div>`;
+  </div>
+  ${jjVolumeSupported ? `<div class="retro-volume">
+    <label for="jj-player-volume">${bi('Volumen','Volume')}</label>
+    <input id="jj-player-volume" type="range" min="0" max="100" step="1" value="${jjVolume}" aria-valuetext="${jjVolume}%">
+    <span class="retro-volume-level" aria-hidden="true">${jjVolume}%</span>
+  </div>` : `<p class="hint">${bi('Usa los botones de volumen de tu dispositivo.','Use your device’s volume controls.')}</p>`}`;
   media.append(audio);
   JJPlayer.audio=audio;
   audio.controls=false;
+  if(jjVolumeSupported){
+    const volume=$('#jj-player-volume',media);
+    const level=$('.retro-volume-level',media);
+    audio.volume=jjVolume/100;
+    volume.oninput=()=>{
+      jjVolume=volume.valueAsNumber;
+      audio.volume=jjVolume/100;
+      const percentage=jjVolume+'%';
+      volume.setAttribute('aria-valuetext',percentage);
+      level.textContent=percentage;
+      try { localStorage.setItem(jjVolumeKey,String(jjVolume)); }
+      catch { /* Keep the selected level for this session. */ }
+    };
+  }
   const toggle=$('.retro-toggle',media),progress=$('.retro-progress',media),time=$('.retro-time',media);
   const timeLabel=value=>Number.isFinite(value)?Math.floor(value/60)+':'+String(Math.floor(value%60)).padStart(2,'0'):'–:––';
   function sync(){

@@ -3,106 +3,163 @@
 (() => {
  const mobile=matchMedia('(max-width:760px)');
  const isChristmas=()=>document.documentElement.dataset.season==='christmas';
+ const games=[
+  ['vs','⚔','Jugar en pareja','Play together'],
+  ['games','♧','Minijuegos','Mini games']
+ ];
  const quick=[
-  ['games','Juegos','Games','100%','0%','33.333%'],
-  ['home','Inicio','Home','0%','0%','33.333%'],
-  ['musicas','Música','Music','66.667%','66.667%','100%'],
-  ['memories','Recuerdos','Memories','100%','66.667%','100%']
+  ['home','⌂','Inicio','Home','0%','0%','33.333%'],
+  ['memories','▧','Recuerdos','Memories','100%','66.667%','100%'],
+  ['musicas','♫','Música','Music','66.667%','66.667%','100%']
  ];
  const groups=[
-  ['⚔','Arena','Arena',['vs','casino','cards']],
-  ['▷','Sala multimedia','Media room',['comics','live']],
-  ['♡','Nuestro rincón','Our corner',['pets','collection','shop','messages','affection','flowers','gifts','candy','yuki','secret_adventures']],
-  ['✦','Novedades y cuenta','News and account',['news','profile','season','missions','calendar','goals','approvals']]
+  ['⚔','Juegos','Games',['cards','casino']],
+  ['▷','Multimedia','Media',['musicalbums','comics','live']],
+  ['♡','Nuestro rincón','Our corner',['messages','flowers','affection','candy','gifts','regalos-jxj','cartas-3d-jj','pets','collection','shop','yuki','secret_adventures']],
+  ['✦','Novedades y cuenta','News and account',['news','profile','season','missions','calendar','goals','approvals']],
+  ['☾','Más apartados','More sections',[]]
  ];
  let arcade=null;
 
- function openArcade(trigger){
-  const nav=$('#primary-nav');
-  if(!nav)return;
-  if(arcade?.open)return;
-  nav.classList.remove('open');
-  const sources=new Map([...nav.querySelectorAll('button[data-nav]')].map(button=>[button.dataset.nav,button]));
-  arcade=document.createElement('dialog');
-  arcade.id='jj-arcade-menu';
-  arcade.setAttribute('aria-labelledby','jj-arcade-title');
-  arcade.innerHTML=`
-   <header class="arcade-hero"><div><span>✦ JULISSA &amp; JESÚS</span><h2 id="jj-arcade-title">${bi('Juntos en otra aventura','Together on another adventure')}</h2><p>${bi('Aventura arcade · Edición de Navidad','Arcade adventure · Christmas edition')}</p></div>
-   <button type="button" class="arcade-close" aria-label="${say('Cerrar menú','Close menu')}">×</button></header>
-   <div class="arcade-body"><div class="arcade-quick"></div><h3>${bi('Explora el universo','Explore the universe')}</h3><div class="arcade-groups"></div></div>`;
-  const dialog=arcade;
-  const makeButton=(route,label,art='')=>{
+ function openArcade(){
+  const appRoot=document.getElementById('app');
+  if(!appRoot?.querySelector('#primary-nav'))return false;
+  if(arcade?.open)return true;
+  const profileId=state.profile?.id;
+  const dialog=document.createElement('dialog');
+  if(typeof dialog.showModal!=='function')return false;
+  dialog.id='jj-arcade-menu';
+  dialog.setAttribute('aria-labelledby','jj-arcade-title');
+  dialog.innerHTML=`
+   <header class="arcade-hero">
+    <h2 id="jj-arcade-title">${bi('Nuestro universo','Our universe')}</h2>
+    <button type="button" class="arcade-close" autofocus aria-label="${say('Cerrar menú','Close menu')}">×</button>
+   </header>
+   <div class="arcade-body">
+    <div class="arcade-play"></div>
+    <div class="arcade-quick"></div>
+    <nav class="arcade-groups" aria-labelledby="jj-arcade-title"></nav>
+   </div>`;
+
+  const shortcuts=new Map();
+  function addShortcut(container,[route,icon,es,en,row,left,right]){
    const button=document.createElement('button');
    button.type='button';
    button.dataset.arcadeRoute=route;
-   button.innerHTML=art+label;
-   const source=sources.get(route);
-   if(source.getAttribute('aria-current')==='page')button.setAttribute('aria-current','page');
-   button.onclick=()=>{
-    if(!source.isConnected||source.hidden||!sectionAllowed(route))return;
-    dialog.close();
-    source.click();
-   };
-   return button;
-  };
-  const used=new Set();
-  for(const [route,es,en,row,left,right] of quick){
-   if(!sources.has(route))continue;
-   used.add(route);
-   const art=`<span class="arcade-sprites" aria-hidden="true"><span style="background-position:${left} ${row}"></span><span style="background-position:${right} ${row}"></span></span>`;
-   const label=route==='games'
-    ? `<span class="arcade-card-text"><small>${bi('MISIÓN PRINCIPAL','MAIN QUEST')}</small><strong>${bi('Juega con Julie','Play together')}</strong><span>${bi('Juegos · En pareja o en solitario','Games · Together or solo')}</span></span>`
-    : `<span class="arcade-card-text">${bi(es,en)}</span>`;
-   dialog.querySelector('.arcade-quick').append(makeButton(route,label,art));
+   const art=row
+    ? `<span class="arcade-sprites" aria-hidden="true"><span style="background-position:${left} ${row}"></span><span style="background-position:${right} ${row}"></span></span>`
+    : '';
+   button.innerHTML=art+`<span class="arcade-card-text"><span aria-hidden="true">${icon}</span> ${bi(es,en)}</span>`;
+   container.append(button);
+   shortcuts.set(route,button);
   }
-  const addGroup=(symbol,es,en,routes)=>{
-   const details=document.createElement('details');
-   details.innerHTML=`<summary><span aria-hidden="true">${symbol}</span><span>${bi(es,en)}</span><span aria-hidden="true">⌄</span></summary><div class="arcade-links"></div>`;
-   const links=details.querySelector('.arcade-links');
-   for(const route of routes){
-    if(used.has(route)||!sources.has(route))continue;
-    used.add(route);
-    links.append(makeButton(route,sources.get(route).innerHTML));
-   }
-   if(links.children.length)dialog.querySelector('.arcade-groups').append(details);
-  };
-  for(const [icon,es,en,routes] of groups)addGroup(icon,es,en,routes);
-  addGroup('☾','Más apartados','More sections',[...sources.keys()]);
+  const play=dialog.querySelector('.arcade-play');
+  const favorites=dialog.querySelector('.arcade-quick');
+  games.forEach(item=>addShortcut(play,item));
+  quick.forEach(item=>addShortcut(favorites,item));
 
-  function sync(){
-   if(!nav.isConnected||!isChristmas()||!mobile.matches){dialog.close();return;}
-   for(const button of dialog.querySelectorAll('[data-arcade-route]')){
-    const hidden=sources.get(button.dataset.arcadeRoute).hidden;
-    if(button.hidden!==hidden)button.hidden=hidden;
+  const list=dialog.querySelector('.arcade-groups');
+  const destinations=new Map();
+  const panels=groups.map(([icon,es,en,routes])=>{
+   const panel=document.createElement('details');
+   panel.innerHTML=`<summary><span aria-hidden="true">${icon}</span><span>${bi(es,en)}</span><span class="arcade-chevron" aria-hidden="true">⌄</span></summary><div class="arcade-links"></div>`;
+   const links=panel.querySelector('.arcade-links');
+   routes.forEach(route=>destinations.set(route,links));
+   list.append(panel);
+   return panel;
+  });
+  const other=panels.at(-1).querySelector('.arcade-links');
+  const linksByRoute=new Map();
+  let nav;
+
+  function available(source){
+   return source&&!source.hidden&&!source.disabled&&sectionAllowed(source.dataset.nav);
+  }
+  function updateButton(button,source){
+   const hidden=!available(source);
+   if(button.hidden!==hidden)button.hidden=hidden;
+   if(source?.getAttribute('aria-current')==='page')button.setAttribute('aria-current','page');
+   else button.removeAttribute('aria-current');
+  }
+  function update(){
+   const currentNav=appRoot.querySelector('#primary-nav');
+   if(!currentNav||state.profile?.id!==profileId){dialog.close();return;}
+   if(nav!==currentNav){
+    nav=currentNav;
+    observer.disconnect();
+    observer.observe(appRoot,{childList:true});
+    observer.observe(nav,{
+     subtree:true,childList:true,characterData:true,attributes:true,
+     attributeFilter:['hidden','disabled','aria-current','data-nav']
+    });
+    nav.classList.remove('open');
+    const currentTrigger=appRoot.querySelector('#mobile-menu');
+    currentTrigger.setAttribute('aria-controls',dialog.id);
+    currentTrigger.setAttribute('aria-expanded','true');
    }
-   for(const group of dialog.querySelectorAll('details')){
-    const hidden=!group.querySelector('button:not([hidden])');
-    if(group.hidden!==hidden)group.hidden=hidden;
+   const sources=new Map([...nav.querySelectorAll('button[data-nav]')].map(button=>[button.dataset.nav,button]));
+   for(const [route,button] of shortcuts)updateButton(button,sources.get(route));
+   for(const [route,link] of linksByRoute){
+    if(!sources.has(route)){link.button.remove();linksByRoute.delete(route);}
+   }
+   // Use the live navigation as the source of routes, permissions and labels.
+   // Modules only need to register a primary-nav entry for it to appear here.
+   for(const [route,source] of sources){
+    if(shortcuts.has(route))continue;
+    let link=linksByRoute.get(route);
+    if(!link){
+     const button=document.createElement('button');
+     button.type='button';
+     button.dataset.arcadeRoute=route;
+     (destinations.get(route)||other).append(button);
+     link={button,label:null};
+     linksByRoute.set(route,link);
+    }
+    if(link.label!==source.innerHTML){
+     link.label=source.innerHTML;
+     link.button.innerHTML=link.label;
+    }
+    updateButton(link.button,source);
+   }
+   for(const panel of [play,favorites,...panels]){
+    panel.hidden=!panel.querySelector('button:not([hidden])');
    }
   }
-  const observer=new MutationObserver(sync);
-  observer.observe(nav,{subtree:true,attributes:true,attributeFilter:['hidden']});
+
+  const observer=new MutationObserver(update);
   dialog.querySelector('.arcade-close').onclick=()=>dialog.close();
-  dialog.addEventListener('click',event=>{if(event.target===dialog&&event.clientY<dialog.getBoundingClientRect().top)dialog.close();});
+  dialog.addEventListener('click',event=>{
+   if(event.target===dialog&&event.clientY<dialog.getBoundingClientRect().top){dialog.close();return;}
+   const target=event.target.closest('button[data-arcade-route]');
+   if(!target)return;
+   const liveNav=appRoot.querySelector('#primary-nav');
+   const source=[...(liveNav?.querySelectorAll('button[data-nav]')||[])].find(button=>button.dataset.nav===target.dataset.arcadeRoute);
+   if(state.profile?.id!==profileId||!available(source)){update();return;}
+   dialog.close();
+   source.click();
+  });
   dialog.addEventListener('close',()=>{
    observer.disconnect();
    dialog.remove();
-   if(arcade===dialog)arcade=null;
-   if(trigger.isConnected){
-    trigger.setAttribute('aria-expanded','false');
-    if(document.activeElement===document.body)trigger.focus();
+   if(arcade!==dialog)return;
+   arcade=null;
+   const currentTrigger=appRoot.querySelector('#mobile-menu');
+   if(currentTrigger){
+    currentTrigger.setAttribute('aria-controls','primary-nav');
+    currentTrigger.setAttribute('aria-expanded','false');
+    if(document.activeElement===document.body)currentTrigger.focus();
    }
   },{once:true});
+
+  arcade=dialog;
   document.body.append(dialog);
-  sync();
-  trigger.setAttribute('aria-expanded','true');
+  update();
   dialog.showModal();
+  return true;
  }
  document.addEventListener('click',event=>{
   const trigger=event.target.closest('#mobile-menu');
-  if(!trigger||!isChristmas()||!mobile.matches)return;
-  event.stopImmediatePropagation();
-  openArcade(trigger);
+  if(trigger&&mobile.matches&&openArcade())event.stopImmediatePropagation();
  },true);
  mobile.addEventListener('change',()=>arcade?.close());
 
@@ -126,7 +183,6 @@
  new MutationObserver(()=>{
   if(season===isChristmas())return;
   season=isChristmas();
-  arcade?.close();
   if(!noticePanel.hidden)toggleInbox(false);
  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-season']});
 })();

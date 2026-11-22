@@ -1,0 +1,9 @@
+#jj-wallet-chip[hidden],#wallet-chip-panel[hidden]{display:none}
+#jj-wallet-chip{position:fixed;z-index:59;left:max(8px,env(safe-area-inset-left));bottom:calc(10px + env(safe-area-inset-bottom));color:var(--text)}
+#wallet-chip-toggle{display:flex;align-items:center;gap:8px;min-height:40px;padding:5px 10px;border:1px solid #efcd7870;border-radius:999px;background:#211b30;color:#ffe8b0;box-shadow:0 3px 14px #0c081c84;font-size:.75rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+#wallet-chip-toggle span:first-child{font-size:1rem;color:#f6cf74}
+#wallet-chip-panel{position:absolute;bottom:calc(100% + 8px);left:0;width:min(258px,calc(100vw - 24px));padding:12px 14px;background:#211b30;border:1px solid #efcd7870;border-radius:12px;box-shadow:0 6px 20px #0c081ca0;font-size:.85rem}
+#wallet-chip-panel h2{margin:0 0 5px;font-size:1rem;color:#ffe8b0}
+#wallet-chip-panel p{margin:5px 0}
+#wallet-chip-status:empty{display:none}
+#wallet-chip-refresh{margin-top:5px;min-height:36px;padding:4px 8px;border:1px solid #efcd7870;border-radius:7px;background:#302444;color:#ffe8b0}

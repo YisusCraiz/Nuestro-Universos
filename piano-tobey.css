@@ -1,0 +1,29 @@
+:root{color-scheme:dark;background:#100f21;color:#f3f0ff;font-family:"Instrument Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;padding:clamp(.7rem,3vw,2rem);background:radial-gradient(ellipse at 50% 0,#402568,transparent 65%)}
+main{max-width:42rem;margin:auto;border:1px solid #8e76bf60;border-radius:1.4rem;padding:clamp(.85rem,4vw,2rem);background:#17142cdd}
+header{margin-bottom:.75rem}h1{margin:.2rem 0;font-size:clamp(2rem,8vw,4rem);letter-spacing:-.06em}h1 span{color:#c5a6ff;font-size:.64em}
+.eyebrow{margin:0;color:#9deaf1;font-size:.78rem;font-weight:700;letter-spacing:.2em}
+p{line-height:1.5}form,section{margin-block:1rem}label{display:block;margin-bottom:.4rem}
+input,button,a{font:inherit}input,button{border:1px solid #9879cc;border-radius:.7rem;padding:.65rem .8rem}
+input{background:#221939;color:#fff;max-width:100%}
+button{background:#6749aa;color:#fff;font-weight:700;cursor:pointer;min-height:44px}
+button:disabled{opacity:.55;cursor:default}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #9deaf1;outline-offset:3px}
+.copy-row{display:flex;gap:.5rem}.copy-row input{flex:1;min-width:0}
+#invite-pin{letter-spacing:.2em;color:#ffd793}
+canvas{display:block;width:100%;height:min(53svh,24rem);border-radius:1rem 1rem 0 0;background:#171730}
+#keys{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem}
+#keys button{touch-action:none;background:#312653;border-top:4px solid var(--key,#c5a6ff);border-radius:0 0 .65rem .65rem}
+#keys button:nth-child(2){--key:#9deaf1}#keys button:nth-child(3){--key:#ffa2c8}#keys button:nth-child(4){--key:#ffd793}
+#keys button[data-hit]{background:var(--key,#c5a6ff);color:#110c22}
+#exit{background:#251d3c}#back{color:#b9eaf0;margin-inline-start:.6rem}
+.duel-cast{display:flex;justify-content:space-around;height:clamp(5.5rem,18vh,11rem);background:radial-gradient(ellipse at 50% 110%,#63448a,#211c40 72%);border-radius:1rem}
+.duel-cast img{height:100%;max-width:45%;object-fit:contain}
+
+#group-invites section{margin:.65rem 0} #group-invites strong{display:block;color:#ffd793;margin-bottom:.35rem} .duel-cast img{max-width:24%}
+
+.duel-artist{height:100%;width:25%;position:relative;display:grid;justify-items:center}
+.duel-artist img{width:100%;max-width:none;height:100%;object-fit:contain;transform-origin:50% 85%}
+.duel-artist canvas{position:absolute;inset:auto auto 6% 50%;transform:translateX(-27%);width:74%;height:auto;background:none;border-radius:0;pointer-events:none}
+.duel-artist canvas[data-instrument="voice"]{width:52%;bottom:29%}
+.duel-artist canvas[data-instrument="guitar"]{bottom:16%}

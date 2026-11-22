@@ -1,0 +1,33 @@
+/* Upper-body sway around a foot-level pivot. Note gestures compose with this idle motion. */
+[data-piano-performance] {
+ transform-origin: 50% 87%;
+ animation-timing-function: ease-in-out;
+ animation-iteration-count: infinite;
+}
+[data-piano-performance="drums"] { animation-name:piano-drum-bounce; animation-duration:1.05s; }
+[data-piano-performance="keys"] { animation-name:piano-keyboard-sway; animation-duration:1.65s; animation-delay:-.55s; }
+[data-piano-performance="voice"] { animation-name:piano-singer-sway; animation-duration:2.15s; animation-delay:-1.05s; }
+[data-piano-performance="guitar"] { animation-name:piano-guitar-rock; animation-duration:1.5s; animation-delay:-.35s; }
+@keyframes piano-drum-bounce {
+ 0%,100% { translate:0 0; rotate:-1deg; scale:1 1; }
+ 24% { translate:-1px -4px; rotate:2deg; scale:.99 1.035; }
+ 49% { translate:0 1px; rotate:0deg; scale:1.025 .96; }
+ 73% { translate:1px -3px; rotate:-2deg; scale:.99 1.025; }
+}
+@keyframes piano-keyboard-sway {
+ 0%,100% { translate:-3px 0; rotate:-3deg; scale:1.015 .985; }
+ 50% { translate:3px -2px; rotate:3deg; scale:.99 1.025; }
+}
+@keyframes piano-singer-sway {
+ 0%,100% { translate:-2px 0; rotate:-3deg; scale:1 .995; }
+ 35% { translate:1px -4px; rotate:1deg; scale:.985 1.035; }
+ 68% { translate:3px -2px; rotate:4deg; scale:1.01 1.015; }
+}
+@keyframes piano-guitar-rock {
+ 0%,100% { translate:-3px 0; rotate:-5deg; scale:1.015 .98; }
+ 46% { translate:3px -3px; rotate:5deg; scale:.985 1.03; }
+ 71% { translate:1px 0; rotate:1deg; scale:1.02 .98; }
+}
+@media (prefers-reduced-motion: reduce) {
+ [data-piano-performance] { animation:none; }
+}

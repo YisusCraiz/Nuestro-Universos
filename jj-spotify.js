@@ -76,7 +76,7 @@ async function mountMusicPicker(root,onSelect,{songs,onConnect,initial='local'}=
       for(const button of root.querySelectorAll('[data-spotify-index]'))button.onclick=()=>{
         const t=tracks[+button.dataset.spotifyIndex];
         const artist=(t.artists||[]).map(a=>a.name).join(', ');
-        onSelect({source:'spotify',id:t.id,title:(artist?t.name+' · '+artist:t.name).slice(0,300)});
+        onSelect({source:'spotify',id:t.id,title:(artist?t.name+' · '+artist:t.name).slice(0,300),trackTitle:t.name,artist,artwork:t.album?.images?.[0]?.url,duration:t.duration_ms/1000});
       };
     }catch(e){if(root.isConnected&&run===request){showConnection();status.textContent=e.message;}}
   };

@@ -4,19 +4,39 @@ function comicLanguage(row){const code=row?.page_text?.__comic_language?.code;re
 let comicLanguageFilter=null;
 function comicTitle(row){return comicLanguage(row)==='en'?(row.title_en?.trim()||row.title):row.title;}
 function comicCover(row){return row?.page_text?.__comic_cover?.path||row?.pages?.[0];}
-async function comicImage(path,img,current){
+async function comicImage(path,img,current,bucket='universe-comics'){
  if(/^assets\/winter-event\/(cover|page-[1-6])\.webp$/.test(path)){if(current())img.src=path;return;}
- const {data,error}=await db.storage.from('universe-comics').createSignedUrl(path,3600);
+ const {data,error}=await db.storage.from(bucket).createSignedUrl(path,3600);
  if(!current())return;if(error)throw error;img.src=data.signedUrl;
 }
 universeReadComic=async function(row){
+ if(row.giftPdf){
+  modal(`<h2 translate="no">${esc(comicTitle(row))}</h2><div class="row" id="received-pdf"></div><p id="received-pdf-status" role="status"></p>`);
+  const root=$('#received-pdf');
+  const file=row.giftPdf;
+  for(const [es,en,download] of [['Abrir PDF','Open PDF',false],['Descargar PDF','Download PDF',true]]){
+   const button=document.createElement('button');
+   button.className='btn secondary';button.textContent=say(es,en);
+   button.onclick=async()=>{
+    button.disabled=true;
+    try{
+     const url=await db.storage.from('jj-secret-gifts').createSignedUrl(file.path,300,download?{download:file.name||comicTitle(row)+'.pdf'}:undefined);
+     if(url.error)throw url.error;
+     if(root.isConnected)window.location.assign(url.data.signedUrl);
+    }catch{if(root.isConnected)$('#received-pdf-status').textContent=say('No se pudo abrir el PDF. Reintenta.','Could not open the PDF. Try again.');}
+    finally{button.disabled=false;}
+   };
+   root.append(button);
+  }
+  return;
+ }
  if(row.winterEvent){const data=await WinterEvent.read();if(data.completed_at)openWinterComic(data,false,comicLanguage(row));return;}
  modal(`<div class="comic-reader-heading"><h2 translate="no">${esc(comicTitle(row))}</h2><p>${bi('Desliza para leer el cómic completo.','Scroll to read the complete comic.')}</p></div><div class="comic-reader comic-reader-continuous" id="universe-reader" translate="no"></div>`);
  const root=$('#universe-reader'),generation=modalVersion,current=()=>root.isConnected&&modalVersion===generation;
  await Promise.all(row.pages.map(async(path,i)=>{
   const article=document.createElement('article'),img=document.createElement('img');img.alt=say('Página ','Page ')+(i+1);img.loading=i?'lazy':'eager';img.decoding='async';article.append(img);root.append(article);
-  const failed=()=>{if(!current()||article.querySelector('button'))return;const retry=document.createElement('button');retry.className='comic-page-retry';retry.textContent=say('Reintentar página ','Retry page ')+(i+1);retry.onclick=async()=>{retry.disabled=true;try{await comicImage(path,img,current);if(current())retry.remove();}catch{retry.disabled=false;}};article.append(retry);};
-  img.onerror=failed;try{await comicImage(path,img,current);}catch{failed();}
+  const failed=()=>{if(!current()||article.querySelector('button'))return;const retry=document.createElement('button');retry.className='comic-page-retry';retry.textContent=say('Reintentar página ','Retry page ')+(i+1);retry.onclick=async()=>{retry.disabled=true;try{await comicImage(path,img,current,row.giftBucket);if(current())retry.remove();}catch{retry.disabled=false;}};article.append(retry);};
+  img.onerror=failed;try{await comicImage(path,img,current,row.giftBucket);}catch{failed();}
  }));
 };
 universeComicForm=function(row){
@@ -62,6 +82,18 @@ universeComicForm=function(row){
 };
 universeComics=async function(v){
  const rows=state.demo?[]:await lifeRows('universe_comics');
+ let receivedUnavailable=false;
+ if(!state.demo){
+  try{
+   const {data,error}=await db.rpc('jj_received_comics_api');
+   if(error)throw error;
+   rows.push(...data.map(item=>{
+    const pdf=item.files.length===1&&(item.files[0].mime==='application/pdf'||/\.pdf$/i.test(item.files[0].name||''));
+    return {id:item.id,title:item.title,position:1,page_text:{__comic_language:{code:item.language}},
+      giftBucket:'jj-secret-gifts',giftPdf:pdf?item.files[0]:null,pages:pdf?[]:item.files.map(file=>file.path)};
+   }));
+  }catch{receivedUnavailable=true;}
+ }
  try{rows.push(...await WinterEvent.comicRows());}catch{}
  if(v!==state.version)return;
  const options=[['es','Español','Español'],['en','English','English'],['unassigned','Sin clasificar','Unassigned']];
@@ -72,6 +104,11 @@ universeComics=async function(v){
   $('#main').innerHTML=lifeHeading('Cómics','Comics','Nuestras historias, una portada a la vez.','Our stories, one cover at a time.')+
    `<div class="comic-toolbar"><label>${bi('Idioma del cómic','Comic language')}<select id="comic-language-filter">${options.map(([code,es,en])=>`<option value="${code}" ${comicLanguageFilter===code?'selected':''}>${say(es,en)} (${rows.filter(r=>comicLanguage(r)===code).length})</option>`).join('')}</select></label>${jjButton('add-comic','+ Añadir cómic','+ Add comic')}</div>`+
    `<div class="comic-library">${selected.map(r=>`<article class="comic-card"><button class="comic-card-open" data-read-comic="${esc(r.id)}"><span class="comic-card-cover"><img data-comic-cover="${esc(r.id)}" alt="${esc(comicTitle(r))}" loading="lazy" style="opacity:0"><span class="comic-cover-placeholder">${bi('Cómic','Comic')}</span></span><h2 translate="no">${esc(comicTitle(r))}</h2></button>${r.owner_id===state.profile.id?`<button class="text-button" data-edit-comic="${esc(r.id)}">${bi('Editar cómic','Edit comic')}</button>`:''}</article>`).join('')}</div>${selected.length?'':`<p class="comic-empty">${bi('No hay cómics en este filtro. Elige otro idioma arriba; los anteriores sin idioma están en Sin clasificar.','No comics match this filter. Choose another language above; older comics without a language are under Unassigned.')}</p>`}${comicLanguageFilter==='unassigned'&&selected.length?`<p class="hint">${bi('Estos cómics aún no tienen idioma. Abre Editar cómic y elige Español o English para clasificarlos.','These comics do not have a language yet. Open Edit comic and choose Español or English to classify them.')}</p>`:''}`;
+  if(receivedUnavailable){
+   const notice=document.createElement('p');notice.className='hint';
+   notice.textContent=say('Los cómics recibidos no cargaron. Vuelve a abrir este apartado.','Received comics did not load. Reopen this section.');
+   $('#main').prepend(notice);
+  }
   const filter=$('#comic-language-filter');filter.onchange=e=>{comicLanguageFilter=e.target.value;paint();};$('#add-comic').onclick=()=>universeComicForm();
   document.querySelectorAll('[data-edit-comic]').forEach(b=>b.onclick=()=>universeComicForm(rows.find(r=>r.id===b.dataset.editComic)));
   document.querySelectorAll('[data-read-comic]').forEach(b=>b.onclick=()=>universeReadComic(rows.find(r=>r.id===b.dataset.readComic)));
@@ -80,7 +117,7 @@ universeComics=async function(v){
    const current=()=>v===state.version&&img.isConnected,placeholder=img.nextElementSibling;
    let retry;
    const failed=()=>{if(!current())return;img.style.opacity='0';placeholder.hidden=false;placeholder.textContent=say('Portada pendiente','Cover unavailable');if(!retry){retry=document.createElement('button');retry.className='text-button';retry.textContent=say('Reintentar portada','Retry cover');retry.onclick=load;img.closest('.comic-card').append(retry);}retry.disabled=false;};
-   const load=async()=>{if(retry)retry.disabled=true;try{await comicImage(path,img,current);}catch{failed();}};
+   const load=async()=>{if(retry)retry.disabled=true;try{await comicImage(path,img,current,row.giftBucket);}catch{failed();}};
    img.onload=()=>{if(!current())return;img.style.opacity='1';placeholder.hidden=true;retry?.remove();retry=null;};img.onerror=failed;load();
   });
  };paint();
