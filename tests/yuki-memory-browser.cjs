@@ -56,6 +56,15 @@ async function scenario(name,handle,expected){
   assert.equal(inserted[0].status,'pending','new memories are pending, never approved');
   assert.equal(inserted[0].owner_id,user.id,'new proposal belongs to logged-in user');
   assert.equal(inserted[0].visibility,'private','default memory is private');
+  const firstEditor=window.document.querySelector('#items article textarea');
+  assert.ok(firstEditor.getAttribute('aria-label')?.includes('recuerdo'),'memory editor has an accessible label');
+  assert.ok(window.document.querySelector('#items article select').getAttribute('aria-label')?.includes('Privacidad'),'privacy selector has an accessible label');
+  draft.value='Unsaved navigation warning';
+  const leaving=new window.Event('beforeunload',{cancelable:true});
+  window.dispatchEvent(leaving);
+  assert.equal(leaving.defaultPrevented,true,'unsaved new memories warn before navigating away');
+  draft.value='';
+
   assert.ok(window.document.getElementById('load-info').textContent.includes('1 recuerdos cargados'),'loaded count is explicitly shown');
   failMemoryLoad=true;
   window.document.getElementById('refresh').click();
