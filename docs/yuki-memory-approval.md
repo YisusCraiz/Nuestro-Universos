@@ -68,6 +68,7 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - [x] Reglas RLS y guard de aprobación comprobados en Supabase, sin usar recuerdos personales como datos de prueba.
 - [x] Pruebas DOM con Supabase simulado para crear, aprobar, revocar, borrar, cargar y proteger ediciones.
 - [x] Prueba de ejecución aislada del bloque Gemini: sin flag, sin consentimiento, Julie, recuerdo pendiente, revocado, sorpresa y errores del servidor no permiten acceder a información no autorizada.
+- [x] Ensayo del ciclo completo sobre la base real con datos **sintéticos**, roles `authenticated` simulados por SQL y transacción revertida: creación, aprobación, lectura filtrada, revocación, edición, eliminación y aislamiento entre perfiles (`supabase/yuki-memory-integration-rehearsal.sql`).
 - [ ] Prueba real de navegador con sesión de Yisus y sesión independiente de Julie; verificar GET/POST/UPDATE/DELETE, ausencia de filtraciones y comportamiento móvil.
 - [ ] Revisar manualmente el consentimiento informado del dueño, especialmente el alcance de transferencia de datos a Gemini; mantener ambos flags desactivados hasta entonces.
 - [ ] Probar Edge Function desplegada en entorno de prueba controlado (sin reemplazar el chat productivo) y revocación efectiva en el siguiente turno.
@@ -76,3 +77,6 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 
 ### Revisión de seguridad de Supabase (22 noviembre 2026)
 La tabla `public.yuki_memory_proposals` mantiene RLS, cuatro políticas y el trigger `yuki_memory_guard_update` activo; el rol `anon` no tiene SELECT. El asesor de seguridad no señaló hallazgos específicos de esta tabla. Sin embargo, el proyecto tiene otros avisos generales de seguridad que se deben evaluar independientemente, sin asumir que esta prueba certifica toda la aplicación.
+
+### Verificación adicional: ensayo de integración SQL (22 noviembre 2026)
+Se ejecutó directamente en el proyecto Supabase conectado `supabase/yuki-memory-integration-rehearsal.sql` con perfiles `jesus` y `julisa` simulados mediante identidad SQL, y finalizó sin excepciones. La selección de recuerdos aprobados y no sorpresas devolvió solo los registros sintéticos esperados; revocar o editar eliminó los registros de la selección aprobada; la eliminación se comprobó; Julie no pudo leer ni aprobar recuerdos de Yisus. El `ROLLBACK` eliminó los cuatro recuerdos ficticios. **Esta evidencia no demuestra una sesión real de navegador, transferencia autorizada a Gemini ni protección contra todo tipo de filtraciones del modelo.**
