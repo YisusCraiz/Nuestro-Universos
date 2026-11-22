@@ -41,7 +41,8 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 ## Integración Gemini preparada (sin activar)
 - `supabase/functions/yuki-chat/index.ts` consulta `yuki_memory_proposals` **solo** si `YUKI_REVIEWED_MEMORY_AI_ENABLED=true` y el perfil autenticado es `jesus`.
 - Filtra `owner_id` con el UUID del JWT, `status='approved'`, y limita a 20 registros. Se usa el cliente con JWT del usuario y RLS; no se usa el cliente administrador para leer propuestas.
-- Por defecto el interruptor está apagado; este cambio en la rama no despliega la Edge Function. No habilitar hasta confirmar consentimiento para enviar recuerdos a Gemini y completar pruebas reales de ambas cuentas, revocación y ausencia de filtraciones.
+- Son obligatorios **dos** controles independientes: `YUKI_REVIEWED_MEMORY_AI_ENABLED=true` (activación técnica) y `YUKI_REVIEWED_MEMORY_OWNER_CONSENT=true` (consentimiento explícito del propietario para enviar los recuerdos aprobados a Gemini). El consentimiento de un recuerdo para almacenamiento **no** implica consentimiento para procesamiento por IA.
+- Por defecto ambos controles están apagados; este cambio en la rama no despliega la Edge Function. No habilitar hasta confirmar consentimiento informado y completar pruebas reales de ambas cuentas, revocación y ausencia de filtraciones.
 - La función ya tenía un sistema **anterior y separado** de recuerdos (`yuki_chat_memories` / `yuki_memories`). Este cambio no modifica sus políticas ni los permisos de recuerdos compartidos preexistentes.
 
 ## Refuerzos de seguridad y errores de red (noviembre 2026)
@@ -62,3 +63,16 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - Cuando otra tarjeta cambia mientras una actualización está pendiente, la recarga automática se pospone para no borrar el nuevo borrador. Un aviso explica que debe actualizarse la lista después de conservar las ediciones.
 - Las tarjetas con visibilidad `surprise` indican explícitamente que están excluidas del contexto de Gemini incluso si se aprobaron. La integración de Gemini permanece desactivada por defecto.
 - Estas garantías tienen pruebas de DOM simulado; sigue faltando validación de dos sesiones reales y revisión manual de accesibilidad.
+
+## Criterios verificables para publicar la fase 1
+- [x] Reglas RLS y guard de aprobación comprobados en Supabase, sin usar recuerdos personales como datos de prueba.
+- [x] Pruebas DOM con Supabase simulado para crear, aprobar, revocar, borrar, cargar y proteger ediciones.
+- [x] Prueba de ejecución aislada del bloque Gemini: sin flag, sin consentimiento, Julie, recuerdo pendiente, revocado, sorpresa y errores del servidor no permiten acceder a información no autorizada.
+- [ ] Prueba real de navegador con sesión de Yisus y sesión independiente de Julie; verificar GET/POST/UPDATE/DELETE, ausencia de filtraciones y comportamiento móvil.
+- [ ] Revisar manualmente el consentimiento informado del dueño, especialmente el alcance de transferencia de datos a Gemini; mantener ambos flags desactivados hasta entonces.
+- [ ] Probar Edge Function desplegada en entorno de prueba controlado (sin reemplazar el chat productivo) y revocación efectiva en el siguiente turno.
+- [ ] Auditar privacidad y accesibilidad, especialmente las políticas del sistema de memoria anterior, que no fueron modificadas.
+- [ ] Revisar PR y fusionar/publicar solo tras aprobar los puntos anteriores.
+
+### Revisión de seguridad de Supabase (22 noviembre 2026)
+La tabla `public.yuki_memory_proposals` mantiene RLS, cuatro políticas y el trigger `yuki_memory_guard_update` activo; el rol `anon` no tiene SELECT. El asesor de seguridad no señaló hallazgos específicos de esta tabla. Sin embargo, el proyecto tiene otros avisos generales de seguridad que se deben evaluar independientemente, sin asumir que esta prueba certifica toda la aplicación.
