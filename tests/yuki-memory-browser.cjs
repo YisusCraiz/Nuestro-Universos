@@ -371,6 +371,13 @@ async function scenario(name,handle,expected){
   insertGate=null;
   inserted.pop();
   editDuringInsert.value='A memory awaiting individual approval';
+  inserted[0].visibility='surprise';
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(window.document.querySelector('#items article .status')?.textContent.includes('excluida de Gemini'),'surprise memory shows exclusion notice');
+  inserted[0].visibility='private';
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
   window.document.getElementById('visibility').value='surprise';
   window.document.getElementById('search').value='Sensitive private search';
   draft.value='PRIVATE DRAFT';
