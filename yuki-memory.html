@@ -32,6 +32,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  let pageSize=100;
  let loadRevision=0;
  const hasUnsavedEdits=()=>[...items.querySelectorAll('article')].some(card=>{const area=card.querySelector('textarea'),level=card.querySelector('select');return area&&(area.value!==area.defaultValue||level&&level.value!==level.dataset.original)});
+ window.addEventListener('beforeunload',event=>{if(sessionActive&&(memoryInput.value.trim()||hasUnsavedEdits())){event.preventDefault();event.returnValue='';}});
  const more=document.getElementById('more');
  more.onclick=async()=>{if(more.disabled||!sessionActive)return;if(hasUnsavedEdits()&&!confirm('Hay cambios sin guardar. Cargar más recuerdos descartará esas ediciones. ¿Continuar?'))return;const previousSize=pageSize;pageSize+=100;more.disabled=true;try{if(await load()!==true)pageSize=previousSize;}catch(e){pageSize=previousSize;if(sessionActive)say('No se pudieron cargar más recuerdos: '+e.message);}finally{if(sessionActive)more.disabled=false;}};
  const refresh=document.getElementById('refresh');
