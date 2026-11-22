@@ -281,6 +281,7 @@ async function scenario(name,handle,expected){
   failMemoryLoad=false;
   refresh.click();
   await new Promise(resolve=>setTimeout(resolve,30));
+  window.document.getElementById('visibility').value='surprise';
   window.document.getElementById('search').value='Sensitive private search';
   draft.value='PRIVATE DRAFT';
   switchedUser=true;
@@ -290,6 +291,7 @@ async function scenario(name,handle,expected){
   assert.equal(window.document.getElementById('items').children.length,0,'account switch hides private memories');
   assert.equal(draft.value,'','account switch clears draft');
   assert.equal(window.document.getElementById('search').value,'','account switch clears private search text');
+  assert.equal(window.document.getElementById('visibility').value,'private','account switch restores safest privacy default');
   assert.equal(window.document.getElementById('refresh').disabled,true,'account switch disables refresh');
   assert.equal(window.document.getElementById('more').disabled,true,'account switch disables pagination');
   assert.equal(window.document.getElementById('memory-count').textContent,'0 / 4000 caracteres','account switch resets draft length indicator');
