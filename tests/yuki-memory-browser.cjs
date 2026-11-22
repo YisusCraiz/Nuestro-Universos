@@ -22,7 +22,9 @@ async function scenario(name,handle,expected){
  let insertGate=null;
  let updateGate=null;
  let switchedUser=false;
+ let preflightInvocations=0;
  const db={
+  functions:{invoke:async(name)=>{assert.equal(name,'yuki-memory-preflight');preflightInvocations++;return {data:{ok:true,approvedVisibleCount:1,excludedSurpriseCount:0,memoryTextReturned:false,geminiUsed:false},error:null};}},
   auth:{getUser:async()=>{if(failAuth)throw Error('Network unavailable');return {data:{user:handle===null?null:(switchedUser?{id:'different-account'}:user)},error:null};},onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
    if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle},error:null})})})};
@@ -47,8 +49,13 @@ async function scenario(name,handle,expected){
  assert.equal(window.document.getElementById('propose').disabled,handle!=='jesus',name+': proposal access');
  assert.equal(window.document.getElementById('refresh').disabled,handle!=='jesus',name+': refresh requires authorized profile');
  assert.equal(window.document.getElementById('more').disabled,handle!=='jesus',name+': pagination requires authorized profile');
+ assert.equal(window.document.getElementById('preflight').disabled,handle!=='jesus',name+': preflight requires authorized profile');
  if(handle==='jesus'){
   assert.equal(typeof authListener,'function','auth listener registered');
+  window.document.getElementById('preflight').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(preflightInvocations,1,'owner can call isolated authenticated preflight');
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se enviaron textos'),'preflight reports no model or memory-content transfer');
   const draft=window.document.getElementById('memory');
   draft.value='A memory awaiting individual approval';
   window.document.getElementById('propose').click();
@@ -417,6 +424,7 @@ async function scenario(name,handle,expected){
   assert.equal(window.document.getElementById('search').value,'','account switch clears private search text');
   assert.equal(window.document.getElementById('visibility').value,'private','account switch restores safest privacy default');
   assert.equal(window.document.getElementById('refresh').disabled,true,'account switch disables refresh');
+  assert.equal(window.document.getElementById('preflight').disabled,true,'account switch disables backend preflight');
   assert.equal(window.document.getElementById('more').disabled,true,'account switch disables pagination');
   assert.equal(window.document.getElementById('memory-count').textContent,'0 / 4000 caracteres','account switch resets draft length indicator');
   assert.equal(window.document.getElementById('load-info').textContent,'','account switch clears loaded-memory metadata');
@@ -430,10 +438,12 @@ async function scenario(name,handle,expected){
   const queriesAfterSignout=proposalsQueried;
   const actionsAfterSignout=mutations.length;
   window.document.getElementById('refresh').click();
+  window.document.getElementById('preflight').click();
   window.document.getElementById('more').click();
   window.document.getElementById('propose').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(proposalsQueried,queriesAfterSignout,'signed-out controls cannot query private memories');
+  assert.equal(preflightInvocations,1,'signed-out controls cannot invoke preflight');
   assert.equal(mutations.length,actionsAfterSignout,'signed-out controls cannot mutate memories');
  }
  assert.deepEqual(errors.map(e=>e.message),[],name+': browser script errors');
