@@ -7,8 +7,10 @@ const stop=source.indexOf('    const saved = await db.from(',start);
 assert.ok(start>=0&&stop>start,'Reviewed memory server block exists');
 const block=source.slice(start,stop)
  .replace('let reviewedMemories: string[] = [];','let reviewedMemories = [];')
- .replace('(value):value is string=>','(value)=>');
-const probe=new vm.Script('(async()=>{'+block+';return reviewedMemories;})()');
+ .replace('let sharedReviewedMemories: string[] = [];','let sharedReviewedMemories = [];')
+ .replace('(row:{memory_text?:unknown})=>','(row)=>')
+ .replaceAll('(value):value is string=>','(value)=>');
+const probe=new vm.Script('(async()=>{'+block+';return {own:reviewedMemories,shared:sharedReviewedMemories};})()');
 const rows=[
  {owner_id:'user-1',status:'approved',visibility:'private',memory_text:'PRIVATE APPROVED'},
  {owner_id:'user-1',status:'approved',visibility:'shared',memory_text:'SHARED APPROVED'},
@@ -16,9 +18,9 @@ const rows=[
  {owner_id:'user-1',status:'pending',visibility:'private',memory_text:'UNAPPROVED'},
  {owner_id:'user-2',status:'approved',visibility:'private',memory_text:'JULIE PRIVATE APPROVED'}
 ];
-async function run({consent=true,handle='jesus',owner='user-1',error=false,consentError=false}={}){
- let memoryReads=0,consentReads=0;
- const db={from(name){
+async function run({consent=true,handle='jesus',owner='user-1',error=false,consentError=false,sharedError=false,shareAi=true}={}){
+ let memoryReads=0,consentReads=0,sharedReads=0;
+ const db={rpc:async(name,args)=>{assert.equal(name,'yuki_shared_memories_for_me');assert.equal(args.p_for_ai,true);sharedReads++;return sharedError?{data:null,error:{message:'mock RPC error'}}:{data:shareAi?[{memory_text:'PARTNER EXPLICITLY SHARED'}]:[],error:null};},from(name){
   if(name==='yuki_memory_ai_consent'){
    consentReads++;
    return {select(fields){assert.equal(fields,'enabled');return {eq(field,value){assert.equal(field,'owner_id');assert.equal(value,owner);return {maybeSingle:async()=>consentError?{data:null,error:{message:'mock consent error'}}:{data:consent?{enabled:true}:null,error:null}};}};}};
@@ -38,28 +40,35 @@ async function run({consent=true,handle='jesus',owner='user-1',error=false,conse
  }};
  const sandbox={db,uid:owner,profile:{data:{handle}},json:(payload,status)=>({payload,status})};
  const result=await probe.runInNewContext(sandbox);
- return {result:Array.isArray(result)?Array.from(result):result,memoryReads,consentReads};
+ return {result:result&&result.own?{own:Array.from(result.own),shared:Array.from(result.shared)}:result,memoryReads,consentReads,sharedReads};
 }
 (async()=>{
  let out=await run();
- assert.deepEqual(out.result,['PRIVATE APPROVED','SHARED APPROVED'],'Only approved non-surprise owner memories reach Gemini');
+ assert.deepEqual(out.result.own,['PRIVATE APPROVED','SHARED APPROVED'],'Only approved non-surprise owner memories reach Gemini');
  assert.equal(out.memoryReads,1);
+ assert.deepEqual(out.result.shared,['PARTNER EXPLICITLY SHARED'],'Gemini sees only RPC-authorized partner memories');
  out=await run({consent:false});
- assert.deepEqual(out.result,[],'No owner consent means no memories');
+ assert.deepEqual(out.result.own,[],'No owner consent means no memories');
  assert.equal(out.memoryReads,0,'No consent blocks private memory queries');
+ assert.equal(out.sharedReads,0,'No consent also blocks all shared Gemini queries');
  out=await run({handle:'julisa',owner:'user-2'});
- assert.deepEqual(out.result,['JULIE PRIVATE APPROVED'],'Julie reads only her own independently approved memories');
+ assert.deepEqual(out.result.own,['JULIE PRIVATE APPROVED'],'Julie reads only her own independently approved memories');
  out=await run({handle:'julisa'});
- assert.deepEqual(out.result,['PRIVATE APPROVED','SHARED APPROVED'],'Mock owner id drives isolation, not hardcoded profile');
+ assert.deepEqual(out.result.own,['PRIVATE APPROVED','SHARED APPROVED'],'Mock owner id drives isolation, not hardcoded profile');
  out=await run({handle:'outsider'});
- assert.deepEqual(out.result,[],'Unsupported profiles cannot receive memories');
+ assert.deepEqual(out.result.own,[],'Unsupported profiles cannot receive memories');
+ out=await run({shareAi:false});
+ assert.deepEqual(out.result.shared,[],'Partner grant without AI permission is never included');
  rows[0].status='pending';
  out=await run();
- assert.deepEqual(out.result,['SHARED APPROVED'],'Revocation removes memories from next turn');
+ assert.deepEqual(out.result.own,['SHARED APPROVED'],'Revocation removes memories from next turn');
  rows[0].status='approved';
  out=await run({error:true});
  assert.equal(out.result.status,503);
  assert.equal(out.result.payload.code,'reviewed_memory_unavailable');
+ out=await run({sharedError:true});
+ assert.equal(out.result.status,503,'Shared RPC failures block generation');
+ assert.equal(out.result.payload.code,'shared_memory_unavailable');
  out=await run({consentError:true});
  assert.equal(out.result.status,503);
  assert.equal(out.result.payload.code,'memory_consent_unavailable');

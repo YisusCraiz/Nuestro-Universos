@@ -11,5 +11,7 @@ assert.ok(guarded.includes('if(memoryConsentError)return json'),'Consent query f
 assert.ok(guarded.includes("typeof value==='string' && value.trim().length>0"),'Blank memories filtered');
 assert.ok(guarded.includes('value.slice(0,4000)'),'Bound text size');
 assert.ok(!guarded.includes("admin.from('yuki_memory_proposals')"),'RLS-scoped client required');
-assert.ok(source.includes('reviewedMemories,visibleActivities'),'Only reviewed context included separately');
+assert.ok(guarded.includes("db.rpc('yuki_shared_memories_for_me',{p_for_ai:true})"),'Partner memories must use a recipient-scoped AI-only RPC');
+assert.ok(guarded.includes("if(granted.error)return json({code:'shared_memory_unavailable'},503)"),'Shared memory failures must fail closed');
+assert.ok(source.includes('reviewedMemories,sharedReviewedMemories,visibleActivities'),'Own and recipient-granted memories are separated');
 console.log('PASS: Gemini uses only independently consented approved memories from current profile');

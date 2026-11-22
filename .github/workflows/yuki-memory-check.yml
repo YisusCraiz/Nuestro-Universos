@@ -3,6 +3,9 @@ on:
   pull_request:
     paths:
       - 'yuki-memory.html'
+      - 'yuki-memory-sharing.html'
+      - 'tests/yuki-memory-sharing.cjs'
+      - 'tests/yuki-memory-sharing-browser.cjs'
       - 'jj-yuki.js'
       - 'tests/yuki-memory-browser.cjs'
       - 'tests/yuki-memory-gemini.cjs'
@@ -16,6 +19,7 @@ on:
   push:
     branches:
       - feature/yuki-memory-approval
+      - feature/yuki-memory-sharing
     paths:
       - 'yuki-memory.html'
       - 'tests/yuki-memory-browser.cjs'
@@ -40,6 +44,10 @@ jobs:
         run: |
           node --check jj-yuki.js
           node -e "const s=require('fs').readFileSync('jj-yuki.js','utf8');if(!/if\\(owner\\(\\)\\|\\|sectionAllowed\\('yuki'\\)\\)\\s*\\{[^}]*memory\\.href='yuki-memory\\.html'/.test(s))process.exit(1)"
+      - name: Check explicit sharing permissions and panel
+        run: node tests/yuki-memory-sharing.cjs
+      - name: Exercise Yuki private sharing panel and revocation
+        run: node tests/yuki-memory-sharing-browser.cjs
       - name: Check Gemini approved-memory gate
         run: node tests/yuki-memory-gemini.cjs
       - name: Exercise backend reviewed-memory runtime scenarios
