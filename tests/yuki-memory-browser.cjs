@@ -18,6 +18,7 @@ async function scenario(name,handle,expected){
  let mutationRows=true;
  let failAuth=false;
  let failMemoryLoad=false;
+ let throwMemoryLoad=false;
  let insertGate=null;
  let switchedUser=false;
  const db={
@@ -27,7 +28,7 @@ async function scenario(name,handle,expected){
    if(table==='yuki_memory_proposals'){
     proposalsQueried++;
     return {
-     select:()=>({eq:()=>({order:()=>({limit:async()=>failMemoryLoad?{data:null,error:{message:'Mock network error'}}:{data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null}})})}),
+     select:()=>({eq:()=>({order:()=>({limit:async()=>{if(throwMemoryLoad)throw Error('Mock disconnected network');return failMemoryLoad?{data:null,error:{message:'Mock network error'}}:{data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null};}})})}),
      insert:async row=>{if(insertGate)await insertGate;inserted.push(row);return {error:null};},
      update:row=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'update',row});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);if(matches)Object.assign(inserted[0],row);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;},
      delete:()=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'delete'});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;}
@@ -65,6 +66,14 @@ async function scenario(name,handle,expected){
   window.document.getElementById('refresh').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.ok(window.document.getElementById('notice').textContent.includes('actualizados'),'successful refresh confirms completion');
+  throwMemoryLoad=true;
+  window.document.getElementById('refresh').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se pudo cargar'),'thrown network exception is handled without false success');
+  assert.equal(window.document.getElementById('refresh').disabled,false,'refresh remains usable after temporary network error');
+  throwMemoryLoad=false;
+  window.document.getElementById('refresh').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
   const cancelledEdit=window.document.querySelector('#items article textarea');
   cancelledEdit.value='Unsaved content must survive cancelled approval';
   const priorCancelledQueries=proposalsQueried;
