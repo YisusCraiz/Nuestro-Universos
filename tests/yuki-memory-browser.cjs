@@ -42,6 +42,8 @@ async function scenario(name,handle,expected){
  assert.ok(notice.includes(expected),name+': unexpected notice '+notice);
  assert.equal(proposalsQueried,handle==='jesus'?1:0,name+': unauthorized memory query');
  assert.equal(window.document.getElementById('propose').disabled,handle!=='jesus',name+': proposal access');
+ assert.equal(window.document.getElementById('refresh').disabled,handle!=='jesus',name+': refresh requires authorized profile');
+ assert.equal(window.document.getElementById('more').disabled,handle!=='jesus',name+': pagination requires authorized profile');
  if(handle==='jesus'){
   assert.equal(typeof authListener,'function','auth listener registered');
   const draft=window.document.getElementById('memory');
