@@ -268,6 +268,19 @@ async function scenario(name,handle,expected){
   assert.ok(proposalsQueried>queriesBeforeMore,'confirmed pagination loads more memories');
   assert.ok(window.document.getElementById('load-info').textContent.includes('102 recuerdos'),'pagination displays loaded count');
   inserted.splice(1);
+  // Simulate a guarded update conflict followed by a failed list refresh.
+  failMemoryLoad=true;
+  mutationRows=false;
+  const beforeFailedConflict=mutations.length;
+  const failedConflictAction=[...window.document.querySelectorAll('#items article button')].find(x=>x.textContent==='Volver a pendiente');
+  failedConflictAction.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,beforeFailedConflict+1,'conflict update was attempted');
+  assert.ok(window.document.getElementById('notice').textContent.includes('No se pudo cargar'),'failed conflict reload reports load error');
+  assert.ok(!window.document.getElementById('notice').textContent.includes('Se cargó su versión actual'),'failed conflict reload cannot report success');
+  failMemoryLoad=false;
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
   window.document.getElementById('search').value='Sensitive private search';
   draft.value='PRIVATE DRAFT';
   switchedUser=true;
