@@ -438,20 +438,7 @@ async function scenario(name,handle,expected){
   assert.equal(window.document.getElementById('propose').disabled,true,'account switch locks proposal creation');
   switchedUser=false;
 
-  // A pending preflight response must not announce success after signout.
-  let finishPreflight;
-  preflightGate=new Promise(resolve=>{finishPreflight=resolve;});
-  const earlierPreflightInvocations=preflightInvocations;
-  window.document.getElementById('preflight').click();
-  await new Promise(resolve=>setTimeout(resolve,10));
-  assert.equal(preflightInvocations,earlierPreflightInvocations+1,'preflight request started before signout');
   authListener('SIGNED_OUT',null);
-  finishPreflight();
-  await new Promise(resolve=>setTimeout(resolve,30));
-  assert.equal(window.document.getElementById('preflight').disabled,true,'in-flight preflight does not reactivate after signout');
-  assert.ok(!window.document.getElementById('notice').textContent.includes('Prueba segura correcta'),'stale preflight response does not reveal previous session result');
-  preflightGate=null;
-
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
   assert.equal(window.document.getElementById('propose').disabled,true,'submission disabled on sign-out');
   assert.equal(window.document.getElementById('items').children.length,0,'items cleared on sign-out');
@@ -463,15 +450,52 @@ async function scenario(name,handle,expected){
   window.document.getElementById('propose').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(proposalsQueried,queriesAfterSignout,'signed-out controls cannot query private memories');
-  assert.equal(preflightInvocations,earlierPreflightInvocations+1,'signed-out controls cannot invoke preflight');
+  assert.equal(preflightInvocations,2,'signed-out controls cannot invoke preflight');
   assert.equal(mutations.length,actionsAfterSignout,'signed-out controls cannot mutate memories');
  }
  assert.deepEqual(errors.map(e=>e.message),[],name+': browser script errors');
  window.close();
  console.log('PASS',name);
 }
+async function preflightSignoutScenario(){
+ const dom=new JSDOM(html,{url:'https://example.test/yuki-memory.html',runScripts:'outside-only'});
+ const {window}=dom;
+ const user={id:'test-owner'};
+ let releaseRequest;
+ let listener=null;
+ let queries=0;
+ const delayed=new Promise(resolve=>{releaseRequest=resolve;});
+ window.UNIVERSE_CONFIG={supabaseUrl:'https://example.supabase.co',supabasePublishableKey:'public-test-key'};
+ const db={
+  auth:{getUser:async()=>({data:{user},error:null}),onAuthStateChange:cb=>{listener=cb;return {data:{subscription:{unsubscribe(){}}}}}},
+  functions:{invoke:async()=>{await delayed;return {data:{ok:true,approvedVisibleCount:1,excludedSurpriseCount:0,memoryTextReturned:false,geminiUsed:false},error:null};}},
+  from(table){
+   if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle:'jesus'},error:null})})})};
+   if(table==='yuki_memory_proposals')return {select:()=>({eq:()=>({order:()=>({limit:async()=>{queries++;return {data:[],error:null};}})})})};
+   throw Error('Unexpected table '+table);
+  }
+ };
+ window.supabase={createClient:()=>db};
+ window.eval(inline);
+ await new Promise(resolve=>setTimeout(resolve,30));
+ assert.equal(typeof listener,'function','session listener installed');
+ const button=window.document.getElementById('preflight');
+ button.click();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(button.disabled,true,'preflight locked while pending');
+ listener('SIGNED_OUT',null);
+ releaseRequest();
+ await new Promise(resolve=>setTimeout(resolve,40));
+ assert.equal(button.disabled,true,'preflight never re-enables after signout');
+ assert.equal(window.document.getElementById('items').children.length,0,'signed-out page remains cleared');
+ assert.ok(!window.document.getElementById('notice').textContent.includes('Prueba segura correcta'),'stale result cannot show previous session counts');
+ assert.equal(queries,1,'signout avoids additional memory loading');
+ window.close();
+ console.log('PASS preflight signout during delayed response');
+}
 (async()=>{
  await scenario('Unauthenticated',null,'Inicia sesión');
  await scenario('Julie cannot access Yisus panel','julisa','reservado para Yisus');
  await scenario('Yisus can load empty memory panel','jesus','Tus recuerdos');
+ await preflightSignoutScenario();
 })().catch(e=>{console.error(e);process.exitCode=1;});
