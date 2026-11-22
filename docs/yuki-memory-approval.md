@@ -80,3 +80,10 @@ La tabla `public.yuki_memory_proposals` mantiene RLS, cuatro políticas y el tri
 
 ### Verificación adicional: ensayo de integración SQL (22 noviembre 2026)
 Se ejecutó directamente en el proyecto Supabase conectado `supabase/yuki-memory-integration-rehearsal.sql` con perfiles `jesus` y `julisa` simulados mediante identidad SQL, y finalizó sin excepciones. La selección de recuerdos aprobados y no sorpresas devolvió solo los registros sintéticos esperados; revocar o editar eliminó los registros de la selección aprobada; la eliminación se comprobó; Julie no pudo leer ni aprobar recuerdos de Yisus. El `ROLLBACK` eliminó los cuatro recuerdos ficticios. **Esta evidencia no demuestra una sesión real de navegador, transferencia autorizada a Gemini ni protección contra todo tipo de filtraciones del modelo.**
+
+## Preflight aislado del backend (22 noviembre 2026)
+- Se desplegó la función **separada** `yuki-memory-preflight` en Supabase; `yuki-chat` productivo no fue reemplazado. La función tiene `verify_jwt=true`, verifica el JWT y el perfil `jesus`, y consulta la tabla con RLS del usuario, sin `service_role`.
+- Solo devuelve **conteos** de recuerdos aprobados consultables y sorpresas excluidas; no obtiene ni devuelve `memory_text`, ni contacta con Gemini. Incluye encabezado `Cache-Control: no-store`.
+- El panel de la rama incluye el botón **Probar acceso seguro**, que utiliza la sesión de Supabase existente. El resultado no demuestra todavía el comportamiento de Gemini ni la ausencia de filtraciones en otros apartados.
+- La función aparece como `ACTIVE` en la API de Supabase y se confirmó su código desplegado. Se añadieron comprobaciones automatizadas del panel y una prueba estática de los controles de la función. **Aún hay que invocarla con tokens reales de ambos perfiles** antes de considerarla validada de extremo a extremo.
+- No publicar ni fusionar la nueva interfaz antes de revisar sus resultados y el consentimiento independiente para Gemini.
