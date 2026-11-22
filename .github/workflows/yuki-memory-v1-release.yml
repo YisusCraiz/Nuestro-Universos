@@ -1,0 +1,68 @@
+name: Publish Yuki Memory 1.0.0
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/yuki-memory-v1-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm release files and secrets are not embedded
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const assert=require('node:assert/strict');
+          for(const file of [
+            'yuki-memory.html','yuki-memory-sharing.html','jj-yuki.js',
+            'supabase/functions/yuki-chat/index.ts','supabase/yuki-memory-sharing.sql',
+            'supabase/yuki-memory-ai-consent.sql','docs/yuki-memory-v1.0.0.md'
+          ])assert.ok(fs.existsSync(file),'Missing '+file);
+          const chat=fs.readFileSync('supabase/functions/yuki-chat/index.ts','utf8');
+          const sql=fs.readFileSync('supabase/yuki-memory-sharing.sql','utf8');
+          const sharing=fs.readFileSync('yuki-memory-sharing.html','utf8');
+          assert.ok(chat.includes("db.rpc('yuki_shared_memories_for_me',{p_for_ai:true})"));
+          assert.ok(chat.includes('memoryConsent?.enabled===true'));
+          assert.ok(sql.includes('yuki_memory_revoke_grants_on_change'));
+          assert.ok(sharing.includes('Revocar acceso / Revoke'));
+          assert.ok(!chat.includes('sb_secret_'),'No server keys in source');
+          console.log('Release files and memory privacy gates verified');
+          NODE
+      - name: Install DOM test dependency
+        run: npm install --no-save --ignore-scripts --no-audit --no-fund jsdom@26.1.0
+      - name: Run full Yuki memory checks
+        run: |
+          set -e
+          node --check jj-yuki.js
+          node tests/yuki-memory-browser.cjs
+          node tests/yuki-memory-sharing-browser.cjs
+          node tests/yuki-memory-sharing.cjs
+          node tests/yuki-memory-gemini.cjs
+          node tests/yuki-memory-edge-runtime.cjs
+          node tests/yuki-memory-preflight.cjs
+          node tests/yuki-memory-preflight-runtime.cjs
+      - name: Create version tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=yuki-memory-v1.0.0
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release already exists: $TAG"
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "Yuki Memoria 1.0.0 · Nuestro Universo" \
+            --notes-file docs/yuki-memory-v1.0.0.md \
+            --latest=false
+          gh release view "$TAG" --json name,url,tagName,isDraft
