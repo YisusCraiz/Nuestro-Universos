@@ -26,7 +26,8 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter'),search=document.getElementById('search');
  const memoryInput=document.getElementById('memory');
  memoryInput.addEventListener('input',()=>{document.getElementById('memory-count').textContent=memoryInput.value.length+' / 4000 caracteres';});
- search.addEventListener('input',()=>render(cached));
+ let appliedSearch='';let appliedFilter='all';
+ search.addEventListener('input',()=>{if(hasUnsavedEdits()&&!confirm('Cambiar la búsqueda descartará las ediciones sin guardar. ¿Continuar?')){search.value=appliedSearch;return;}appliedSearch=search.value;render(cached);});
  let cached=[];
  let pageSize=100;
  let loadRevision=0;
@@ -43,10 +44,10 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   catch(e){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}
   if(!sessionActive||error||!currentUser||currentUser.id!==user.id){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('La sesión ya no corresponde a Yisus.');}
  };
- filter.onchange=()=>render(cached);
+ filter.onchange=()=>{if(hasUnsavedEdits()&&!confirm('Cambiar el filtro descartará las ediciones sin guardar. ¿Continuar?')){filter.value=appliedFilter;return;}appliedFilter=filter.value;render(cached);};
  const say=(s)=>notice.textContent=s;
  // Do not retain sensitive draft text in session history when leaving the panel.
- const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];memoryInput.value='';document.getElementById('visibility').value='private';document.getElementById('memory-count').textContent='0 / 4000 caracteres';search.value='';filter.value='all';pageSize=100;more.hidden=true;more.disabled=true;refresh.disabled=true;};
+ const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];memoryInput.value='';document.getElementById('visibility').value='private';document.getElementById('memory-count').textContent='0 / 4000 caracteres';search.value='';filter.value='all';appliedSearch='';appliedFilter='all';pageSize=100;more.hidden=true;more.disabled=true;refresh.disabled=true;};
  // No memory actions are available until both identity and profile checks succeed.
  document.getElementById('propose').disabled=true;
  refresh.disabled=true;
