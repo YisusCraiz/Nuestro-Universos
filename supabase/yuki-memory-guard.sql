@@ -9,6 +9,13 @@ begin
  if new.created_at is distinct from old.created_at then
   raise exception 'Memory creation time cannot be modified';
  end if;
+ -- A pending/rejected memory must be approved exactly as reviewed.
+ -- A client cannot alter its contents or privacy in the same request that approves it.
+ if old.status <> 'approved' and new.status = 'approved'
+    and (new.memory_text is distinct from old.memory_text
+      or new.visibility is distinct from old.visibility) then
+  raise exception 'Review the exact memory text and privacy before approving';
+ end if;
  if old.status = 'approved' and
    (new.memory_text is distinct from old.memory_text or new.visibility is distinct from old.visibility) then
   new.status := 'pending';
