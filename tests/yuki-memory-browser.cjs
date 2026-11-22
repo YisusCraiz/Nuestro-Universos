@@ -23,8 +23,10 @@ async function scenario(name,handle,expected){
  let updateGate=null;
  let switchedUser=false;
  let preflightInvocations=0;
+ let preflightGate=null;
+ let preflightCountOverride=null;
  const db={
-  functions:{invoke:async(name)=>{assert.equal(name,'yuki-memory-preflight');preflightInvocations++;return {data:{ok:true,approvedVisibleCount:1,excludedSurpriseCount:0,memoryTextReturned:false,geminiUsed:false},error:null};}},
+  functions:{invoke:async(name)=>{assert.equal(name,'yuki-memory-preflight');preflightInvocations++;if(preflightGate)await preflightGate;return {data:{ok:true,approvedVisibleCount:preflightCountOverride??1,excludedSurpriseCount:0,memoryTextReturned:false,geminiUsed:false},error:null};}},
   auth:{getUser:async()=>{if(failAuth)throw Error('Network unavailable');return {data:{user:handle===null?null:(switchedUser?{id:'different-account'}:user)},error:null};},onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
    if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle},error:null})})})};
@@ -56,6 +58,11 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(preflightInvocations,1,'owner can call isolated authenticated preflight');
   assert.ok(window.document.getElementById('notice').textContent.includes('No se enviaron textos'),'preflight reports no model or memory-content transfer');
+  preflightCountOverride=-1;
+  window.document.getElementById('preflight').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.ok(window.document.getElementById('notice').textContent.includes('no se completó'),'invalid negative preflight count is rejected');
+  preflightCountOverride=null;
   const draft=window.document.getElementById('memory');
   draft.value='A memory awaiting individual approval';
   window.document.getElementById('propose').click();
@@ -431,7 +438,20 @@ async function scenario(name,handle,expected){
   assert.equal(window.document.getElementById('propose').disabled,true,'account switch locks proposal creation');
   switchedUser=false;
 
+  // A pending preflight response must not announce success after signout.
+  let finishPreflight;
+  preflightGate=new Promise(resolve=>{finishPreflight=resolve;});
+  const earlierPreflightInvocations=preflightInvocations;
+  window.document.getElementById('preflight').click();
+  await new Promise(resolve=>setTimeout(resolve,10));
+  assert.equal(preflightInvocations,earlierPreflightInvocations+1,'preflight request started before signout');
   authListener('SIGNED_OUT',null);
+  finishPreflight();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(window.document.getElementById('preflight').disabled,true,'in-flight preflight does not reactivate after signout');
+  assert.ok(!window.document.getElementById('notice').textContent.includes('Prueba segura correcta'),'stale preflight response does not reveal previous session result');
+  preflightGate=null;
+
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
   assert.equal(window.document.getElementById('propose').disabled,true,'submission disabled on sign-out');
   assert.equal(window.document.getElementById('items').children.length,0,'items cleared on sign-out');
@@ -443,7 +463,7 @@ async function scenario(name,handle,expected){
   window.document.getElementById('propose').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(proposalsQueried,queriesAfterSignout,'signed-out controls cannot query private memories');
-  assert.equal(preflightInvocations,1,'signed-out controls cannot invoke preflight');
+  assert.equal(preflightInvocations,earlierPreflightInvocations+1,'signed-out controls cannot invoke preflight');
   assert.equal(mutations.length,actionsAfterSignout,'signed-out controls cannot mutate memories');
  }
  assert.deepEqual(errors.map(e=>e.message),[],name+': browser script errors');
