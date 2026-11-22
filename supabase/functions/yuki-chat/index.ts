@@ -43,10 +43,12 @@ Deno.serve(async req => {
     // Read approved proposals fresh for every new turn; never cache them across requests.
     // An approval revoked before this query must not appear in the next Gemini prompt.
     if (Deno.env.get('YUKI_REVIEWED_MEMORY_AI_ENABLED') === 'true' && profile.data.handle === 'jesus') {
+      // Surprise memories are withheld even from Gemini context until a separate reveal mechanism exists.
       const reviewed = await db.from('yuki_memory_proposals')
         .select('memory_text')
         .eq('owner_id',uid)
         .eq('status','approved')
+        .in('visibility',['private','shared'])
         .order('approved_at',{ascending:false})
         .limit(20);
       if (reviewed.error) return json({code:'reviewed_memory_unavailable'},503);
