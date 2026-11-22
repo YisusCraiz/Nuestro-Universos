@@ -15,10 +15,10 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
 <script src="config.js"></script><script src="assets/supabase.js"></script></head>
 <body><a href="./">← Nuestro Universo</a><h1>✧ Memoria de Yuki</h1>
 <p>Los recuerdos no se sincronizan automáticamente desde ChatGPT. Pega únicamente el recuerdo que deseas proponer. <strong>Se guardará como propuesta pendiente y no se utilizará hasta que la apruebes individualmente.</strong></p>
-<p class="muted">Esta página requiere tu sesión de Supabase y verifica el perfil de Yisus. Nadie más puede consultar tus propuestas. La conexión con Gemini se activará después de completar las pruebas de privacidad.</p>
+<p class="muted">Esta página requiere tu sesión de Supabase y verifica tu perfil: Yisus y Julie administran memorias separadas. Ninguno puede consultar las propuestas del otro. La conexión con Gemini se activará después de completar las pruebas de privacidad.</p>
 <section class="panel"><h2>Nuevo recuerdo pendiente</h2>
 <label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
-<small id="memory-count">0 / 4000 caracteres</small><label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
+<small id="memory-count">0 / 4000 caracteres</small><label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para tu pareja)</option><option value="surprise">Sorpresa protegida</option></select>
 <button id="propose">Guardar para revisar</button></section>
 <section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><small id="load-info" class="muted" aria-live="polite"></small><div class="toolbar"><label for="search">Buscar</label><input id="search" type="search" placeholder="Buscar en mis recuerdos" autocomplete="off" aria-label="Buscar recuerdos"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><button id="refresh" class="secondary" type="button">Actualizar recuerdos</button><button id="preflight" class="secondary" type="button">Probar acceso seguro</button><p id="notice" role="status" aria-live="polite"></p><div id="items"></div><button id="more" class="secondary" type="button" hidden>Cargar más recuerdos</button></section>
 <script>
@@ -58,7 +58,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   let currentUser,error;
   try{({data:{user:currentUser},error}=await db.auth.getUser());}
   catch(e){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('No se pudo verificar la sesión. Vuelve a iniciar sesión.');}
-  if(!sessionActive||error||!currentUser||currentUser.id!==user.id){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('La sesión ya no corresponde a Yisus.');}
+  if(!sessionActive||error||!currentUser||currentUser.id!==user.id){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();throw Error('La sesión ya no corresponde al perfil autorizado.');}
  };
  filter.onchange=()=>{if(hasUnsavedEdits()&&!confirm('Cambiar el filtro descartará las ediciones sin guardar. ¿Continuar?')){filter.value=appliedFilter;return;}appliedFilter=filter.value;render(cached);};
  const say=(s)=>notice.textContent=s;
@@ -74,7 +74,8 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  const {data:{user},error:authError}=await db.auth.getUser();
  if(authError||!user){say('Inicia sesión en Nuestro Universo antes de abrir esta página.');document.getElementById('propose').disabled=true;return;}
  const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',user.id).single();
- if(profileError||profile?.handle!=='jesus'){say('Este panel de importación está reservado para Yisus.');document.getElementById('propose').disabled=true;return;}
+ if(profileError||!['jesus','julisa'].includes(profile?.handle)){say('Este panel está reservado para Yisus y Julie.');document.getElementById('propose').disabled=true;return;}
+ document.querySelector('h1').textContent='✧ Memoria de Yuki · '+(profile.handle==='jesus'?'Yisus':'Julie');
  document.getElementById('propose').disabled=false;
  refresh.disabled=false;
  more.disabled=false;
@@ -114,7 +115,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
    heading.append(stamp);
    if(entry.visibility==='surprise'){const confidential=document.createElement('small');confidential.textContent=' · Sorpresa protegida: excluida de Gemini';heading.append(confidential);}
    edit.value=entry.memory_text;edit.maxLength=4000;edit.setAttribute('aria-label','Texto del recuerdo '+(entry.status==='pending'?'pendiente':entry.status==='approved'?'aprobado':'rechazado'));level.setAttribute('aria-label','Privacidad del recuerdo');
-   for(const [value,label] of [['private','Solo yo'],['shared','Compartido (sin acceso de Julie aún)'],['surprise','Sorpresa protegida']]){
+   for(const [value,label] of [['private','Solo yo'],['shared','Compartido (sin acceso de tu pareja aún)'],['surprise','Sorpresa protegida']]){
     const opt=document.createElement('option');opt.value=value;opt.textContent=label;level.append(opt);
    }
    level.value=entry.visibility;
@@ -133,7 +134,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
     if(entry.status==='approved'&&!confirm('Modificar un recuerdo aprobado revocará su aprobación hasta que lo revises otra vez. ¿Continuar?'))return false;
     await update(entry.status);
    });
-   if(entry.status==='pending')action('Aprobar','',async()=>{if(edit.value.trim()!==entry.memory_text||level.value!==entry.visibility)throw Error('Primero guarda los cambios y revisa el recuerdo antes de aprobarlo.');if(!confirm('¿Aprobar individualmente este recuerdo? Solo se guardará en tu cuenta; Gemini y Julie aún no tendrán acceso.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'approved'}).eq('id',entry.id).eq('owner_id',user.id).eq('status','pending').eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('No se aprobó el recuerdo: puede haber cambiado desde la última carga.');});
+   if(entry.status==='pending')action('Aprobar','',async()=>{if(edit.value.trim()!==entry.memory_text||level.value!==entry.visibility)throw Error('Primero guarda los cambios y revisa el recuerdo antes de aprobarlo.');if(!confirm('¿Aprobar individualmente este recuerdo? Solo se guardará en tu cuenta; Gemini y tu pareja aún no tendrán acceso.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'approved'}).eq('id',entry.id).eq('owner_id',user.id).eq('status','pending').eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('No se aprobó el recuerdo: puede haber cambiado desde la última carga.');});
    if(entry.status==='approved')action('Revocar aprobación','secondary',async()=>{if(!confirm('¿Revocar la aprobación? Este recuerdo dejará de estar disponible para futuras consultas de Gemini.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'pending'}).eq('id',entry.id).eq('owner_id',user.id).eq('status','approved').eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('No se pudo revocar la aprobación: el recuerdo pudo haber cambiado desde la última carga.');});
    if(entry.status!=='rejected')action('Rechazar','secondary',async()=>{if(!confirm('¿Rechazar este recuerdo? No estará disponible como recuerdo aprobado.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'rejected'}).eq('id',entry.id).eq('owner_id',user.id).eq('status',entry.status).eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('El recuerdo no se actualizó. Puede haber cambiado desde la última carga.');});
    if(entry.status==='rejected')action('Volver a pendiente','secondary',async()=>{if(!confirm('¿Devolver este recuerdo a pendiente para revisarlo otra vez? No se aprobará automáticamente.'))return false;const {data:updated,error}=await db.from('yuki_memory_proposals').update({status:'pending'}).eq('id',entry.id).eq('owner_id',user.id).eq('status','rejected').eq('memory_text',entry.memory_text).eq('visibility',entry.visibility).select('id');if(error)throw error;if(!updated?.length)throw Error('El recuerdo no se actualizó. Puede haber cambiado desde la última carga.');});
