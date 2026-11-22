@@ -47,7 +47,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
    const {data,error}=await db.functions.invoke('yuki-memory-preflight',{body:{}});
    if(!sessionActive)return;
    await requireSession();
-   if(error||data?.ok!==true||data?.memoryTextReturned!==false||data?.geminiUsed!==false||!Number.isInteger(data?.approvedVisibleCount)||!Number.isInteger(data?.excludedSurpriseCount))throw Error('No se pudo verificar el aislamiento del backend.');
+   if(error||data?.ok!==true||data?.memoryTextReturned!==false||data?.geminiUsed!==false||!Number.isSafeInteger(data?.approvedVisibleCount)||data.approvedVisibleCount<0||!Number.isSafeInteger(data?.excludedSurpriseCount)||data.excludedSurpriseCount<0)throw Error('No se pudo verificar el aislamiento del backend.');
    say('Prueba segura correcta: '+data.approvedVisibleCount+' recuerdos aprobados consultables; '+data.excludedSurpriseCount+' sorpresas excluidas. No se enviaron textos ni se utilizó Gemini.');
   }catch(e){if(sessionActive)say('La prueba segura no se completó: '+e.message);}
   finally{if(sessionActive)preflight.disabled=false;}
