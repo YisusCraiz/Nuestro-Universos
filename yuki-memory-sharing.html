@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer">
+<title>Yuki · Compartir recuerdos</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#171322;color:#f9f1ff}
+body{max-width:830px;margin:0 auto;padding:18px}h1{color:#f5d5ff}p{line-height:1.5}a{color:#e2b9ff}
+.panel{background:#292039;border:1px solid #58456a;border-radius:18px;padding:18px;margin:16px 0}
+article{border-top:1px solid #58456a;padding:14px 0;overflow-wrap:anywhere}
+button{font:inherit;border:0;border-radius:10px;padding:11px;background:#9d79d7;color:#161021;cursor:pointer;margin:5px 6px 5px 0;min-height:44px}
+button.secondary{background:#423650;color:white}button.danger{background:#a94564;color:white}button:disabled{opacity:.5;cursor:wait}
+button:focus-visible,a:focus-visible{outline:3px solid #f0baff;outline-offset:2px}
+.muted,small{color:#c9bdd7}#notice{min-height:1.5em}
+@media(max-width:520px){body{padding:10px}.panel{padding:12px}}
+</style>
+<script src="config.js"></script><script src="assets/supabase.js"></script></head>
+<body>
+<a href="yuki-memory.html">← Volver a mi memoria / Back to my memories</a>
+<h1>✧ Compartir recuerdos / Shared memories</h1>
+<p>Solo el propietario puede conceder acceso a un recuerdo aprobado. Incluso los recuerdos privados pueden compartirse <strong>individualmente</strong>, pero nunca las sorpresas. Puedes revocar el permiso cuando quieras.</p>
+<p class="muted">English: Only the owner can explicitly grant access to an approved memory, including a private one. Surprise memories stay hidden. Access can be revoked. Allowing Yuki to use it in your partner’s chat requires a separate permission.</p>
+<p id="notice" role="status" aria-live="polite"></p>
+<button id="refresh" class="secondary" disabled>Actualizar / Refresh</button>
+<section class="panel"><h2>Mis recuerdos autorizables / Memories I can share</h2><div id="owned"></div></section>
+<section class="panel"><h2>Compartidos conmigo / Shared with me</h2><p class="muted">Los siguientes recuerdos fueron autorizados por su dueño; no podrás editarlos. Solo se usarán con Gemini si ambos permisos están activos.</p><div id="received"></div></section>
+<script>
+(async()=>{
+ const notice=document.getElementById('notice'),owned=document.getElementById('owned'),received=document.getElementById('received'),refresh=document.getElementById('refresh');
+ const say=s=>notice.textContent=s;
+ const config=window.UNIVERSE_CONFIG;
+ if(!config?.supabaseUrl||!config?.supabasePublishableKey||!window.supabase){say('No se pudo conectar a Supabase.');return;}
+ const db=window.supabase.createClient(config.supabaseUrl,config.supabasePublishableKey);
+ let active=true,user=null,partnerId=null,revision=0,loading=false;
+ const clear=()=>{revision++;active=false;owned.replaceChildren();received.replaceChildren();partnerId=null;refresh.disabled=true;};
+ const requireSession=async()=>{
+  if(!active||!user)throw Error('La sesión no está activa.');
+  let result;
+  try{result=await db.auth.getUser();}catch{clear();throw Error('No se pudo verificar la sesión.');}
+  if(result.error||result.data?.user?.id!==user.id){clear();throw Error('La sesión cambió.');}
+ };
+ try{
+  const auth=await db.auth.getUser();
+  if(auth.error||!auth.data?.user){say('Inicia sesión primero en Nuestro Universo.');return;}
+  user=auth.data.user;
+  const prof=await db.from('profiles').select('handle').eq('id',user.id).single();
+  if(prof.error||!['jesus','julisa'].includes(prof.data?.handle)){say('Solo Yisus o Julie pueden compartir recuerdos.');return;}
+  const partner=await db.rpc('yuki_partner_for_sharing');
+  if(partner.error||!partner.data){say('No se pudo verificar a la pareja destinataria.');return;}
+  partnerId=partner.data;
+  db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||session?.user&&session.user.id!==user.id){clear();say('La sesión cambió. Vuelve a iniciar sesión.');}});
+  refresh.disabled=false;
+ }catch{say('No se pudo verificar la sesión.');return;}
+ const confirmAction=(prompt)=>window.confirm(prompt);
+ const button=(label,cls,onClick)=>{
+  const b=document.createElement('button');b.type='button';b.textContent=label;b.className=cls||'';
+  b.onclick=async()=>{if(!active||b.disabled||loading)return;loading=true;b.disabled=true;refresh.disabled=true;
+   try{await requireSession();await onClick();if(active)await load();}
+   catch(e){if(active)say('No se pudo completar la operación: '+e.message);}
+   finally{loading=false;if(active)refresh.disabled=false;}
+  };return b;
+ };
+ const load=async()=>{
+  const current=++revision;
+  await requireSession();
+  const [memories,grants,shared]=await Promise.all([
+   db.from('yuki_memory_proposals').select('id,memory_text,visibility,status').eq('owner_id',user.id).eq('status','approved').in('visibility',['private','shared']).order('created_at',{ascending:false}).limit(100),
+   db.from('yuki_memory_grants').select('memory_id,allow_ai').eq('owner_id',user.id),
+   db.rpc('yuki_shared_memories_for_me',{p_for_ai:false})
+  ]);
+  if(!active||current!==revision)return;
+  if(memories.error||grants.error||shared.error||!Array.isArray(memories.data)||!Array.isArray(grants.data)||!Array.isArray(shared.data))throw Error('No se pudieron recuperar los permisos. No se realizaron cambios.');
+  owned.replaceChildren();received.replaceChildren();
+  const byMemory=new Map(grants.data.map(g=>[g.memory_id,g]));
+  if(memories.data.length===0)owned.textContent='Todavía no tienes recuerdos aprobados para compartir.';
+  for(const item of memories.data){
+   const card=document.createElement('article'),label=document.createElement('p'),info=document.createElement('small');
+   label.textContent=item.memory_text;
+   const grant=byMemory.get(item.id);
+   info.textContent=(item.visibility==='private'?'Privado / Private':'Compartido / Shared')+' · '+(grant?'Acceso concedido'+(grant.allow_ai?' · Gemini autorizado':' · Gemini no autorizado'):'Sin acceso concedido');
+   card.append(label,info,document.createElement('div'));
+   const actions=card.lastChild;
+   if(!grant){
+    actions.append(button('Compartir con mi pareja / Share','',async()=>{
+     if(!confirmAction('¿Permitir que tu pareja lea este recuerdo exacto? No autoriza a Gemini.'))return;
+     const {error}=await db.from('yuki_memory_grants').insert({memory_id:item.id,owner_id:user.id,recipient_id:partnerId,allow_ai:false});
+     if(error)throw Error('No se pudo conceder acceso.');say('Acceso de lectura concedido, sin permiso para Gemini.');
+    }));
+   }else{
+    actions.append(button(grant.allow_ai?'Desactivar Gemini para mi pareja':'Permitir a Yuki usarlo con mi pareja','secondary',async()=>{
+     const allow_ai=!grant.allow_ai;
+     if(allow_ai&&!confirmAction('Gemini podrá recibir este recuerdo cuando tu pareja también tenga activo su permiso personal. ¿Continuar?'))return;
+     const {data,error}=await db.from('yuki_memory_grants').update({allow_ai}).eq('memory_id',item.id).eq('owner_id',user.id).select('memory_id');
+     if(error||!data?.length)throw Error('El permiso cambió o fue revocado.');say('Permiso Gemini actualizado.');
+    }));
+    actions.append(button('Revocar acceso / Revoke','danger',async()=>{
+     if(!confirmAction('¿Revocar totalmente el acceso de tu pareja a este recuerdo?'))return;
+     const {data,error}=await db.from('yuki_memory_grants').delete().eq('memory_id',item.id).eq('owner_id',user.id).select('memory_id');
+     if(error||!data?.length)throw Error('El acceso ya no estaba activo.');say('Acceso revocado para los siguientes usos.');
+    }));
+   }
+   owned.append(card);
+  }
+  if(!shared.data.length)received.textContent='Todavía no han compartido recuerdos contigo.';
+  for(const item of shared.data){
+   const card=document.createElement('article'),text=document.createElement('p'),info=document.createElement('small');
+   text.textContent=item.memory_text;info.textContent=item.allow_ai?'El dueño permitió el uso en Gemini (también requiere tu permiso).':'Solo lectura: Gemini no tiene permiso del dueño.';
+   card.append(text,info);received.append(card);
+  }
+  say('Accesos actualizados. La compartición siempre requiere permiso explícito.');
+ };
+ refresh.onclick=async()=>{if(refresh.disabled||loading)return;refresh.disabled=true;try{await load();}catch(e){if(active)say('Error: '+e.message);}finally{if(active)refresh.disabled=false;}};
+ try{await load();}catch(e){if(active)say('No se pudo cargar: '+e.message);}
+})();
+</script></body></html>
