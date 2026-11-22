@@ -2,6 +2,7 @@ const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const source=fs.readFileSync('supabase/functions/yuki-chat/index.ts','utf8');
 const gate=source.indexOf("Deno.env.get('YUKI_REVIEWED_MEMORY_AI_ENABLED') === 'true'");
+assert.ok(source.includes("Deno.env.get('YUKI_REVIEWED_MEMORY_OWNER_CONSENT') === 'true'"),'Owner consent must be independently enabled for Gemini');
 const lookup=source.indexOf("db.from('yuki_memory_proposals')");
 const saved=source.indexOf("db.from('yuki_chat_turns').insert");
 assert.ok(gate>=0,'Reviewed memory integration must be explicitly opt-in');
