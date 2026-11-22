@@ -94,6 +94,21 @@ async function scenario(name,handle,expected){
   refresh.click();
   await new Promise(resolve=>setTimeout(resolve,30));
 
+  const filterDraft=window.document.querySelector('#items article textarea');
+  filterDraft.value='Unsaved draft during search';
+  const searchBox=window.document.getElementById('search');
+  const statusFilter=window.document.getElementById('filter');
+  window.confirm=()=>false;
+  searchBox.value='unmatched';
+  searchBox.dispatchEvent(new window.Event('input',{bubbles:true}));
+  assert.equal(searchBox.value,'','cancelled search restores previous query');
+  assert.equal(filterDraft.value,'Unsaved draft during search','cancelled search preserves unsaved edit');
+  statusFilter.value='approved';
+  statusFilter.dispatchEvent(new window.Event('change',{bubbles:true}));
+  assert.equal(statusFilter.value,'all','cancelled filter restores previous selection');
+  assert.equal(filterDraft.value,'Unsaved draft during search','cancelled filter preserves unsaved edit');
+  filterDraft.value='A memory awaiting individual approval';
+  window.confirm=()=>true;
   const staleEdit=window.document.querySelector('#items article textarea');
   staleEdit.value='An older local edit';
   inserted[0].memory_text='A newer edit from another device';
