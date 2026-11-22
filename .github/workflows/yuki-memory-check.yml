@@ -6,6 +6,8 @@ on:
       - 'tests/yuki-memory-browser.cjs'
       - 'tests/yuki-memory-gemini.cjs'
       - 'tests/yuki-memory-edge-runtime.cjs'
+      - 'tests/yuki-memory-preflight.cjs'
+      - 'supabase/functions/yuki-memory-preflight/index.ts'
       - 'supabase/functions/yuki-chat/index.ts'
       - 'supabase/yuki-memory-*.sql'
       - '.github/workflows/yuki-memory-check.yml'
@@ -36,6 +38,8 @@ jobs:
         run: node tests/yuki-memory-gemini.cjs
       - name: Exercise backend reviewed-memory runtime scenarios
         run: node tests/yuki-memory-edge-runtime.cjs
+      - name: Check isolated memory preflight privacy
+        run: node tests/yuki-memory-preflight.cjs
       - name: Check embedded JavaScript syntax and critical privacy controls
         shell: bash
         run: |
