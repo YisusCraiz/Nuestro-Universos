@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'yuki-memory.html'
+      - 'jj-yuki.js'
       - 'tests/yuki-memory-browser.cjs'
       - 'tests/yuki-memory-gemini.cjs'
       - 'tests/yuki-memory-edge-runtime.cjs'
@@ -35,6 +36,10 @@ jobs:
         run: npm install --no-save --ignore-scripts --no-audit --no-fund jsdom@26.1.0
       - name: Run account access browser-DOM smoke tests
         run: node tests/yuki-memory-browser.cjs
+      - name: Verify merged Yuki navigation module syntax and owner-only memory link
+        run: |
+          node --check jj-yuki.js
+          node -e "const s=require('fs').readFileSync('jj-yuki.js','utf8');if(!/if\\(owner\\(\\)\\)\\s*\\{[^}]*memory\\.href='yuki-memory\\.html'/.test(s))process.exit(1)"
       - name: Check Gemini approved-memory gate
         run: node tests/yuki-memory-gemini.cjs
       - name: Exercise backend reviewed-memory runtime scenarios
