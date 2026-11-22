@@ -16,6 +16,7 @@ declare
  premature_approval_denied boolean := false;
  timestamp_insert_denied boolean := false;
  created_at_denied boolean := false;
+ simultaneous_approval_denied boolean := false;
 begin
  select id into strict jesus_id from public.profiles where handle='jesus';
  select id into strict julie_id from public.profiles where handle='julisa';
@@ -35,6 +36,15 @@ begin
  if not timestamp_insert_denied then raise exception 'Client forged approval timestamp on pending insertion'; end if;
  insert into public.yuki_memory_proposals(owner_id,memory_text,visibility,status)
  values (jesus_id,'TEMP ISOLATION TEST','private','pending') returning id into memory_id;
+ begin
+  update public.yuki_memory_proposals
+  set status='approved',memory_text='TEMP UNREVIEWED CHANGE'
+  where id=memory_id;
+ exception when others then simultaneous_approval_denied := true;
+ end;
+ if not simultaneous_approval_denied then raise exception 'Client approved a memory while changing its text'; end if;
+ select status into current_status from public.yuki_memory_proposals where id=memory_id;
+ if current_status <> 'pending' then raise exception 'Failed joint approval changed status'; end if;
  update public.yuki_memory_proposals set status='approved' where id=memory_id;
  select approved_at into approved_time from public.yuki_memory_proposals where id=memory_id;
  if approved_time is null then raise exception 'Approval timestamp missing'; end if;
