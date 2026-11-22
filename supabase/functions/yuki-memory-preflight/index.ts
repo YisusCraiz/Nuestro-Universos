@@ -33,8 +33,8 @@ Deno.serve(async request=>{
       db.from('yuki_memory_proposals').select('id',{count:'exact',head:true})
         .eq('owner_id',uid).eq('status','approved').eq('visibility','surprise')
     ]);
-    if(approved.error||excluded.error)return respond({code:'query_unavailable'},503);
-    return respond({ok:true,approvedVisibleCount:approved.count??0,excludedSurpriseCount:excluded.count??0,
+    if(approved.error||excluded.error||!Number.isSafeInteger(approved.count)||approved.count<0||!Number.isSafeInteger(excluded.count)||excluded.count<0)return respond({code:'query_unavailable'},503);
+    return respond({ok:true,approvedVisibleCount:approved.count,excludedSurpriseCount:excluded.count,
       geminiUsed:false,memoryTextReturned:false});
   }catch{return respond({code:'internal_error'},503);}
 });
