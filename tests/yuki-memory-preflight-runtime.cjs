@@ -46,7 +46,9 @@ async function scenario({method='POST',token='good-token',handle='jesus',authErr
  const invalid=await scenario({authError:true});
  assert.equal(invalid.status,401);assert.equal(invalid.reads,0);
  const julie=await scenario({handle:'julisa'});
- assert.equal(julie.status,403);assert.equal(julie.reads,0);
+ assert.equal(julie.status,200);assert.equal(julie.reads,2);
+ const outsider=await scenario({handle:'outsider'});
+ assert.equal(outsider.status,403);assert.equal(outsider.reads,0);
  const failedProfile=await scenario({profileError:true});
  assert.equal(failedProfile.status,403);assert.equal(failedProfile.reads,0);
  const failedDB=await scenario({queryError:true});
@@ -58,5 +60,5 @@ async function scenario({method='POST',token='good-token',handle='jesus',authErr
  assert.equal(noSettings.status,503);assert.equal(noSettings.reads,0);
  const method=await scenario({method:'GET'});
  assert.equal(method.status,405);assert.equal(method.authCalls,0);
- console.log('PASS: preflight runtime owner counts, no token, invalid token, Julie denied, DB failure, missing config and non-POST');
+ console.log('PASS: preflight runtime owner counts, no token, invalid token, unsupported profile denied, DB failure, missing config and non-POST');
 })().catch(error=>{console.error(error);process.exitCode=1;});
