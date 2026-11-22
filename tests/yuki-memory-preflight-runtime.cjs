@@ -6,7 +6,7 @@ const source=fs.readFileSync('supabase/functions/yuki-memory-preflight/index.ts'
 const executable=source.replace(/^import .*;\s*/m,'').replace('payload:object','payload');
 assert.ok(!executable.includes('createClient } from'),'Supabase import was not isolated');
 
-async function scenario({method='POST',token='good-token',handle='jesus',authError=false,profileError=false,queryError=false,missingConfig=false}={}){
+async function scenario({method='POST',token='good-token',handle='jesus',authError=false,profileError=false,queryError=false,missingCount=false,missingConfig=false}={}){
  let handler;
  let reads=0,authCalls=0,requests=[];
  const makeQuery=(table)=>{
@@ -15,7 +15,7 @@ async function scenario({method='POST',token='good-token',handle='jesus',authErr
    eq(column,value){this.conditions.push([column,value]);return this;},
    in(column,values){this.conditions.push([column,values]);return this;},
    async single(){assert.equal(table,'profiles');return {data:profileError?null:{handle},error:profileError?{message:'down'}:null};},
-   then(resolve,reject){return Promise.resolve(queryError?{count:null,error:{message:'down'}}:{count:table==='yuki_memory_proposals'?this.conditions.some(([col,v])=>col==='visibility'&&v==='surprise')?2:5:0,error:null}).then(resolve,reject);}
+   then(resolve,reject){return Promise.resolve(queryError?{count:null,error:{message:'down'}}:{count:missingCount?null:table==='yuki_memory_proposals'?this.conditions.some(([col,v])=>col==='visibility'&&v==='surprise')?2:5:0,error:null}).then(resolve,reject);}
   };
   return query;
  };
@@ -51,6 +51,9 @@ async function scenario({method='POST',token='good-token',handle='jesus',authErr
  assert.equal(failedProfile.status,403);assert.equal(failedProfile.reads,0);
  const failedDB=await scenario({queryError:true});
  assert.equal(failedDB.status,503);assert.equal(failedDB.body.code,'query_unavailable');
+ const missingCounts=await scenario({missingCount:true});
+ assert.equal(missingCounts.status,503,'Missing database count must fail closed');
+ assert.equal(missingCounts.body.code,'query_unavailable');
  const noSettings=await scenario({missingConfig:true});
  assert.equal(noSettings.status,503);assert.equal(noSettings.reads,0);
  const method=await scenario({method:'GET'});
