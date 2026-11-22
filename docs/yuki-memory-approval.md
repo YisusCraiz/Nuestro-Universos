@@ -50,3 +50,9 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - La carga de recuerdos contempla tanto respuestas fallidas como excepciones de red. Una reconexión se prueba desde el panel sin reutilizar permisos de otra sesión.
 - Las pruebas DOM incluyen intentos de usar controles después del cierre de sesión y verifican que no haya consultas ni mutaciones posteriores.
 - Las pruebas DOM con Supabase simulado y las pruebas SQL de aislamiento no reemplazan un recorrido real con dos sesiones de navegador.
+
+## Conservación de ediciones simultáneas
+- Antes de crear una propuesta nueva, el panel solicita confirmación si existen ediciones sin guardar en otras tarjetas.
+- Si una tarjeta empieza a editarse mientras una inserción está pendiente, el resultado de esa inserción no fuerza una recarga que borre el texto local. La propuesta queda guardada, y el usuario puede actualizar la lista después de conservar sus ediciones.
+- Un error de carga informa que la lista todavía visible puede estar desactualizada; no afirma que los datos mostrados sean recientes.
+- Las pruebas automatizadas de estas situaciones usan un cliente Supabase simulado. La validación con cuentas reales sigue pendiente.
