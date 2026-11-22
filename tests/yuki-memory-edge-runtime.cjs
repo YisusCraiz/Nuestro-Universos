@@ -9,7 +9,7 @@ const block=source.slice(start,stop)
  .replace('let reviewedMemories: string[] = [];','let reviewedMemories = [];')
  .replace('let sharedReviewedMemories: string[] = [];','let sharedReviewedMemories = [];')
  .replace('(row:{memory_text?:unknown})=>','(row)=>')
- .replace('(value):value is string=>','(value)=>');
+ .replaceAll('(value):value is string=>','(value)=>');
 const probe=new vm.Script('(async()=>{'+block+';return {own:reviewedMemories,shared:sharedReviewedMemories};})()');
 const rows=[
  {owner_id:'user-1',status:'approved',visibility:'private',memory_text:'PRIVATE APPROVED'},
