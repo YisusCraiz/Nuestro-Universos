@@ -40,6 +40,7 @@ Deno.serve(async req => {
     // Each user must opt in independently and can revoke permission in their own panel.
     // All reads use the caller's JWT and RLS; sharing with the partner is not implied.
     let reviewedMemories: string[] = [];
+    let sharedReviewedMemories: string[] = [];
     const {data:memoryConsent,error:memoryConsentError}=await db.from('yuki_memory_ai_consent').select('enabled').eq('owner_id',uid).maybeSingle();
     if(memoryConsentError)return json({code:'memory_consent_unavailable'},503);
     // Read approved proposals fresh each turn; no pending, rejected, or surprise memories.
@@ -54,6 +55,11 @@ Deno.serve(async req => {
         .limit(20);
       if (reviewed.error) return json({code:'reviewed_memory_unavailable'},503);
       reviewedMemories = (reviewed.data ?? []).map(row=>row.memory_text).filter((value):value is string=>typeof value==='string' && value.trim().length>0).map(value=>value.slice(0,4000));
+      // A separate recipient-only RPC enforces each owner's explicit grant and allow_ai flag.
+      // Private memories can be shared one by one; surprise memories never enter this RPC.
+      const granted = await db.rpc('yuki_shared_memories_for_me',{p_for_ai:true});
+      if(granted.error)return json({code:'shared_memory_unavailable'},503);
+      sharedReviewedMemories = (granted.data ?? []).map((row:{memory_text?:unknown})=>row.memory_text).filter((value):value is string=>typeof value==='string'&&value.trim().length>0).map(value=>value.slice(0,4000));
     }
     const saved = await db.from('yuki_chat_turns').insert({id:payload.requestId,message:payload.message.trim()});
     if(saved.error) return json({code:'save_failed'},saved.error.code==='23505'?409:503);
@@ -80,7 +86,7 @@ Deno.serve(async req => {
       body:JSON.stringify({
         systemInstruction:{parts:[{text:instructions}]},
         contents:[{role:'user',parts:[{text:JSON.stringify({
-          message:payload.message,speaker:profile.data.handle==='jesus'?'Jesús':'Julie',recentConversation:history.data.reverse(),approvedMemories:memories.data,reviewedMemories,visibleActivities:activities.data,followCurrentTopic:topicMatch.data===true
+          message:payload.message,speaker:profile.data.handle==='jesus'?'Jesús':'Julie',recentConversation:history.data.reverse(),approvedMemories:memories.data,reviewedMemories,sharedReviewedMemories,visibleActivities:activities.data,followCurrentTopic:topicMatch.data===true
         })}]}],
         generationConfig:{maxOutputTokens:900}
       }),
