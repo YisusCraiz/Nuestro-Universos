@@ -24,7 +24,7 @@ Deno.serve(async request=>{
     if(auth.error||!auth.data.user)return respond({code:'unauthorized'},401);
     const uid=auth.data.user.id;
     const {data:profile,error:profileError}=await db.from('profiles').select('handle').eq('id',uid).single();
-    if(profileError||profile?.handle!=='jesus')return respond({code:'forbidden'},403);
+    if(profileError||!['jesus','julisa'].includes(profile?.handle))return respond({code:'forbidden'},403);
 
     // Return only synthetic-safe counts, not any individual memory or content.
     const [approved,excluded]=await Promise.all([
