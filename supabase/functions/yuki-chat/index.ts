@@ -37,6 +37,24 @@ Deno.serve(async req => {
       admin.rpc('yuki_topic_reply_for_julie',{p_viewer:uid,p_message:payload.message})
     ]);
     if (memories.error || activities.error || history.error || profile.error) return json({},503);
+    // Each user must opt in independently and can revoke permission in their own panel.
+    // All reads use the caller's JWT and RLS; sharing with the partner is not implied.
+    let reviewedMemories: string[] = [];
+    const {data:memoryConsent,error:memoryConsentError}=await db.from('yuki_memory_ai_consent').select('enabled').eq('owner_id',uid).maybeSingle();
+    if(memoryConsentError)return json({code:'memory_consent_unavailable'},503);
+    // Read approved proposals fresh each turn; no pending, rejected, or surprise memories.
+    if(memoryConsent?.enabled===true && ['jesus','julisa'].includes(profile.data.handle)) {
+      // Surprise memories are withheld even from Gemini context until a separate reveal mechanism exists.
+      const reviewed = await db.from('yuki_memory_proposals')
+        .select('memory_text')
+        .eq('owner_id',uid)
+        .eq('status','approved')
+        .in('visibility',['private','shared'])
+        .order('approved_at',{ascending:false})
+        .limit(20);
+      if (reviewed.error) return json({code:'reviewed_memory_unavailable'},503);
+      reviewedMemories = (reviewed.data ?? []).map(row=>row.memory_text).filter((value):value is string=>typeof value==='string' && value.trim().length>0).map(value=>value.slice(0,4000));
+    }
     const saved = await db.from('yuki_chat_turns').insert({id:payload.requestId,message:payload.message.trim()});
     if(saved.error) return json({code:'save_failed'},saved.error.code==='23505'?409:503);
     const saveReply = async (reply:string,suggestion:string|null=null) => {
@@ -62,7 +80,7 @@ Deno.serve(async req => {
       body:JSON.stringify({
         systemInstruction:{parts:[{text:instructions}]},
         contents:[{role:'user',parts:[{text:JSON.stringify({
-          message:payload.message,speaker:profile.data.handle==='jesus'?'Jesús':'Julie',recentConversation:history.data.reverse(),approvedMemories:memories.data,visibleActivities:activities.data,followCurrentTopic:topicMatch.data===true
+          message:payload.message,speaker:profile.data.handle==='jesus'?'Jesús':'Julie',recentConversation:history.data.reverse(),approvedMemories:memories.data,reviewedMemories,visibleActivities:activities.data,followCurrentTopic:topicMatch.data===true
         })}]}],
         generationConfig:{maxOutputTokens:900}
       }),

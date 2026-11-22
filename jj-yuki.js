@@ -60,6 +60,9 @@
   const caption=()=>toggle.textContent=avatarVisible()?say('Ocultar mi avatar de Yuki','Hide my Yuki avatar'):say('Mostrar mi avatar de Yuki','Show my Yuki avatar');caption();
   toggle.onclick=()=>{try{localStorage.setItem(visibleKey(),String(!avatarVisible()))}catch{}caption();sync();};
   card.append(title,text,toggle);
+  if(owner()||sectionAllowed('yuki')){
+   const memory=document.createElement('a');memory.className='btn secondary';memory.href='yuki-memory.html';memory.textContent=say('Revisar memoria de Yuki','Review Yuki memories');memory.style.display='inline-block';memory.style.margin='8px 0';card.append(memory);
+  }
   if(owner()){
    const row=document.createElement('label');row.className='row';row.style.margin='18px 0';const box=document.createElement('input');box.type='checkbox';box.checked=JJSections.values?.yuki===true;
    const msg=document.createElement('p');msg.setAttribute('role','status');
