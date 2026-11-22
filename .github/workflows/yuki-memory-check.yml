@@ -5,6 +5,7 @@ on:
       - 'yuki-memory.html'
       - 'tests/yuki-memory-browser.cjs'
       - 'tests/yuki-memory-gemini.cjs'
+      - 'tests/yuki-memory-edge-runtime.cjs'
       - 'supabase/functions/yuki-chat/index.ts'
       - 'supabase/yuki-memory-*.sql'
       - '.github/workflows/yuki-memory-check.yml'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'yuki-memory.html'
       - 'tests/yuki-memory-browser.cjs'
+      - 'tests/yuki-memory-edge-runtime.cjs'
       - '.github/workflows/yuki-memory-check.yml'
 jobs:
   static-panel-check:
@@ -32,6 +34,8 @@ jobs:
         run: node tests/yuki-memory-browser.cjs
       - name: Check Gemini approved-memory gate
         run: node tests/yuki-memory-gemini.cjs
+      - name: Exercise backend reviewed-memory runtime scenarios
+        run: node tests/yuki-memory-edge-runtime.cjs
       - name: Check embedded JavaScript syntax and critical privacy controls
         shell: bash
         run: |
