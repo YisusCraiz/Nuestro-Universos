@@ -333,9 +333,13 @@ async function scenario(name,handle,expected){
   const beforeConcurrentAction=proposalsQueried;
   const cardsDuringUpdate=[...window.document.querySelectorAll('#items article')];
   const otherLocalEdit=cardsDuringUpdate[1].querySelector('textarea');
-  const restoreDuringUpdate=[...cardsDuringUpdate[0].querySelectorAll('button')].find(x=>x.textContent==='Volver a pendiente');
-  assert.ok(restoreDuringUpdate,'rejected memory can be restored during concurrency test');
-  restoreDuringUpdate.click();
+  otherLocalEdit.value=otherLocalEdit.defaultValue;
+  const firstMemoryBeforeUpdate=inserted[0].memory_text;
+  cardsDuringUpdate[0].querySelector('textarea').value='Temporary new text while saving';
+  mutationRows=true;
+  const saveDuringUpdate=[...cardsDuringUpdate[0].querySelectorAll('button')].find(x=>x.textContent==='Guardar cambios');
+  assert.ok(saveDuringUpdate,'memory save available during concurrency test');
+  saveDuringUpdate.click();
   await new Promise(resolve=>setTimeout(resolve,10));
   otherLocalEdit.value='Another card edited after update started';
   releaseUpdate();
@@ -344,6 +348,8 @@ async function scenario(name,handle,expected){
   assert.equal(proposalsQueried,beforeConcurrentAction+1,'concurrent update skips full reload when another card becomes dirty');
   assert.ok(window.document.getElementById('notice').textContent.includes('Conservamos las ediciones'),'concurrent update explains deferred refresh');
   updateGate=null;
+  inserted[0].memory_text=firstMemoryBeforeUpdate;
+  mutationRows=false;
   otherLocalEdit.value=otherLocalEdit.defaultValue;
   refresh.click();
   await new Promise(resolve=>setTimeout(resolve,30));
