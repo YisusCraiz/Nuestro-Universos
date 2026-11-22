@@ -20,7 +20,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
 <label for="memory">Texto del recuerdo</label><textarea id="memory" maxlength="4000" placeholder="Escribe o pega un resumen concreto…"></textarea>
 <small id="memory-count">0 / 4000 caracteres</small><label for="visibility">Privacidad</label><select id="visibility"><option value="private">Solo yo</option><option value="shared">Compartido (aún no visible para Julie)</option><option value="surprise">Sorpresa protegida</option></select>
 <button id="propose">Guardar para revisar</button></section>
-<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><small id="load-info" class="muted" aria-live="polite"></small><div class="toolbar"><label for="search">Buscar</label><input id="search" type="search" placeholder="Buscar en mis recuerdos" autocomplete="off" aria-label="Buscar recuerdos"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><button id="refresh" class="secondary" type="button">Actualizar recuerdos</button><p id="notice" role="status" aria-live="polite"></p><div id="items"></div><button id="more" class="secondary" type="button" hidden>Cargar más recuerdos</button></section>
+<section class="panel"><h2>Mis propuestas</h2><div id="stats" class="stats" aria-live="polite"></div><small id="load-info" class="muted" aria-live="polite"></small><div class="toolbar"><label for="search">Buscar</label><input id="search" type="search" placeholder="Buscar en mis recuerdos" autocomplete="off" aria-label="Buscar recuerdos"><label for="filter">Mostrar</label><select id="filter"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="approved">Aprobados</option><option value="rejected">Rechazados</option></select></div><button id="refresh" class="secondary" type="button">Actualizar recuerdos</button><button id="preflight" class="secondary" type="button">Probar acceso seguro</button><p id="notice" role="status" aria-live="polite"></p><div id="items"></div><button id="more" class="secondary" type="button" hidden>Cargar más recuerdos</button></section>
 <script>
 (async()=>{
  const notice=document.getElementById('notice'),items=document.getElementById('items'),stats=document.getElementById('stats'),filter=document.getElementById('filter'),search=document.getElementById('search');
@@ -37,6 +37,21 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  more.onclick=async()=>{if(more.disabled||!sessionActive)return;if(hasUnsavedEdits()&&!confirm('Hay cambios sin guardar. Cargar más recuerdos descartará esas ediciones. ¿Continuar?'))return;const previousSize=pageSize;pageSize+=100;more.disabled=true;try{if(await load()!==true)pageSize=previousSize;}catch(e){pageSize=previousSize;if(sessionActive)say('No se pudieron cargar más recuerdos: '+e.message);}finally{if(sessionActive)more.disabled=false;}};
  const refresh=document.getElementById('refresh');
  refresh.onclick=async()=>{if(refresh.disabled)return;if(hasUnsavedEdits()&&!confirm('Hay cambios sin guardar. Actualizar descartará esas ediciones. ¿Continuar?'))return;refresh.disabled=true;try{if(await load()===true)say('Recuerdos actualizados.')}catch(e){if(sessionActive)say('No se pudo actualizar: '+e.message)}finally{if(sessionActive)refresh.disabled=false;}};
+ const preflight=document.getElementById('preflight');
+ preflight.disabled=true;
+ preflight.onclick=async()=>{
+  if(preflight.disabled||!sessionActive)return;
+  preflight.disabled=true;
+  try{
+   await requireSession();
+   const {data,error}=await db.functions.invoke('yuki-memory-preflight',{body:{}});
+   if(!sessionActive)return;
+   await requireSession();
+   if(error||data?.ok!==true||data?.memoryTextReturned!==false||data?.geminiUsed!==false||!Number.isInteger(data?.approvedVisibleCount)||!Number.isInteger(data?.excludedSurpriseCount))throw Error('No se pudo verificar el aislamiento del backend.');
+   say('Prueba segura correcta: '+data.approvedVisibleCount+' recuerdos aprobados consultables; '+data.excludedSurpriseCount+' sorpresas excluidas. No se enviaron textos ni se utilizó Gemini.');
+  }catch(e){if(sessionActive)say('La prueba segura no se completó: '+e.message);}
+  finally{if(sessionActive)preflight.disabled=false;}
+ };
  let sessionActive=true;
  const requireSession=async()=>{
   if(!sessionActive)throw Error('La sesión cambió. Vuelve a iniciar sesión.');
@@ -48,7 +63,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  filter.onchange=()=>{if(hasUnsavedEdits()&&!confirm('Cambiar el filtro descartará las ediciones sin guardar. ¿Continuar?')){filter.value=appliedFilter;return;}appliedFilter=filter.value;render(cached);};
  const say=(s)=>notice.textContent=s;
  // Do not retain sensitive draft text in session history when leaving the panel.
- const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];memoryInput.value='';document.getElementById('visibility').value='private';document.getElementById('memory-count').textContent='0 / 4000 caracteres';search.value='';filter.value='all';appliedSearch='';appliedFilter='all';pageSize=100;more.hidden=true;more.disabled=true;refresh.disabled=true;};
+ const clearSensitive=()=>{loadRevision++;items.replaceChildren();stats.replaceChildren();document.getElementById('load-info').textContent='';cached=[];memoryInput.value='';document.getElementById('visibility').value='private';document.getElementById('memory-count').textContent='0 / 4000 caracteres';search.value='';filter.value='all';appliedSearch='';appliedFilter='all';pageSize=100;more.hidden=true;more.disabled=true;refresh.disabled=true;preflight.disabled=true;};
  // No memory actions are available until both identity and profile checks succeed.
  document.getElementById('propose').disabled=true;
  refresh.disabled=true;
@@ -63,6 +78,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
  document.getElementById('propose').disabled=false;
  refresh.disabled=false;
  more.disabled=false;
+ preflight.disabled=false;
  async function load(){
   const revision=++loadRevision;
   await requireSession();
