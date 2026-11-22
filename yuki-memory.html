@@ -139,7 +139,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   btn.disabled=false;
   if(error){if(sessionActive)say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
   if(!sessionActive)return;
-  const hasNewDraft=memoryInput.value.trim()!==text;if(!hasNewDraft){memoryInput.value='';memoryInput.dispatchEvent(new Event('input'));}const refreshed=await load();if(refreshed===true&&hasNewDraft)say('Recuerdo guardado. Tu nuevo borrador sigue en el editor.');
+  const hasNewDraft=memoryInput.value.trim()!==text;if(!hasNewDraft){memoryInput.value='';memoryInput.dispatchEvent(new Event('input'));}if(hasUnsavedEdits()){say('Recuerdo guardado. Conservamos ediciones iniciadas durante el envío; actualiza la lista cuando las hayas guardado.');return;}const refreshed=await load();if(refreshed===true&&hasNewDraft)say('Recuerdo guardado. Tu nuevo borrador sigue en el editor.');
  };
  db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||(session?.user&&session.user.id!==user.id)){sessionActive=false;document.getElementById('propose').disabled=true;clearSensitive();say('La sesión cambió. Vuelve a iniciar sesión para continuar.');}});
  await load();
