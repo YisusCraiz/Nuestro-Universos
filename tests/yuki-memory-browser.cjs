@@ -47,12 +47,12 @@ async function scenario(name,handle,expected){
  await new Promise(resolve=>setTimeout(resolve,30));
  const notice=window.document.getElementById('notice').textContent;
  assert.ok(notice.includes(expected),name+': unexpected notice '+notice);
- assert.equal(proposalsQueried,handle==='jesus'?1:0,name+': unauthorized memory query');
- assert.equal(window.document.getElementById('propose').disabled,handle!=='jesus',name+': proposal access');
- assert.equal(window.document.getElementById('refresh').disabled,handle!=='jesus',name+': refresh requires authorized profile');
- assert.equal(window.document.getElementById('more').disabled,handle!=='jesus',name+': pagination requires authorized profile');
- assert.equal(window.document.getElementById('preflight').disabled,handle!=='jesus',name+': preflight requires authorized profile');
- if(handle==='jesus'){
+ assert.equal(proposalsQueried,['jesus','julisa'].includes(handle)?1:0,name+': unauthorized memory query');
+ assert.equal(window.document.getElementById('propose').disabled,!['jesus','julisa'].includes(handle),name+': proposal access');
+ assert.equal(window.document.getElementById('refresh').disabled,!['jesus','julisa'].includes(handle),name+': refresh requires authorized profile');
+ assert.equal(window.document.getElementById('more').disabled,!['jesus','julisa'].includes(handle),name+': pagination requires authorized profile');
+ assert.equal(window.document.getElementById('preflight').disabled,!['jesus','julisa'].includes(handle),name+': preflight requires authorized profile');
+ if(['jesus','julisa'].includes(handle)){
   assert.equal(typeof authListener,'function','auth listener registered');
   window.document.getElementById('preflight').click();
   await new Promise(resolve=>setTimeout(resolve,30));
@@ -495,7 +495,7 @@ async function preflightSignoutScenario(){
 }
 (async()=>{
  await scenario('Unauthenticated',null,'Inicia sesión');
- await scenario('Julie cannot access Yisus panel','julisa','reservado para Yisus');
+ await scenario('Julie can manage only her own memories','julisa','Tus recuerdos');
  await scenario('Yisus can load empty memory panel','jesus','Tus recuerdos');
  await preflightSignoutScenario();
 })().catch(e=>{console.error(e);process.exitCode=1;});
