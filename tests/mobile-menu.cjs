@@ -39,14 +39,17 @@ async function main(){
   await menu.waitFor();
   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
   assert.equal(await trigger.getAttribute('aria-controls'),'jj-arcade-menu');
-  const games=menu.getByText('Juegos',{exact:true});
+  await menu.getByRole('heading',{name:'Juntos en otra aventura'}).waitFor();
+  await menu.getByText('Juega con Julie',{exact:true}).waitFor();
+  assert.equal(await page.locator('#primary-nav').isVisible(),false);
+  const games=menu.locator('summary').filter({hasText:'Arena'});
   const uno=shortcut('cards');
   assert.equal(await uno.isVisible(),false);
   await games.tap();
   assert.equal(await uno.isVisible(),true);
   await games.tap();
   assert.equal(await uno.isVisible(),false);
-  for(const label of ['Multimedia','Nuestro rincón','Novedades y cuenta']){
+  for(const label of ['Sala multimedia','Nuestro rincón','Novedades y cuenta']){
    const summary=menu.locator('summary').filter({has:page.getByText(label,{exact:true})});
    await summary.tap();
    assert.equal(await summary.evaluate(node=>node.parentElement.open),true);
@@ -57,6 +60,7 @@ async function main(){
 
   // Recreating the shell must keep the open menu wired to current buttons.
   await page.evaluate(()=>shell());
+  await games.tap();
   await shortcut('vs').tap();
   await page.waitForFunction(()=>state.page==='vs');
   await menu.waitFor({state:'detached'});
@@ -88,7 +92,25 @@ async function main(){
   await page.waitForFunction(()=>state.page==='home');
   await menu.waitFor({state:'detached'});
 
+  // WebViews without showModal still open the same panel instead of the legacy grid.
   await page.evaluate(()=>{
+   window.menuShowModal=HTMLDialogElement.prototype.showModal;
+   HTMLDialogElement.prototype.showModal=undefined;
+  });
+  await trigger.tap();
+  await menu.getByRole('heading',{name:'Juntos en otra aventura'}).waitFor();
+  assert.equal(await menu.evaluate(node=>node.classList.contains('arcade-fallback')),true);
+  assert.equal(await page.locator('#primary-nav').isVisible(),false);
+  await page.keyboard.press('Escape');
+  await menu.waitFor({state:'detached'});
+  assert.equal(await trigger.evaluate(node=>document.activeElement===node),true);
+  await trigger.tap();
+  await shortcut('games').tap();
+  await page.waitForFunction(()=>state.page==='games');
+  await menu.waitFor({state:'detached'});
+  await page.evaluate(async()=>{
+   HTMLDialogElement.prototype.showModal=window.menuShowModal;
+   await navigate('home');
    UniverseI18n.setLanguage('en');
    applySeason('classic');
    state.demo=false;
@@ -100,7 +122,7 @@ async function main(){
   await menu.getByRole('button',{name:'Close menu'}).tap();
   await menu.waitFor({state:'detached'});
   assert.equal(await trigger.getAttribute('aria-expanded'),'false');
-  assert.equal(await trigger.getAttribute('aria-controls'),'primary-nav');
+  assert.equal(await trigger.getAttribute('aria-controls'),'jj-arcade-menu');
   await page.setViewportSize({width:1000,height:720});
   assert.equal(await trigger.isVisible(),false);
   await page.locator('#primary-nav [data-nav=home]').waitFor();

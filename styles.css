@@ -40,7 +40,7 @@ dialog{overscroll-behavior:contain;max-height:calc(100dvh - 32px - env(safe-area
   .sidebar .brand{display:inline-block;font-size:1.3rem;max-width:calc(100% - 98px);vertical-align:middle}
   .mobile-menu{display:inline-flex;float:right;min-height:44px;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:8px;padding:8px 12px;font-size:.875rem}
   .nav{display:none;overflow:visible;margin-top:16px;padding:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;clear:both}
-  .nav.open{display:grid}.nav button{white-space:normal;line-height:1.4;padding:10px;font-size:.875rem;gap:8px;text-align:left;border:1px solid var(--line)}
+  .nav button{white-space:normal;line-height:1.4;padding:10px;font-size:.875rem;gap:8px;text-align:left;border:1px solid var(--line)}
   .nav button .icon{flex-shrink:0}.topbar{min-height:60px;height:auto;padding:10px 20px}
   .gate-art{min-height:220px;padding:24px}.gate-art h1{font-size:2.2rem;margin:12px 0}
   .gate-form{padding:28px 20px 36px}.gate-inner h2{font-size:2rem}

@@ -13,8 +13,8 @@
   ['musicas','♫','Música','Music','66.667%','66.667%','100%']
  ];
  const groups=[
-  ['⚔','Juegos','Games',['cards','casino']],
-  ['▷','Multimedia','Media',['musicalbums','comics','live']],
+  ['⚔','Arena','Arena',['vs','cards','casino']],
+  ['▷','Sala multimedia','Media room',['musicalbums','comics','live']],
   ['♡','Nuestro rincón','Our corner',['messages','flowers','affection','candy','gifts','regalos-jxj','cartas-3d-jj','pets','collection','shop','yuki','secret_adventures']],
   ['✦','Novedades y cuenta','News and account',['news','profile','season','missions','calendar','goals','approvals']],
   ['☾','Más apartados','More sections',[]]
@@ -24,20 +24,25 @@
  function openArcade(){
   const appRoot=document.getElementById('app');
   if(!appRoot?.querySelector('#primary-nav'))return false;
-  if(arcade?.open)return true;
+  if(arcade?.hasAttribute('open'))return true;
   const profileId=state.profile?.id;
   const dialog=document.createElement('dialog');
-  if(typeof dialog.showModal!=='function')return false;
+  const christmas=isChristmas();
+  const closeButtonLabel=say('Cerrar menú','Close menu');
   dialog.id='jj-arcade-menu';
   dialog.setAttribute('aria-labelledby','jj-arcade-title');
+  dialog.setAttribute('aria-modal','true');
   dialog.innerHTML=`
    <header class="arcade-hero">
-    <h2 id="jj-arcade-title">${bi('Nuestro universo','Our universe')}</h2>
-    <button type="button" class="arcade-close" autofocus aria-label="${say('Cerrar menú','Close menu')}">×</button>
+    <div>${christmas?'<span class="arcade-eyebrow">✦ JULISSA &amp; JESÚS</span>':''}
+    <h2 id="jj-arcade-title">${christmas?bi('Juntos en otra aventura','Together on another adventure'):bi('Nuestro universo','Our universe')}</h2>
+    ${christmas?`<p>${bi('Aventura arcade · Edición de Navidad','Arcade adventure · Christmas edition')}</p>`:''}</div>
+    <button type="button" class="arcade-close" autofocus aria-label="${closeButtonLabel}">×</button>
    </header>
    <div class="arcade-body">
     <div class="arcade-play"></div>
     <div class="arcade-quick"></div>
+    ${christmas?`<h3>${bi('Explora el universo','Explore the universe')}</h3>`:''}
     <nav class="arcade-groups" aria-labelledby="jj-arcade-title"></nav>
    </div>`;
 
@@ -49,13 +54,16 @@
    const art=row
     ? `<span class="arcade-sprites" aria-hidden="true"><span style="background-position:${left} ${row}"></span><span style="background-position:${right} ${row}"></span></span>`
     : '';
-   button.innerHTML=art+`<span class="arcade-card-text"><span aria-hidden="true">${icon}</span> ${bi(es,en)}</span>`;
+   button.innerHTML=christmas&&route==='games'
+    ? art+`<span class="arcade-card-text"><small>${bi('MISIÓN PRINCIPAL','MAIN QUEST')}</small><strong>${bi('Juega con Julie','Play together')}</strong><span>${bi('Juegos · En pareja o en solitario','Games · Together or solo')}</span></span>`
+    : art+`<span class="arcade-card-text"><span aria-hidden="true">${icon}</span> ${bi(es,en)}</span>`;
    container.append(button);
    shortcuts.set(route,button);
   }
   const play=dialog.querySelector('.arcade-play');
   const favorites=dialog.querySelector('.arcade-quick');
-  games.forEach(item=>addShortcut(play,item));
+  if(christmas)addShortcut(favorites,['games','♧','Minijuegos','Mini games','100%','0%','33.333%']);
+  else games.forEach(item=>addShortcut(play,item));
   quick.forEach(item=>addShortcut(favorites,item));
 
   const list=dialog.querySelector('.arcade-groups');
@@ -68,9 +76,10 @@
    list.append(panel);
    return panel;
   });
-  const other=panels.at(-1).querySelector('.arcade-links');
+  const other=panels[panels.length-1].querySelector('.arcade-links');
   const linksByRoute=new Map();
   let nav;
+  let backdrop;
 
   function available(source){
    return source&&!source.hidden&&!source.disabled&&sectionAllowed(source.dataset.nav);
@@ -83,7 +92,7 @@
   }
   function update(){
    const currentNav=appRoot.querySelector('#primary-nav');
-   if(!currentNav||state.profile?.id!==profileId){dialog.close();return;}
+   if(!currentNav||state.profile?.id!==profileId){closeMenu();return;}
    if(nav!==currentNav){
     nav=currentNav;
     observer.disconnect();
@@ -92,10 +101,8 @@
      subtree:true,childList:true,characterData:true,attributes:true,
      attributeFilter:['hidden','disabled','aria-current','data-nav']
     });
-    nav.classList.remove('open');
     const currentTrigger=appRoot.querySelector('#mobile-menu');
-    currentTrigger.setAttribute('aria-controls',dialog.id);
-    currentTrigger.setAttribute('aria-expanded','true');
+    currentTrigger?.setAttribute('aria-expanded','true');
    }
    const sources=new Map([...nav.querySelectorAll('button[data-nav]')].map(button=>[button.dataset.nav,button]));
    for(const [route,button] of shortcuts)updateButton(button,sources.get(route));
@@ -127,62 +134,91 @@
   }
 
   const observer=new MutationObserver(update);
-  dialog.querySelector('.arcade-close').onclick=()=>dialog.close();
+  const closeButton=dialog.querySelector('.arcade-close');
+  closeButton.onclick=closeMenu;
   dialog.addEventListener('click',event=>{
-   if(event.target===dialog&&event.clientY<dialog.getBoundingClientRect().top){dialog.close();return;}
+   if(event.target===dialog&&event.clientY<dialog.getBoundingClientRect().top){closeMenu();return;}
    const target=event.target.closest('button[data-arcade-route]');
    if(!target)return;
    const liveNav=appRoot.querySelector('#primary-nav');
    const source=[...(liveNav?.querySelectorAll('button[data-nav]')||[])].find(button=>button.dataset.nav===target.dataset.arcadeRoute);
    if(state.profile?.id!==profileId||!available(source)){update();return;}
-   dialog.close();
+   closeMenu();
    source.click();
   });
-  dialog.addEventListener('close',()=>{
+  function closeMenu(){
+   if(!dialog.hasAttribute('open'))return;
+   if(backdrop)finish();
+   else dialog.close();
+  }
+  function dismissFallback(event){
+   if(event.key==='Escape'){
+    event.preventDefault();
+    closeMenu();
+   }
+  }
+  function closeOnDesktop(){
+   if(!mobile.matches)closeMenu();
+  }
+  function finish(){
    observer.disconnect();
+   window.removeEventListener('resize',closeOnDesktop);
+   document.removeEventListener('keydown',dismissFallback);
+   if(backdrop){
+    backdrop.remove();
+    appRoot.inert=false;
+   }
    dialog.remove();
    if(arcade!==dialog)return;
    arcade=null;
    const currentTrigger=appRoot.querySelector('#mobile-menu');
-   if(currentTrigger){
-    currentTrigger.setAttribute('aria-controls','primary-nav');
-    currentTrigger.setAttribute('aria-expanded','false');
-    if(document.activeElement===document.body)currentTrigger.focus();
-   }
-  },{once:true});
+   currentTrigger?.setAttribute('aria-expanded','false');
+   if(document.activeElement===document.body)currentTrigger?.focus();
+  }
 
   arcade=dialog;
+  dialog.addEventListener('close',finish,{once:true});
+  window.addEventListener('resize',closeOnDesktop);
   document.body.append(dialog);
   update();
-  dialog.showModal();
+  if(typeof dialog.showModal==='function')dialog.showModal();
+  else{
+   backdrop=document.createElement('div');
+   backdrop.className='arcade-backdrop';
+   backdrop.onclick=closeMenu;
+   dialog.before(backdrop);
+   dialog.classList.add('arcade-fallback');
+   dialog.setAttribute('open','');
+   appRoot.inert=true;
+   document.addEventListener('keydown',dismissFallback);
+   closeButton.focus();
+  }
   return true;
  }
- document.addEventListener('click',event=>{
-  const trigger=event.target.closest('#mobile-menu');
-  if(trigger&&mobile.matches&&openArcade())event.stopImmediatePropagation();
- },true);
- mobile.addEventListener('change',()=>arcade?.close());
+ window.JJMobileMenu={open:openArcade};
 
- const tabs=document.createElement('div');
- tabs.className='christmas-notice-tabs';
- tabs.setAttribute('role','group');
- tabs.setAttribute('aria-label','Actividad / Activity');
- tabs.innerHTML=`<button type="button" aria-controls="jj-inbox" aria-pressed="true">◷ ${bi('Actividad','Activity')}</button>
- <button type="button" aria-controls="jj-push-settings" aria-pressed="false">▯ ${bi('En este teléfono','On this device')}</button>`;
- noticePanel.querySelector('header').after(tabs);
- const [activity,device]=tabs.querySelectorAll('button');
- const previousShowSettings=showNoticeSettings;
- showNoticeSettings=function(show){
-  previousShowSettings(show);
-  activity.setAttribute('aria-pressed',String(!show));
-  device.setAttribute('aria-pressed',String(show));
- };
- activity.onclick=()=>{if(!pushSettings.hidden)pushToggle.click();};
- device.onclick=()=>{if(pushSettings.hidden)pushToggle.click();};
- let season=isChristmas();
- new MutationObserver(()=>{
-  if(season===isChristmas())return;
-  season=isChristmas();
-  if(!noticePanel.hidden)toggleInbox(false);
- }).observe(document.documentElement,{attributes:true,attributeFilter:['data-season']});
+ document.addEventListener('DOMContentLoaded',()=>{
+  const tabs=document.createElement('div');
+  tabs.className='christmas-notice-tabs';
+  tabs.setAttribute('role','group');
+  tabs.setAttribute('aria-label','Actividad / Activity');
+  tabs.innerHTML=`<button type="button" aria-controls="jj-inbox" aria-pressed="true">◷ ${bi('Actividad','Activity')}</button>
+  <button type="button" aria-controls="jj-push-settings" aria-pressed="false">▯ ${bi('En este teléfono','On this device')}</button>`;
+  noticePanel.querySelector('header').after(tabs);
+  const [activity,device]=tabs.querySelectorAll('button');
+  const previousShowSettings=showNoticeSettings;
+  showNoticeSettings=function(show){
+   previousShowSettings(show);
+   activity.setAttribute('aria-pressed',String(!show));
+   device.setAttribute('aria-pressed',String(show));
+  };
+  activity.onclick=()=>{if(!pushSettings.hidden)pushToggle.click();};
+  device.onclick=()=>{if(pushSettings.hidden)pushToggle.click();};
+  let season=isChristmas();
+  new MutationObserver(()=>{
+   if(season===isChristmas())return;
+   season=isChristmas();
+   if(!noticePanel.hidden)toggleInbox(false);
+  }).observe(document.documentElement,{attributes:true,attributeFilter:['data-season']});
+ },{once:true});
 })();

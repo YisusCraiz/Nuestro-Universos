@@ -2,6 +2,7 @@
  --menu-accent:var(--gold,#ffd196);
  --menu-line:#755267;
  position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,520px);max-width:none;
+ max-height:calc(100vh - 16px);
  max-height:calc(100dvh - max(16px,env(safe-area-inset-top)));padding:0;
  border:1px solid var(--menu-line);border-radius:22px 22px 0 0;
  background:var(--surface,#21162c);color:var(--text,#fff0f5);
@@ -47,6 +48,28 @@ html[data-season="christmas"] .arcade-sprites{display:flex;justify-content:cente
 .arcade-links button{display:flex;gap:8px;align-items:center;min-height:44px;text-align:left;padding:5px 8px;border:1px solid var(--menu-line);border-radius:8px;background:#ffffff0a}
 #jj-arcade-menu [aria-current="page"]{border-color:var(--menu-accent);box-shadow:inset 0 0 0 1px var(--menu-accent)}
 #jj-arcade-menu [hidden]{display:none!important}
+#jj-arcade-menu.arcade-fallback{z-index:2147483647}
+.arcade-backdrop{position:fixed;inset:0;z-index:2147483646;background:#090611bb;backdrop-filter:blur(6px);touch-action:none}
+html[data-season="christmas"] #jj-arcade-menu .arcade-hero{align-items:flex-start;padding:16px 14px 13px;border-bottom-color:#a7653d}
+html[data-season="christmas"] #jj-arcade-menu h2{font-size:clamp(1.45rem,5vw,1.9rem);margin:4px 0}
+.arcade-eyebrow,.arcade-card-text small{color:#ffd196;font-size:.72rem;letter-spacing:.1em}
+.arcade-hero p{margin:4px 0 0;color:#ead1e8;font-size:.82rem}
+.arcade-body h3{margin:14px 0 6px;color:var(--menu-accent);font-size:.82rem;letter-spacing:.07em;text-transform:uppercase}
+html[data-season="christmas"] .arcade-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+html[data-season="christmas"] .arcade-quick button{position:relative;isolation:isolate;overflow:hidden;border-color:#b97d7b;border-radius:12px;background:#422952;min-height:88px;padding:0}
+html[data-season="christmas"] .arcade-quick [data-arcade-route="musicas"]{background:#333653}
+html[data-season="christmas"] .arcade-quick [data-arcade-route="memories"]{background:#57304f}
+html[data-season="christmas"] .arcade-quick [data-arcade-route="games"]{grid-column:1/-1;min-height:125px;text-align:left;background:radial-gradient(ellipse at 85% 90%,#a9634f,transparent 64%),linear-gradient(135deg,#38203c,#6c3650)}
+html[data-season="christmas"] .arcade-sprites{position:absolute;inset:0 0 24px}
+html[data-season="christmas"] .arcade-sprites>span{width:clamp(40px,14vw,54px);filter:drop-shadow(0 4px 4px #140c18b0)}
+html[data-season="christmas"] .arcade-sprites>span+span{margin-left:-18px}
+html[data-season="christmas"] .arcade-card-text{position:absolute;inset:auto 0 0;padding:6px 3px;background:#21162ce0;font-size:.78rem}
+html[data-season="christmas"] [data-arcade-route="games"] .arcade-sprites{inset:0 0 0 47%}
+html[data-season="christmas"] [data-arcade-route="games"] .arcade-sprites>span{width:clamp(64px,20vw,90px)}
+html[data-season="christmas"] [data-arcade-route="games"] .arcade-sprites>span+span{margin-left:-28px}
+html[data-season="christmas"] [data-arcade-route="games"] .arcade-card-text{inset:0 auto 0 10px;width:49%;display:grid;align-content:center;gap:4px;background:none}
+.arcade-card-text strong{font-size:clamp(1rem,4.2vw,1.28rem)}
+#jj-arcade-menu .arcade-quick [aria-current="page"]{border-color:var(--menu-accent)}
 .christmas-notice-tabs{display:none}
 html[data-season="christmas"] #jj-notifications .christmas-notice-tabs{display:grid;grid-template-columns:1fr 1.3fr;gap:4px;flex:none;padding:4px;background:#3a2545;margin:6px 8px 0;border-radius:11px}
 html[data-season="christmas"] #jj-push-toggle{display:none}
