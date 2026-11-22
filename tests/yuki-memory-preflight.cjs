@@ -1,10 +1,7 @@
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const source=fs.readFileSync('supabase/functions/yuki-memory-preflight/index.ts','utf8');
-for(const required of [
- "request.method!=='POST'",
- "req", // replaced below with the authorization request checks
-]){ void required; }
+assert.ok(source.includes("request.method!=='POST'"),'Preflight must reject non-POST requests');
 for(const required of [
  "request.headers.get('Authorization')",
  "db.auth.getUser(match[1])",
