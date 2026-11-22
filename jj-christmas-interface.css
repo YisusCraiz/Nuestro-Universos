@@ -1,42 +1,51 @@
 #jj-arcade-menu[open]{
+ --menu-accent:var(--gold,#ffd196);
+ --menu-line:#755267;
  position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,520px);max-width:none;
  max-height:calc(100dvh - max(16px,env(safe-area-inset-top)));padding:0;
- border:1px solid #a7653d;border-radius:22px 22px 0 0;background:#21162c;color:#fff0f5;
+ border:1px solid var(--menu-line);border-radius:22px 22px 0 0;
+ background:var(--surface,#21162c);color:var(--text,#fff0f5);
  display:flex;flex-direction:column;overflow:hidden;
 }
-#jj-arcade-menu .arcade-hero{
- display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex:none;
- padding:16px 14px 13px;background:radial-gradient(ellipse at right,#764058,transparent 68%),#321d40;
- border-bottom:1px solid #a7653d;
+html[data-season="christmas"] #jj-arcade-menu{
+ --menu-accent:#ffd196;
+ background:#21162c;color:#fff0f5;border-color:#a7653d;
 }
-.arcade-hero>div>span,.arcade-card-text small{color:#ffd196;font-size:.72rem;letter-spacing:.1em}
-#jj-arcade-menu h2{font-size:clamp(1.45rem,5vw,1.9rem);line-height:1.12;margin:4px 0;padding:0}
-.arcade-hero p{margin:4px 0 0;color:#ead1e8;font-size:.82rem}
+#jj-arcade-menu .arcade-hero{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;flex:none;
+ padding:8px 14px;border-bottom:1px solid var(--menu-line);
+}
+html[data-season="christmas"] #jj-arcade-menu .arcade-hero{
+ background:radial-gradient(ellipse at right,#764058,transparent 75%),#321d40;
+}
+#jj-arcade-menu h2{font-size:clamp(1.35rem,5vw,1.7rem);line-height:1.2;margin:0;padding:0}
 #jj-arcade-menu button{color:inherit;cursor:pointer}
-.arcade-close{width:44px;height:44px;flex:none;border:1px solid #a7653d;border-radius:10px;background:#291931;font-size:1.35rem}
-.arcade-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
-.arcade-body h3{margin:14px 0 6px;color:#ffd196;font-size:.82rem;letter-spacing:.07em;text-transform:uppercase}
-.arcade-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.arcade-quick button{position:relative;isolation:isolate;overflow:hidden;border:1px solid #b97d7b;border-radius:12px;background:#422952;min-height:88px;padding:0}
-.arcade-quick [data-arcade-route="games"]{grid-column:1/-1;min-height:125px;text-align:left;background:radial-gradient(ellipse at 85% 90%,#a9634f,transparent 64%),linear-gradient(135deg,#38203c,#6c3650)}
-.arcade-quick [data-arcade-route="musicas"]{background:#333653}
-.arcade-quick [data-arcade-route="memories"]{background:#57304f}
-.arcade-sprites{position:absolute;inset:0 0 24px;display:flex;justify-content:center;align-items:center;pointer-events:none}
-.arcade-sprites>span{width:54px;aspect-ratio:1;flex:none;background:url(assets/bombitas/characters-v2.png) no-repeat;background-size:400% 400%;filter:drop-shadow(0 4px 4px #140c18b0)}
-.arcade-sprites>span+span{margin-left:-18px}
-[data-arcade-route="games"] .arcade-sprites{inset:0 0 0 47%}
-[data-arcade-route="games"] .arcade-sprites>span{width:clamp(64px,20vw,90px)}
-[data-arcade-route="games"] .arcade-sprites>span+span{margin-left:-28px}
-.arcade-card-text{position:absolute;inset:auto 0 0;padding:5px 3px;background:#21162ce0;font-size:.78rem}
-[data-arcade-route="games"] .arcade-card-text{inset:0 auto 0 10px;width:49%;display:grid;align-content:center;gap:4px;background:none;line-height:1.2}
-.arcade-card-text strong{font-size:clamp(1rem,4.2vw,1.28rem)}
-.arcade-groups details{border-bottom:1px solid #755267}
-.arcade-groups summary{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;min-height:44px;cursor:pointer;list-style:none}
+.arcade-close{width:44px;height:44px;flex:none;border:1px solid var(--menu-line);border-radius:10px;background:#ffffff0a;font-size:1.35rem}
+.arcade-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:12px 14px calc(14px + env(safe-area-inset-bottom))}
+.arcade-play,.arcade-quick{display:flex;gap:8px;margin-bottom:10px}
+.arcade-play button,.arcade-quick button{
+ flex:1 1 0;min-width:0;min-height:48px;padding:6px 4px;
+ border:1px solid var(--menu-line);border-radius:12px;background:#ffffff0a;
+}
+.arcade-play button{background:#70445b;font-weight:700}
+#jj-arcade-menu .arcade-play [data-arcade-route="vs"]{background:#f3c598;color:#261a30;border-color:#f3c598}
+.arcade-card-text{font-size:.85rem;line-height:1.2}
+.arcade-play .arcade-card-text{font-size:.93rem}
+.arcade-sprites{display:none;pointer-events:none}
+html[data-season="christmas"] .arcade-sprites{display:flex;justify-content:center;align-items:center}
+.arcade-sprites>span{width:clamp(28px,10vw,44px);aspect-ratio:1;flex:none;background:url(assets/bombitas/characters-v2.png) no-repeat;background-size:400% 400%}
+.arcade-sprites>span+span{margin-left:-10px}
+.arcade-groups details{border-bottom:1px solid var(--menu-line)}
+.arcade-groups summary{display:grid;grid-template-columns:1.4em 1fr auto;align-items:center;gap:8px;min-height:48px;padding:4px 8px;cursor:pointer;list-style:none;touch-action:manipulation}
 .arcade-groups summary::-webkit-details-marker{display:none}
-.arcade-groups summary>span:first-child,.arcade-groups summary>span:last-child{color:#ffd196}
-.arcade-links{display:grid;gap:4px;padding:0 0 8px 17px}
-.arcade-links button{display:flex;gap:8px;align-items:center;min-height:44px;text-align:left;padding:5px 8px;border:1px solid #755267;border-radius:8px;background:#35243e}
-#jj-arcade-menu [aria-current="page"]{border-color:#ffd196}
+.arcade-groups summary:focus-visible{outline:2px solid var(--menu-accent);outline-offset:-2px}
+.arcade-groups summary>span:first-child,.arcade-chevron{color:var(--menu-accent)}
+.arcade-groups details[open] summary{background:#ffffff0a}
+.arcade-groups details[open] .arcade-chevron{transform:rotate(180deg)}
+.arcade-groups details:not([open]) .arcade-links{display:none}
+.arcade-links{display:grid;gap:5px;padding:6px 0 8px 12px}
+.arcade-links button{display:flex;gap:8px;align-items:center;min-height:44px;text-align:left;padding:5px 8px;border:1px solid var(--menu-line);border-radius:8px;background:#ffffff0a}
+#jj-arcade-menu [aria-current="page"]{border-color:var(--menu-accent);box-shadow:inset 0 0 0 1px var(--menu-accent)}
 #jj-arcade-menu [hidden]{display:none!important}
 .christmas-notice-tabs{display:none}
 html[data-season="christmas"] #jj-notifications .christmas-notice-tabs{display:grid;grid-template-columns:1fr 1.3fr;gap:4px;flex:none;padding:4px;background:#3a2545;margin:6px 8px 0;border-radius:11px}
