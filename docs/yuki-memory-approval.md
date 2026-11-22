@@ -1,7 +1,7 @@
 # Yuki: memoria con aprobación individual (fase 1)
 
 ## Estado
-Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_proposals` y su trigger de seguridad ya se aplicaron al proyecto Supabase `wainkarkdlbfprgytyty`; las pruebas SQL de aislamiento se ejecutaron correctamente. Las pruebas DOM de GitHub Actions usan un cliente Supabase simulado: **no equivalen a una prueba real con dos sesiones**. Gemini aún no tiene acceso a estos recuerdos. La memoria interna de ChatGPT no dispone aquí de una API de lectura o sincronización automática.
+La primera versión de memoria fue **fusionada a `main` en el PR #24** el 22 noviembre de 2026; la disponibilidad pública mediante GitHub Pages aún requiere verificación HTTP desde el navegador del usuario. La tabla `public.yuki_memory_proposals` y su trigger de seguridad ya se aplicaron al proyecto Supabase `wainkarkdlbfprgytyty`; las pruebas SQL de aislamiento se ejecutaron correctamente. Las pruebas DOM de GitHub Actions usan un cliente Supabase simulado: **no equivalen a una prueba real con dos sesiones**. Gemini aún no tiene acceso a estos recuerdos. La memoria interna de ChatGPT no dispone aquí de una API de lectura o sincronización automática.
 
 ## Flujo
 1. Yisus redacta o importa manualmente un resumen de recuerdo (nunca conversaciones completas por defecto).
@@ -28,7 +28,7 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - Hacer pruebas negativas: Julie no ve pendientes/privados/sorpresas, Yisus no ve recuerdos privados de Julie, Gemini no obtiene material no aprobado.
 - Integrar una exportación manual desde ChatGPT; una sincronización automática solo sería posible mediante una fuente/API explícitamente disponible y autorizada.
 
-**Esta rama no debe fusionarse hasta completar las pruebas de seguridad.**
+**Histórico:** antes de la fusión se exigieron pruebas y revisión. La fusión a `main` se realizó tras verificaciones automatizadas y consentimiento reportado; falta validar el flujo real de Gemini después de activar individualmente cada permiso.
 
 ## Verificación realizada (12 noviembre 2026)
 - Se comprobó que existen perfiles `jesus` y `julisa` en la base productiva configurada en `config.js`.
@@ -106,3 +106,11 @@ Se añadió `tests/yuki-memory-preflight-runtime.cjs`, que ejecuta el **handler 
 - El permiso verbal informado por Yisus no habilita la IA por sí solo. **Cada titular debe activar explícitamente la casilla en su panel** antes de compartir los recuerdos autorizados con Gemini.
 - El nuevo código de conversación se desplegó a la función existente tras pruebas de escenario aislado; falta una prueba de conversación auténtica por cada titular para declarar Gemini verificada de extremo a extremo.
 - No se ha implementado compartición cruzada automática de recuerdos: `shared` solo marca intención futura, y la otra persona no los recibe.
+
+## Publicación de primera versión — 22 noviembre 2026
+- PR #24 fusionado a `main` en commit `8a2e572e6ed86adf93ea40fb10f324654c3aa8c4`.
+- Código de `yuki-memory.html`, navegación de Yuki y funciones integradas confirmado en el repositorio principal; `yuki-chat` está activa en Supabase versión 9 y `yuki-memory-preflight` versión 3.
+- La base `yuki_memory_ai_consent` tiene RLS con políticas por titular. La selección de memoria requiere aprobación del recuerdo y consentimiento independiente activo, con revocación desde el panel.
+- El permiso se encuentra **apagado por defecto**. Yisus y Julie deben activarlo personalmente para que sus recuerdos aprobados se usen con Gemini. No se permite transferencia automática entre cuentas ni sorpresas.
+- Los dos usuarios informaron que pudieron probar sus accesos; esto constituye confirmación de usuario, no auditoría independiente de sesiones de extremo a extremo.
+- GitHub Actions pasó en el cambio `c96961b0181c11a50030d1b554e2951fb0478a8a` (run 44990143493). Sigue pendiente la prueba de conversación real de Gemini con consentimiento activo y comprobación HTTP de la propagación de GitHub Pages.
