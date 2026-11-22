@@ -90,3 +90,10 @@ Se ejecutó directamente en el proyecto Supabase conectado `supabase/yuki-memory
 
 ### Pruebas dinámicas de la función de preflight (22 noviembre 2026)
 Se añadió `tests/yuki-memory-preflight-runtime.cjs`, que ejecuta el **handler real del código fuente** de la función con un cliente Supabase simulado: una sesión de Yisus devuelve solo los conteos esperados y `Cache-Control: no-store`; una petición sin token, un token inválido, el perfil de Julie, un fallo de perfil o de base de datos, una configuración incompleta y un método distinto de POST deben rechazarse sin datos privados. La prueba ahora forma parte de GitHub Actions. **No se usan tokens reales de ninguno de los dos ni se envían recuerdos a Gemini; la llamada autenticada al servicio desplegado sigue siendo una validación pendiente.**
+
+### Verificación adicional de preflight (22 noviembre 2026)
+- Se reforzó el contrato de la función de conteos: un conteo nulo, negativo o fuera del rango seguro provoca un error y **nunca** se presenta como cero válido.
+- El panel rechaza también respuestas con conteos negativos o no seguros.
+- Se añadió una prueba aislada de cierre de sesión mientras la respuesta de preflight estaba pendiente: al regresar, el resultado antiguo no aparece y el botón permanece desactivado.
+- GitHub Actions aprobó las pruebas del navegador y del backend. Se desplegó únicamente `yuki-memory-preflight` **versión 2**, con `verify_jwt=true`, y se verificó el código publicado; `yuki-chat` sigue intacta y Gemini continúa sin acceso a los nuevos recuerdos.
+- La ejecución real con JWT de ambas cuentas todavía requiere validación manual autorizada.
