@@ -7,7 +7,7 @@
  const avatarVisible=()=>{try{return localStorage.getItem(visibleKey())!=='false'}catch{return true}};
  const owner=()=>state.profile?.handle==='jesus';
  const allowed=()=>!state.demo && (owner() || (JJSections.values?.yuki===true && eventState?.unlocked===true));
- function label(){return eventState?.unlocked?'Yuki':say('Primer aniversario','First anniversary');}
+ function label(){return owner()||eventState?.unlocked?'Yuki':say('Primer aniversario','First anniversary');}
  function paintLabel(){
   const text=label();entry[2]=text;
   document.querySelectorAll('[data-nav="yuki"]').forEach(el=>{if(el.dataset.yukiLabel!==text){el.dataset.yukiLabel=text;el.replaceChildren();const icon=document.createElement('span');icon.className='icon';icon.textContent='✧';el.append(icon,text);}});

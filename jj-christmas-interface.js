@@ -15,7 +15,7 @@
  const groups=[
   ['⚔','Arena','Arena',['vs','cards','casino']],
   ['▷','Sala multimedia','Media room',['musicalbums','comics','live']],
-  ['♡','Nuestro rincón','Our corner',['messages','flowers','affection','candy','gifts','regalos-jxj','cartas-3d-jj','pets','collection','shop','yuki','secret_adventures']],
+  ['♡','Nuestro rincón','Our corner',['messages','flowers','affection','candy','gifts','regalos-jxj','cartas-3d-jj','pets','collection','shop','secret_adventures']],
   ['✦','Novedades y cuenta','News and account',['news','profile','season','missions','calendar','goals','approvals']],
   ['☾','Más apartados','More sections',[]]
  ];
@@ -42,6 +42,7 @@
    <div class="arcade-body">
     <div class="arcade-play"></div>
     <div class="arcade-quick"></div>
+    <div class="arcade-links arcade-highlight"></div>
     ${christmas?`<h3>${bi('Explora el universo','Explore the universe')}</h3>`:''}
     <nav class="arcade-groups" aria-labelledby="jj-arcade-title"></nav>
    </div>`;
@@ -65,9 +66,10 @@
   if(christmas)addShortcut(favorites,['games','♧','Minijuegos','Mini games','100%','0%','33.333%']);
   else games.forEach(item=>addShortcut(play,item));
   quick.forEach(item=>addShortcut(favorites,item));
+  const highlight=dialog.querySelector('.arcade-highlight');
 
   const list=dialog.querySelector('.arcade-groups');
-  const destinations=new Map();
+  const destinations=new Map([['yuki',highlight]]);
   const panels=groups.map(([icon,es,en,routes])=>{
    const panel=document.createElement('details');
    panel.innerHTML=`<summary><span aria-hidden="true">${icon}</span><span>${bi(es,en)}</span><span class="arcade-chevron" aria-hidden="true">⌄</span></summary><div class="arcade-links"></div>`;
@@ -128,7 +130,7 @@
     }
     updateButton(link.button,source);
    }
-   for(const panel of [play,favorites,...panels]){
+   for(const panel of [play,favorites,highlight,...panels]){
     panel.hidden=!panel.querySelector('button:not([hidden])');
    }
   }

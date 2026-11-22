@@ -24,7 +24,7 @@ async function main(){
    const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
    return route.fulfill({path:file}).catch(()=>route.abort());
   });
-  await page.goto('http://universe.test/');
+  await page.goto('https://universe.test/');
   await page.evaluate(async()=>{
    state.demo=true;
    state.profile={id:'demo-julisa',handle:'julisa',display_name:'Julissa'};
@@ -35,12 +35,37 @@ async function main(){
   const trigger=page.locator('#mobile-menu');
   const menu=page.locator('#jj-arcade-menu');
   const shortcut=route=>menu.locator(`button[data-arcade-route="${route}"]`);
+  async function assertMenuRoutes(){
+   // Every available main section has exactly one mobile entry, including closed groups.
+   const routeLists=await page.evaluate(()=>{
+    const routes=(selector,key)=>[...document.querySelectorAll(selector)]
+     .filter(button=>!button.hidden&&!button.disabled)
+     .map(button=>button.dataset[key]).sort();
+    return {
+     desktop:routes('#primary-nav button[data-nav]','nav'),
+     mobile:routes('#jj-arcade-menu button[data-arcade-route]','arcadeRoute')
+    };
+   });
+   assert.deepEqual(routeLists.mobile,routeLists.desktop);
+  }
   await trigger.tap();
   await menu.waitFor();
   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
   assert.equal(await trigger.getAttribute('aria-controls'),'jj-arcade-menu');
   await menu.getByRole('heading',{name:'Juntos en otra aventura'}).waitFor();
   await menu.getByText('Juega con Julie',{exact:true}).waitFor();
+  await shortcut('yuki').filter({hasText:'Primer aniversario'}).waitFor();
+  await assertMenuRoutes();
+  await page.evaluate(()=>{
+   JJSections.values.yuki=false;
+   paintSectionVisibility();
+  });
+  await shortcut('yuki').waitFor({state:'hidden'});
+  await page.evaluate(()=>{
+   JJSections.values.yuki=true;
+   paintSectionVisibility();
+  });
+  await shortcut('yuki').waitFor();
   assert.equal(await page.locator('#primary-nav').isVisible(),false);
   const games=menu.locator('summary').filter({hasText:'Arena'});
   const uno=shortcut('cards');
@@ -133,6 +158,26 @@ async function main(){
    page.waitForURL('**/regalos-jxj.html#view=scan&lang=en&from=home'),
    shortcut('regalos-jxj').tap()
   ]);
+  await page.goto('https://universe.test/');
+  await page.evaluate(()=>{
+   state.profile={id:'test-owner',handle:'jesus',display_name:'Jesús'};
+   UniverseI18n.setLanguage('es');
+   localStorage.setItem('nuestro-universo.yuki.visible.test-owner','false');
+   const previousRpc=rpc;
+   rpc=async(name,args)=>{
+    if(name==='yuki_event')return {unlocked:false,step:0,visible:false};
+    return previousRpc(name,args);
+   };
+   loadSections=async()=>{};
+   applySeason('christmas');
+   shell();
+  });
+  await trigger.tap();
+  await menu.waitFor();
+  await assertMenuRoutes();
+  await shortcut('yuki').filter({hasText:'Yuki'}).tap();
+  await page.locator('.yuki-event').getByRole('heading',{name:'Primer aniversario'}).waitFor();
+  await menu.waitFor({state:'detached'});
   assert.deepEqual(errors,[]);
   console.log('PASS: mobile touch, groups, refreshed navigation, games, new routes, permissions, English, desktop and QR gifts.');
  }finally{

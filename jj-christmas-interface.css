@@ -46,6 +46,9 @@ html[data-season="christmas"] .arcade-sprites{display:flex;justify-content:cente
 .arcade-groups details:not([open]) .arcade-links{display:none}
 .arcade-links{display:grid;gap:5px;padding:6px 0 8px 12px}
 .arcade-links button{display:flex;gap:8px;align-items:center;min-height:44px;text-align:left;padding:5px 8px;border:1px solid var(--menu-line);border-radius:8px;background:#ffffff0a}
+.arcade-body>.arcade-highlight{padding:0;margin:0 0 10px}
+.arcade-highlight button{font-weight:700}
+.arcade-highlight .icon{color:var(--menu-accent)}
 #jj-arcade-menu [aria-current="page"]{border-color:var(--menu-accent);box-shadow:inset 0 0 0 1px var(--menu-accent)}
 #jj-arcade-menu [hidden]{display:none!important}
 #jj-arcade-menu.arcade-fallback{z-index:2147483647}
