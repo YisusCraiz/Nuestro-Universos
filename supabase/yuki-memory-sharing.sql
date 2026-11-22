@@ -73,3 +73,14 @@ revoke all on function public.yuki_shared_memories_for_me(boolean) from public,a
 grant execute on function public.yuki_shared_memories_for_me(boolean) to authenticated;
 
 create index if not exists yuki_grants_recipient_idx on public.yuki_memory_grants(recipient_id,created_at desc);
+
+-- Resolve the partner's identity server-side; do not trust a recipient UUID provided by the browser.
+create or replace function public.yuki_partner_for_sharing()
+returns uuid language sql stable security definer set search_path='' as $$
+ select target.id from public.profiles viewer
+ join public.profiles target on target.handle=case viewer.handle
+   when 'jesus' then 'julisa' when 'julisa' then 'jesus' else null end
+ where viewer.id=(select auth.uid()) limit 1
+$$;
+revoke all on function public.yuki_partner_for_sharing() from public,anon;
+grant execute on function public.yuki_partner_for_sharing() to authenticated;
