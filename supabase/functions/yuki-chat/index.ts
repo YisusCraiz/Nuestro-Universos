@@ -37,12 +37,13 @@ Deno.serve(async req => {
       admin.rpc('yuki_topic_reply_for_julie',{p_viewer:uid,p_message:payload.message})
     ]);
     if (memories.error || activities.error || history.error || profile.error) return json({},503);
-    // Opt-in rollout: only Yisus may use his individually approved proposals as Gemini context.
-    // Keep disabled until the owner reviews AI processing consent and live access tests pass.
+    // Each user must opt in independently and can revoke permission in their own panel.
+    // All reads use the caller's JWT and RLS; sharing with the partner is not implied.
     let reviewedMemories: string[] = [];
-    // Read approved proposals fresh for every new turn; never cache them across requests.
-    // An approval revoked before this query must not appear in the next Gemini prompt.
-    if (Deno.env.get('YUKI_REVIEWED_MEMORY_AI_ENABLED') === 'true' && Deno.env.get('YUKI_REVIEWED_MEMORY_OWNER_CONSENT') === 'true' && profile.data.handle === 'jesus') {
+    const {data:memoryConsent,error:memoryConsentError}=await db.from('yuki_memory_ai_consent').select('enabled').eq('owner_id',uid).maybeSingle();
+    if(memoryConsentError)return json({code:'memory_consent_unavailable'},503);
+    // Read approved proposals fresh each turn; no pending, rejected, or surprise memories.
+    if(memoryConsent?.enabled===true && ['jesus','julisa'].includes(profile.data.handle)) {
       // Surprise memories are withheld even from Gemini context until a separate reveal mechanism exists.
       const reviewed = await db.from('yuki_memory_proposals')
         .select('memory_text')
