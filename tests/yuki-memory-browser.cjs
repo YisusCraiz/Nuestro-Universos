@@ -66,6 +66,20 @@ async function scenario(name,handle,expected){
   draft.value='';
 
   assert.ok(window.document.getElementById('load-info').textContent.includes('1 recuerdos cargados'),'loaded count is explicitly shown');
+  const dirtyExisting=window.document.querySelector('#items article textarea');
+  dirtyExisting.value='Unsaved edit in an existing card';
+  draft.value='Different new memory';
+  const insertCountBeforeCancel=inserted.length;
+  window.confirm=()=>false;
+  window.document.getElementById('propose').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(inserted.length,insertCountBeforeCancel,'cancelled creation must not insert a new memory');
+  assert.equal(dirtyExisting.value,'Unsaved edit in an existing card','cancelled creation preserves existing card draft');
+  assert.equal(draft.value,'Different new memory','cancelled creation preserves new memory draft');
+  window.confirm=()=>true;
+  dirtyExisting.value='A memory awaiting individual approval';
+  draft.value='';
+
   failMemoryLoad=true;
   window.document.getElementById('refresh').click();
   await new Promise(resolve=>setTimeout(resolve,30));
