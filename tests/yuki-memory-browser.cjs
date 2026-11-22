@@ -18,6 +18,7 @@ async function scenario(name,handle,expected){
  let mutationRows=true;
  let failAuth=false;
  let failMemoryLoad=false;
+ let insertGate=null;
  let switchedUser=false;
  const db={
   auth:{getUser:async()=>{if(failAuth)throw Error('Network unavailable');return {data:{user:handle===null?null:(switchedUser?{id:'different-account'}:user)},error:null};},onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
@@ -27,7 +28,7 @@ async function scenario(name,handle,expected){
     proposalsQueried++;
     return {
      select:()=>({eq:()=>({order:()=>({limit:async()=>failMemoryLoad?{data:null,error:{message:'Mock network error'}}:{data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null}})})}),
-     insert:async row=>{inserted.push(row);return {error:null};},
+     insert:async row=>{if(insertGate)await insertGate;inserted.push(row);return {error:null};},
      update:row=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'update',row});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);if(matches)Object.assign(inserted[0],row);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;},
      delete:()=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'delete'});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;}
     };
@@ -281,6 +282,18 @@ async function scenario(name,handle,expected){
   failMemoryLoad=false;
   refresh.click();
   await new Promise(resolve=>setTimeout(resolve,30));
+  let finishInsert;
+  insertGate=new Promise(resolve=>{finishInsert=resolve;});
+  draft.value='Memory currently being saved';
+  window.document.getElementById('propose').click();
+  await new Promise(resolve=>setTimeout(resolve,10));
+  draft.value='Next private memory draft';
+  finishInsert();
+  await new Promise(resolve=>setTimeout(resolve,40));
+  assert.equal(draft.value,'Next private memory draft','new draft typed during save survives completed insertion');
+  assert.equal(inserted.at(-1).memory_text,'Memory currently being saved','saved memory uses initial draft text');
+  insertGate=null;
+  inserted.pop();
   window.document.getElementById('visibility').value='surprise';
   window.document.getElementById('search').value='Sensitive private search';
   draft.value='PRIVATE DRAFT';
