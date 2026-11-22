@@ -1,3 +1,5 @@
+import {mountPong} from './yuki-room-pong.js?v=1';
+
 export const extraArt = {
  'bed-lavender':'bed-lavender','bed-rose':'bed-rose',
  'shelf-walnut':'shelf-walnut','shelf-cloud':'shelf-cloud',
@@ -9,7 +11,7 @@ export const extraArt = {
  'winter-plush-jj-knit':'winter-plush-jj-knit','winter-plush-st-knit':'winter-plush-st-knit'
 };
 
-export function roomDevices(records, current) {
+export function roomDevices(records, current, onPlayback, onPongResult) {
  let dialog;
  function show(title) {
   close();
@@ -48,6 +50,8 @@ export function roomDevices(records, current) {
    video.playsInline=true;
    video.preload='metadata';
    video.hidden=true;
+   video.addEventListener('playing',()=>onPlayback(true));
+   for(const event of ['pause','ended','emptied','waiting','error'])video.addEventListener(event,()=>onPlayback(false));
    const select=document.createElement('select');
    select.setAttribute('aria-label',say('Videoclip','Music video'));
    select.append(new Option(say('Elige un videoclip','Choose a music video'),''),...clips.map(clip=>new Option(clip.title,clip.id)));
@@ -55,7 +59,7 @@ export function roomDevices(records, current) {
    message.setAttribute('role','status');
    let request=0;
    const screen=dialog;
-   screen.addEventListener('close',()=>{request++;video.pause();video.removeAttribute('src');video.load();},{once:true});
+   screen.addEventListener('close',()=>{request++;onPlayback(false);video.pause();video.removeAttribute('src');video.load();},{once:true});
    select.onchange=async()=>{
     const token=++request;
     video.pause();video.removeAttribute('src');video.load();video.hidden=true;
@@ -75,43 +79,8 @@ export function roomDevices(records, current) {
   }catch{if(body.isConnected)body.textContent=say('No se pudieron cargar los videoclips.','Could not load music videos.');}
  }
  function arcade(){
-  const body=show('Mini arcade J&J');
-  const intro=document.createElement('p');
-  intro.textContent=say('Apaga las nueve luces. Cada toque cambia esa luz y las de al lado.','Turn off all nine lights. Each tap flips that light and its neighbors.');
-  const grid=document.createElement('div');
-  grid.className='yr-arcade-grid';
-  const result=document.createElement('p');
-  result.setAttribute('aria-live','polite');
-  const reset=document.createElement('button');
-  reset.textContent=say('Otra partida','New game');
-  let board, moves;
-  const buttons=Array.from({length:9},(_,i)=>{
-   const button=document.createElement('button');
-   button.type='button';
-   button.setAttribute('aria-label',say('Luz ','Light ')+(i+1));
-   button.onclick=()=>{toggleLights(board,i);moves++;paint();};
-   return button;
-  });
-  function paint(){
-   const won=!board.some(Boolean);
-   buttons.forEach((button,i)=>{
-    button.setAttribute('aria-pressed',String(board[i]));
-    button.textContent=board[i]?'✦':'·';
-    button.disabled=won;
-   });
-   result.textContent=won?say('¡Yatta! Lo resolviste en ','Solved in ')+moves+say(' movimientos.',' moves.'):say('Movimientos: ','Moves: ')+moves;
-  }
-  reset.onclick=()=>{
-   do{
-    board=Array(9).fill(false);
-    for(let i=0;i<5;i++)toggleLights(board,Math.floor(Math.random()*9));
-   }while(!board.some(Boolean));
-   moves=0;
-   paint();
-  };
-  grid.append(...buttons);
-  body.append(intro,grid,result,reset);
-  reset.onclick();
+  const body=show('Ping Pong JxJ');
+  mountPong(body,dialog,current,onPongResult);
  }
  return {tv,arcade,close};
 }

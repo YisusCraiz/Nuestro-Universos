@@ -1,11 +1,12 @@
 import {mountLayout} from './yuki-room-layout.js?v=1';
 import {dyeControls} from './yuki-room-dye.js?v=2';
-import {extraArt,roomDevices,mountPosterPhotos} from './yuki-room-extras.js?v=1';
+import {extraArt,roomDevices,mountPosterPhotos} from './yuki-room-extras.js?v=2';
 import {furnitureArt} from './yuki-room-furniture.js?v=1';
-import {mountRecords,recordDeck,isRecord} from './yuki-room-records.js?v=1';
-import {home,updateHome,skin,phrase} from './yuki-life.js?v=room-4';
+import {mountRecords,recordDeck,isRecord} from './yuki-room-records.js?v=2';
+import {home,updateHome,watchHome,skin,phrase,expressions} from './yuki-life.js?v=room-5';
+import {mountVoice} from './yuki-voice.js?v=1';
 import {keepsakes} from './yuki-room-art.js?v=3';
-import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=8';
+import {roomBackdrop,sceneStyles} from './yuki-room-scene.js?v=9';
 const drawings={
  ...furnitureArt,
  ...keepsakes,
@@ -36,12 +37,18 @@ function art(id){
 }
 const styles=`.yr{width:100%;min-width:0;margin-inline:auto;color:#eee5f7}.yr h1{margin:0;font-size:34px}.yr-header{display:flex;justify-content:space-between;gap:16px;align-items:center;margin:18px 0}.yr-balance{white-space:nowrap;border:1px solid #c9a7dd55;border-radius:24px;padding:9px 14px}.yr-scene{position:relative;overflow:hidden;border-radius:28px;border:1px solid #c5a3cd70}.yr-room-title{position:absolute;top:16px;left:20px;color:#fff5ff;font-size:12px;letter-spacing:.12em;text-transform:uppercase}.yr-decor{position:absolute;pointer-events:none;z-index:1}.yr-decor svg{width:100%;height:100%}.yr-actor{position:absolute;left:45%;padding:0!important;border:0!important;background:transparent!important;z-index:3;cursor:pointer}.yr-pose{display:block;background-size:400% 300%;background-repeat:no-repeat;animation:yr-idle 5.6s steps(1) infinite}.yr-actor[data-walking] .yr-pose{background-position-y:50%!important;animation:yr-walk .8s steps(1) infinite}.yr-actor[data-left] .yr-pose{transform:scaleX(-1)}.yr-bubble{padding:16px 20px;margin:14px 0;border-radius:18px;background:#2e223e;color:#f0e6f5;min-height:64px;font-size:14px;line-height:1.6}.yr-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.yr-tabs button,.yr button.yr-action{background:#51405e;border:1px solid #ba98ca44;color:#f5eafc;border-radius:14px;padding:12px 16px;min-height:44px;cursor:pointer}.yr-tabs button[aria-selected=true]{background:#b88cc7;color:#25182f}.yr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:14px}.yr-card{background:#241c31;border:1px solid #b794ca30;border-radius:20px;padding:16px;text-align:center}.yr-card h3{font-size:16px;margin:8px 0}.yr-card p{color:#cbb9d7}.yr-preview{height:145px;display:grid;place-items:center}.yr-preview svg{width:110px;height:110px}.yr-outfit{width:96px;height:128px;background-size:400% 300%;background-repeat:no-repeat}.yr-confirm{padding:18px;border:1px solid #e5c096;border-radius:16px;background:#382a3e;margin:16px 0}.yr-confirm button{margin:8px}.yr-empty{padding:24px;border:1px dashed #b391c060;border-radius:18px;color:#c9b7d5}.yr-note{color:#c3afcc;font-size:13px;line-height:1.6}.yr [hidden]{display:none!important}.yr button:disabled{opacity:.45;cursor:default}@keyframes yr-idle{0%,68%,100%{background-position-x:0%}74%{background-position-x:33.333333%}80%{background-position-x:66.666667%}86%{background-position-x:100%}}@keyframes yr-walk{0%,100%{background-position-x:0%}25%{background-position-x:33.333333%}50%{background-position-x:66.666667%}75%{background-position-x:100%}}@media(max-width:500px){.yr h1{font-size:27px}}@media(prefers-reduced-motion:reduce){.yr-pose{animation:none!important}}`;
 export async function mountRoom(target,{initialTab='room',onChat,preview=false}={}){
- const owner=state.profile?.id;let alive=true,data,tab=initialTab,busy=false,pending=null,staged=null,generation=0,travel=null,moveTimer,phraseTimer;
+ const owner=state.profile?.id;let alive=true,data,tab=initialTab,busy=false,pending=null,staged=null,generation=0,travel=null,moveTimer,moodTimer;
  const current=()=>alive&&target.isConnected&&state.profile?.id===owner;
  target.innerHTML='<style>'+styles+sceneStyles+'</style><section class="yr"><header class="yr-header"><div><small>YUKI · '+say('TU PEQUEÑO HOGAR','YOUR LITTLE HOME')+'</small><h1>'+say('El cuarto de Yuki','Yuki’s room')+'</h1></div><span class="yr-balance"></span></header><p class="yr-note">'+(preview?say('Preparación privada. El evento real sigue intacto. Las compras de esta tienda sí usan tus JJ.','Private preparation. The real event stays unchanged. Shop purchases still use your JJ.'):say('Ropa y decoración guardadas para tu perfil.','Outfits and decoration saved to your profile.'))+'</p><div class="yr-stage"><div class="yr-scene">'+roomBackdrop+'<span class="yr-room-title">'+say('Un rincón para quedarse','A place to stay')+'</span><div class="yr-furniture"></div><p class="yr-preview-label" role="status" hidden></p><button class="yr-actor" aria-label="'+say('Escuchar a Yuki','Hear from Yuki')+'"><span class="yr-pose"></span></button></div></div><p class="yr-bubble" aria-live="polite"></p><div class="yr-tabs" role="tablist"></div><div class="yr-confirm" hidden></div><div class="yr-panel"></div><p class="yr-status" role="status"></p></section>';
  const root=target.querySelector('.yr'),actor=root.querySelector('.yr-actor'),pose=root.querySelector('.yr-pose'),scene=root.querySelector('.yr-scene'),status=root.querySelector('.yr-status'),panel=root.querySelector('.yr-panel'),confirm=root.querySelector('.yr-confirm');
- const records=mountRecords(root,current);
- const devices=roomDevices(records,current);
+ actor.style.setProperty('--yuki-expressions','url("'+expressions+'")');
+ const voice=mountVoice(current);
+ const records=mountRecords(root,current,dance);
+ const devices=roomDevices(records,current,dance,won=>react(won?'surprised':'playful'));
+ const stopWatching=watchHome(owner,next=>{
+  if(!current()||busy||!data||next===data)return;
+  data=next;paint();
+ });
  const layout=mountLayout(scene,{
   current,status,canStart:()=>!busy&&!pending,
   read:()=>data?.decor?.layout||{},
@@ -50,10 +57,42 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  });
  const posters=mountPosterPhotos(root,current);
  const media=matchMedia('(prefers-reduced-motion: reduce)');
- function speak(){if(current()&&!document.hidden)root.querySelector('.yr-bubble').textContent=phrase();}
- function stop(){clearTimeout(moveTimer);travel?.cancel();travel=null;delete actor.dataset.walking;}
+ const moods=['happy','curious','playful','surprised','shy','sleepy'];
+ let moodIndex=0;
+ function react(mood){
+  clearTimeout(moodTimer);
+  actor.dataset.mood=mood;
+  moodTimer=setTimeout(()=>delete actor.dataset.mood,2100);
+ }
+ function speak(readAloud=false){
+  if(!current()||document.hidden)return;
+  const line=phrase();
+  root.querySelector('.yr-bubble').textContent=line;
+  if(readAloud){
+   react(moods[moodIndex++%moods.length]);
+   voice.play(line,UniverseI18n.language,()=>{});
+  }
+ }
+ function dance(playing){
+  if(actor.hasAttribute('data-dancing')===playing)return;
+  actor.toggleAttribute('data-dancing',playing);
+  scene.toggleAttribute('data-music-playing',playing);
+  resume();
+ }
+ function stop(){
+  clearTimeout(moveTimer);
+  if(travel){
+   const {left,bottom,scale}=getComputedStyle(actor);
+   if(scene.clientWidth&&scene.clientHeight)Object.assign(actor.style,{
+    left:(100*parseFloat(left)/scene.clientWidth)+'%',
+    bottom:(100*parseFloat(bottom)/scene.clientHeight)+'%',scale
+   });
+   travel.cancel();travel=null;
+  }
+  delete actor.dataset.walking;
+ }
  function move(){
-  if(!current()||document.hidden||media.matches)return;
+  if(!current()||document.hidden||media.matches||actor.hasAttribute('data-dancing'))return;
   const width=scene.clientWidth;
   if(!width)return;
   const x=(.16+Math.random()*.54)*(1-actor.offsetWidth/width)*100;
@@ -85,7 +124,7 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
    const item=document.createElement(interactive?'button':'div');
    if(interactive){
     item.type='button';
-    const [es,en,open]=id===recordDeck?['Abrir tocadiscos','Open record player',()=>records.open(data)]:id==='room-tv'?['Ver videoclips','Watch music videos',devices.tv]:['Jugar en el mini arcade','Play the mini arcade',devices.arcade];
+    const [es,en,open]=id===recordDeck?['Abrir tocadiscos','Open record player',()=>records.open(data)]:id==='room-tv'?['Ver videoclips','Watch music videos',devices.tv]:['Jugar Ping Pong JxJ','Play Ping Pong JxJ',devices.arcade];
     item.setAttribute('aria-label',say(es,en));item.title=say(es,en);item.onclick=open;
    }
    item.className='yr-decor';item.dataset.slot=slot;item.dataset.item=id;
@@ -104,9 +143,9 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
   label.hidden=!staged;
   label.textContent=staged?say('Vista previa · ','Preview · ')+say(staged.es,staged.en):'';
  }
- function resume(){stop();if(!document.hidden&&!media.matches)moveTimer=setTimeout(move,800);}
- actor.onclick=speak;document.addEventListener('visibilitychange',resume);media.addEventListener('change',resume);phraseTimer=setInterval(speak,22000);speak();resume();
- function paint(){if(!current()||!data)return;const gen=++generation;root.querySelector('.yr-balance').textContent=data.coins+' JJ';paintFurniture();layout.refresh();records.sync(data);skin(data.outfit,data.decor?.['dye:'+data.outfit]).then(url=>{if(current()&&gen===generation)pose.style.backgroundImage='url("'+url+'")'});
+ function resume(){stop();if(current()&&!document.hidden&&!media.matches&&!actor.hasAttribute('data-dancing'))moveTimer=setTimeout(move,800);}
+ actor.onclick=()=>speak(true);document.addEventListener('visibilitychange',resume);media.addEventListener('change',resume);speak();resume();
+ function paint(){if(!current()||!data)return;const gen=++generation;root.querySelector('.yr-balance').textContent=data.coins+' JJ';paintFurniture();layout.refresh();records.sync(data);skin(data.outfit,data.decor?.['dye:'+data.outfit]).then(url=>{if(current()&&gen===generation){pose.style.backgroundImage='url("'+url+'")';actor.toggleAttribute('data-expressions',data.outfit==='uniform')}});
  const tabs=[['room','Habitación','Room'],['wardrobe','Vestidor','Wardrobe'],['decor','Decorar','Decorate'],['shop','Tienda','Shop']];root.querySelector('.yr-tabs').replaceChildren(...tabs.map(([id,es,en])=>{const b=document.createElement('button');b.textContent=say(es,en);b.setAttribute('role','tab');b.setAttribute('aria-selected',String(tab===id));b.disabled=busy||layout.editing();b.onclick=()=>{tab=id;pending=null;staged=null;paint()};return b}));
  panel.replaceChildren();confirm.hidden=!pending;
  if(pending){confirm.replaceChildren();const p=document.createElement('p');p.textContent=say('Comprar ','Buy ')+say(pending.es,pending.en)+' · '+pending.price+' JJ · '+say('Saldo después: ','Balance afterwards: ')+(data.coins-pending.price)+' JJ';const yes=document.createElement('button');yes.className='yr-action';yes.textContent=say('Confirmar compra','Confirm purchase');yes.disabled=busy||data.coins<pending.price;yes.onclick=()=>mutate('buy',pending.id);const no=document.createElement('button');no.className='yr-action';no.textContent=say('Cancelar','Cancel');no.disabled=busy;no.onclick=()=>{pending=null;paint()};confirm.append(p,yes,no);}
@@ -144,7 +183,7 @@ export async function mountRoom(target,{initialTab='room',onChat,preview=false}=
  posters.fill();
  }
  async function mutate(action,id){if(busy||layout.editing()||!current())return;busy=true;paint();try{const {data:result,error}=await db.rpc('yuki_hub',{p_action:action,p_item:id});if(error)throw error;if(!current())return;data=result;pending=null;staged=null;updateHome(data);window.dispatchEvent(new CustomEvent('jj-wallet-update',{detail:{owner,coins:data.coins}}));if(typeof JJ!=='undefined')JJ.dashboard=null;status.textContent=action==='buy'?say('Compra guardada. Ya puedes usarla desde tu colección.','Purchase saved. You can now use it from your collection.'):say('Guardado.','Saved.');}catch(e){if(current())status.textContent=String(e.message).includes('INSUFFICIENT')?say('No tienes suficientes monedas JJ.','Not enough JJ coins.'):say('No se confirmó. Reintenta; el mismo artículo no se cobra dos veces.','Not confirmed. Retry; the same item is not charged twice.');}finally{busy=false;paint();}}
- function cleanup(){alive=false;devices.close();records.stop();stop();clearInterval(phraseTimer);document.removeEventListener('visibilitychange',resume);media.removeEventListener('change',resume);}
+ function cleanup(){alive=false;stopWatching();devices.close();records.stop();stop();voice.close();clearTimeout(moodTimer);document.removeEventListener('visibilitychange',resume);media.removeEventListener('change',resume);}
  try{data=await home(true);paint();posters.load();records.load().then(paint).catch(()=>{if(current())status.textContent=say('No se pudieron cargar los vinilos.','Could not load records.');});}catch{if(current()){status.textContent=say('No se pudo cargar. Vuelve a abrir este apartado para reintentar.','Could not load. Reopen this section to retry.');}}
  return cleanup;
 }

@@ -1,7 +1,54 @@
 import {recolor} from './yuki-room-dye.js?v=2';
-let homeCache=null,homeOwner=null,homePromise=null,homeTime=0;
-export function updateHome(data){homeCache=data;homeOwner=state.profile?.id;homeTime=Date.now();window.dispatchEvent(new CustomEvent('yuki-customized',{detail:{owner:homeOwner,data}}));}
-export async function home(force=false){const id=state.profile?.id;if(!force&&homeOwner===id&&homeCache&&Date.now()-homeTime<60000)return homeCache;if(homePromise?.id===id)return homePromise.promise;const promise=(async()=>{const {data,error}=await db.rpc('yuki_hub');if(error)throw error;if(state.profile?.id===id){homeCache=data;homeOwner=id;homeTime=Date.now();}return data})();homePromise={id,promise};try{return await promise}finally{if(homePromise?.promise===promise)homePromise=null}}
+export const expressions=new URL('../assets/yuki-room/yuki-expressions.webp',import.meta.url).href;
+const customizationEvent='yuki-customized';
+const homeEntries=new Map();
+const storageKey=owner=>'yuki.home.changed.'+owner;
+function homeEntry(owner){
+ if(!homeEntries.has(owner))homeEntries.set(owner,{data:null,time:0,revision:0,pending:null,lastSignal:null});
+ return homeEntries.get(owner);
+}
+export function updateHome(data){
+ const owner=state.profile?.id;
+ if(!owner)return;
+ const entry=homeEntry(owner);
+ Object.assign(entry,{data,time:Date.now(),revision:entry.revision+1});
+ window.dispatchEvent(new CustomEvent(customizationEvent,{detail:{owner,data}}));
+ try{localStorage.setItem(storageKey(owner),crypto.randomUUID());}catch{}
+}
+export async function home(force=false){
+ const owner=state.profile?.id;
+ const entry=homeEntry(owner);
+ if(!force&&entry.data&&Date.now()-entry.time<60000)return entry.data;
+ const revision=entry.revision;
+ if(entry.pending?.revision===revision)return entry.pending.promise;
+ const promise=(async()=>{
+  const {data,error}=await db.rpc('yuki_hub');
+  if(error)throw error;
+  if(entry.revision!==revision && state.profile?.id===owner)return home();
+  if(state.profile?.id===owner)Object.assign(entry,{data,time:Date.now()});
+  return data;
+ })();
+ entry.pending={revision,promise};
+ try{return await promise;}
+ finally{if(entry.pending?.promise===promise)entry.pending=null;}
+}
+export function watchHome(owner,apply){
+ let active=true;
+ const customized=event=>{if(event.detail?.owner===owner)apply(event.detail.data);};
+ const storage=event=>{
+  if(event.key!==storageKey(owner)||state.profile?.id!==owner)return;
+  const entry=homeEntry(owner);
+  if(entry.lastSignal!==event.newValue)Object.assign(entry,{data:null,time:0,revision:entry.revision+1,lastSignal:event.newValue});
+  home(true).then(data=>{if(active&&state.profile?.id===owner)apply(data);}).catch(()=>{});
+ };
+ window.addEventListener(customizationEvent,customized);
+ window.addEventListener('storage',storage);
+ return ()=>{
+  active=false;
+  window.removeEventListener(customizationEvent,customized);
+  window.removeEventListener('storage',storage);
+ };
+}
 const pajamaColors = new Set(['pajamas-rose','pajamas-mint','pajamas-blue','outfit-casual','outfit-aesthetic','outfit-dress']);
 export async function skin(outfit,palette){
  const url=pajamaColors.has(outfit)

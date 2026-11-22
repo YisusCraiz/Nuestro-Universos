@@ -2,7 +2,7 @@ export const recordDeck = 'jj-turntable';
 const prefix = 'vinyl:';
 export const isRecord = item => item.startsWith(prefix);
 
-export function mountRecords(root, current) {
+export function mountRecords(root, current, onPlayback) {
  const box = document.createElement('section');
  box.className = 'yr-records';
  box.hidden = true;
@@ -49,6 +49,8 @@ export function mountRecords(root, current) {
  audio.ontimeupdate=()=>{seek.value=audio.currentTime;};
  const renderPlay=()=>{play.textContent=audio.paused?'▶':'❚❚';wave.classList.toggle('playing',!audio.paused);};
  for(const event of ['play','pause','ended'])audio.addEventListener(event,renderPlay);
+ audio.addEventListener('playing',()=>onPlayback(true));
+ for(const event of ['pause','ended','emptied','waiting','error'])audio.addEventListener(event,()=>onPlayback(false));
  function skip(direction){
   const ids=[...picker.options].slice(1).map(option=>option.value);
   if(!ids.length)return;
@@ -78,6 +80,7 @@ export function mountRecords(root, current) {
   if(!choices.length)status.textContent=say('Tus discos comprados aparecerán aquí.','Your purchased records will appear here.');
  }
  function stop(){
+  onPlayback(false);
   request++;
   audio.pause();
   if(audio.hasAttribute('src')){audio.removeAttribute('src');audio.load();}

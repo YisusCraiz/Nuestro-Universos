@@ -17,6 +17,8 @@ export const roomBackdrop = `<svg class="yr-backdrop" viewBox="0 0 960 480" pres
  <path d="M0 386l178-91h507l275 128" fill="none" stroke="#d7a8ae" stroke-width="7"/>
  <path d="M0 407q458-75 960 21M0 453q470-62 960-3M0 479q480-46 960-11M244 297 91 480m247-184-72 184m165-185-1 185m92-185 78 185m17-185 188 185" fill="none" stroke="#513849" stroke-opacity=".43" stroke-width="2"/>
  <ellipse cx="331" cy="330" rx="410" ry="232" fill="url(#yr-sun)"/>
+ <path d="M0 397l180-92h503l277 128" fill="none" stroke="#412942" stroke-width="3" opacity=".29"/>
+ <path d="M19 421l74-14m-35 41 76-12m434-11 92 6m159 22 86 9" fill="none" stroke="#efbbc4" stroke-width="2" stroke-linecap="round" opacity=".23"/>
  <g class="yr-default-window">
  <path d="M100 209v-65a67 67 0 0 1 134 0v65Z" fill="#5d486e" stroke="#765776" stroke-width="18"/>
  <path d="M98 205v-65a65 65 0 0 1 130 0v65Z" fill="url(#yr-glass)" stroke="#efc5c9" stroke-width="7"/>
@@ -69,7 +71,7 @@ export const sceneStyles = `
 .yr-backdrop {display:block; position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
 .yr-room-title {z-index:6; background:#291e37e8; border:1px solid #f4cad066; border-radius:30px; padding:7px 12px;}
 .yr-decor[data-item="jj-lamp"]::before {content:''; position:absolute; inset:-25%; background:radial-gradient(#ffcd9970,transparent 64%); z-index:-1;}
-.yr .yr-actor {bottom:12%; width:clamp(56px,13cqi,112px); height:auto; aspect-ratio:94/126; transform-origin:center bottom;}
+.yr .yr-actor {bottom:12%; width:clamp(56px,13cqi,112px); height:auto; aspect-ratio:3/4; transform-origin:center bottom;}
 .yr .yr-pose {position:absolute; inset:0;}
 .yr .yr-actor::before {content:''; position:absolute; bottom:0; left:18%; width:64%; height:9%; background:#39264069; border-radius:50%; filter:blur(3px); z-index:-1;}
 .yr .yr-card {min-width:0; background:linear-gradient(155deg,#4a3156,#241b31 72%); border-color:#d6a9d156; padding:12px; overflow-wrap:anywhere;}
@@ -126,10 +128,9 @@ export const sceneStyles = `
 .yr-device video[hidden] {display:none;}
 .yr-device select {max-width:100%;}
 .yr-device button {padding:8px;border-radius:10px;border:1px solid #ad7fa8;background:#493350;color:#fff2e7;}
-.yr-arcade-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:300px;}
-.yr-arcade-grid button {aspect-ratio:1;font-size:24px;}
-.yr-arcade-grid button[aria-pressed="true"] {background:#9c5e8d;color:#ffe8a9;}
-
+.yr-pong {width:100%;height:auto;display:block;touch-action:none;border-radius:12px;outline-offset:3px;cursor:crosshair;}
+.yr-pong-score {font-weight:750;font-variant-numeric:tabular-nums;color:#fff1d1;}
+.yr-pong + button {margin-top:12px;min-height:44px;min-width:96px;}
 .yr-dye {margin-bottom:12px;padding:12px;border-radius:14px;background:#332442;border:1px solid #ad7fa855;}
 .yr-dye h3,.yr-dye p {margin:0 0 8px;}
 .yr-dye label {display:inline-flex;align-items:center;gap:6px;margin:0 10px 8px 0;}
@@ -177,23 +178,72 @@ export const sceneStyles = `
 .yr .yr-decor[data-slot="poster2"] {--x:55%;--y:39%;--w:16%;--h:25%;}
 .yr .yr-decor[data-slot="display"] {--x:84%;--y:44%;--w:15%;--h:14%;--light:.88;}
 .yr .yr-decor[data-slot="frame"] {--x:46%;--y:49%;--w:9%;--h:13%;}
-.yr .yr-decor[data-slot="player"] {--x:36%;--y:51%;--w:11%;--h:14%;--layer:6;}
+.yr .yr-decor[data-slot="player"] {--x:36%;--y:49%;--w:10%;--h:12%;--layer:6;}
 .yr .yr-decor[data-slot="shelf"] {--x:13%;--y:76%;--w:17%;--h:28%;--layer:3;}
 .yr .yr-decor[data-item="shelf-cloud"] {--x:15%;--y:62%;--w:16%;--h:16%;}
-.yr .yr-decor[data-item="nu-arcade"] {--x:13%;--y:76%;--w:13%;--h:23%;--layer:5;}
-.yr .yr-decor[data-slot="tv"] {--x:29%;--y:72%;--w:17%;--h:22%;--layer:4;}
+.yr .yr-decor[data-item="nu-arcade"] {--x:12%;--y:76%;--w:13%;--h:25%;--layer:5;}
+.yr .yr-decor[data-slot="tv"] {--x:30%;--y:72%;--w:17%;--h:22%;--layer:4;}
 .yr .yr-decor[data-slot="bed"] {--x:71%;--y:77%;--w:32%;--h:34%;--light:.89;--layer:2;}
 .yr .yr-decor[data-slot="plush"] {--x:71%;--y:61%;--w:16%;--h:18%;--layer:3;}
 .yr .yr-decor[data-slot="pillow"] {--x:78%;--y:65%;--w:11%;--h:12%;--layer:4;}
 .yr-scene[data-custom-bed] .yr-decor[data-slot="plush"] {--x:66%;--y:70%;--w:13%;--h:15%;}
 .yr-scene[data-custom-bed] .yr-decor[data-slot="pillow"] {--x:75%;--y:69%;}
-.yr .yr-decor[data-slot="light"] {--x:92%;--y:85%;--w:10%;--h:25%;--light:.91;--layer:5;}
-.yr .yr-decor[data-slot="cabinet"] {--x:87%;--y:86%;--w:15%;--h:19%;--light:.89;--layer:4;}
+.yr .yr-decor[data-slot="light"] {--x:94%;--y:82%;--w:8%;--h:24%;--light:.91;--layer:5;}
+.yr .yr-decor[data-slot="cabinet"] {--x:85%;--y:88%;--w:14%;--h:19%;--light:.89;--layer:4;}
 .yr .yr-decor[data-slot="instrument"] {--x:52%;--y:79%;--w:16%;--h:22%;--layer:4;}
 .yr .yr-decor[data-slot="sofa"] {--x:24%;--y:88%;--w:28%;--h:24%;--layer:6;}
 .yr .yr-decor[data-slot="plant"] {--x:7%;--y:88%;--w:10%;--h:16%;--layer:7;}
 .yr .yr-decor[data-slot="rug"] {--x:43%;--y:91%;--w:36%;--h:19%;--layer:1;transform:translate(-50%,-100%) scaleY(.73);}
 .yr .yr-actor {z-index:8;}
+.yr-actor:is([data-mood],[data-dancing])::after {
+ position:absolute;right:4%;top:13%;z-index:1;padding:.16em .4em;
+ border-radius:12px;background:#392649e8;color:#ffe4be;
+ font-size:clamp(12px,2.4cqi,18px);pointer-events:none;
+}
+.yr-actor[data-mood="happy"]::after {content:"♥";}
+.yr-actor[data-mood="curious"]::after {content:"?";}
+.yr-actor[data-mood="playful"]::after {content:"✦";}
+.yr-actor[data-mood="surprised"]::after {content:"!";}
+.yr-actor[data-mood="shy"]::after {content:"♡";}
+.yr-actor[data-mood="sleepy"]::after {content:"zZ";}
+.yr .yr-actor:not([data-walking],[data-dancing])[data-mood] .yr-pose {transform-origin:center bottom;}
+.yr .yr-actor:not([data-walking],[data-dancing]):is([data-mood="happy"],[data-mood="surprised"]) .yr-pose {animation:yr-idle 1s steps(1) infinite,yr-hop .6s ease-out;}
+.yr .yr-actor:not([data-walking],[data-dancing]):is([data-mood="curious"],[data-mood="shy"]) .yr-pose {animation:yr-idle 1.6s steps(1) infinite,yr-tilt 1s ease-in-out;}
+.yr .yr-actor:not([data-walking],[data-dancing])[data-mood="sleepy"] .yr-pose {animation:yr-idle 2.8s steps(1) infinite,yr-tilt 2.2s ease-in-out;}
+.yr .yr-actor:not([data-walking],[data-dancing])[data-mood="playful"] .yr-pose {animation:yr-idle .8s steps(1) infinite,yr-tilt .65s ease-in-out;}
+.yr-actor[data-mood="curious"] {--emotion-x:33.333333%;}
+.yr-actor[data-mood="surprised"] {--emotion-x:66.666667%;}
+.yr-actor[data-mood="shy"] {--emotion-x:100%;}
+.yr .yr-actor[data-expressions]:not([data-dancing]):is([data-mood="happy"],[data-mood="curious"],[data-mood="surprised"],[data-mood="shy"],[data-mood="playful"]) .yr-pose {
+ background-image:var(--yuki-expressions)!important;
+ background-size:400% 200%;background-position:var(--emotion-x,0%) 0!important;
+ animation:none;transform:none;
+}
+.yr .yr-actor[data-dancing] .yr-pose {
+ background-position-y:50%;transform-origin:center bottom;
+ animation:yr-walk .66s steps(1) infinite,yr-dance .66s ease-in-out infinite;
+}
+.yr .yr-actor[data-dancing][data-expressions] .yr-pose {
+ background-image:var(--yuki-expressions)!important;
+ background-size:400% 200%;background-position:0 100%;
+}
+.yr .yr-actor[data-dancing]::after {content:"♫";animation:yr-note-dance 1.32s ease-in-out infinite;}
+.yr-scene[data-music-playing] .yr-decor[data-item="jj-turntable"] {--light:1.11;}
+@keyframes yr-hop {38%{transform:translateY(-10%) rotate(-5deg)}}
+@keyframes yr-tilt {45%{transform:rotate(-8deg) scaleY(.96)}}
+@keyframes yr-dance {
+ 0%,100%{transform:translateX(-7%) rotate(-7deg)}
+ 25%{transform:translateY(-6%) rotate(-3deg)}
+ 50%{transform:translateX(7%) rotate(7deg)}
+ 75%{transform:translateY(-6%) rotate(3deg)}
+}
+@keyframes yr-note-dance {50%{transform:translateY(-5px) rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){
+ .yr .yr-actor .yr-pose,.yr .yr-actor::after{animation:none!important;transform:none!important;}
+}
+.yr button.yr-decor:focus-visible {outline:2px solid #ffe2af;outline-offset:2px;border-radius:8px;}
+.yr .yr-decor > img {min-width:0;min-height:0;}
+.yr-scene:not([data-layout-editing]) .yr-decor[data-item="nu-arcade"]:hover {--light:1.16;}
 .yr .yr-room-title,.yr .yr-preview-label {z-index:9;}
 @container yuki-room (max-width:525px) {
  .yr .yr-decor[data-slot="bed"] {--h:29%;}
