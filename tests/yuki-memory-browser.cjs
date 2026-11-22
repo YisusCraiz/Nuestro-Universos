@@ -301,6 +301,17 @@ async function scenario(name,handle,expected){
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.ok(proposalsQueried>queriesBeforeMore,'confirmed pagination loads more memories');
   assert.ok(window.document.getElementById('load-info').textContent.includes('102 recuerdos'),'pagination displays loaded count');
+  const memoryCards=[...window.document.querySelectorAll('#items article')];
+  assert.ok(memoryCards.length>1,'multiple memories visible for cross-card draft test');
+  const secondDraft=memoryCards[1].querySelector('textarea');
+  secondDraft.value='Unsubmitted edits in another card';
+  const previousMutations=mutations.length;
+  window.confirm=()=>false;
+  memoryCards[0].querySelector('button').click();
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(mutations.length,previousMutations,'cancelled action with another dirty card cannot mutate');
+  assert.equal(secondDraft.value,'Unsubmitted edits in another card','cancelled cross-card action preserves draft');
+  window.confirm=()=>true;
   inserted.splice(1);
   // Simulate a guarded update conflict followed by a failed list refresh.
   failMemoryLoad=true;
