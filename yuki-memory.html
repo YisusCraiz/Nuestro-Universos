@@ -130,7 +130,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   try{await requireSession();}catch(e){say(e.message);if(sessionActive)btn.disabled=false;return;}
   let error;
   try{({error}=await db.from('yuki_memory_proposals').insert({owner_id:user.id,memory_text:text,visibility:submittedVisibility,status:'pending'}));}
-  catch(e){btn.disabled=false;say('No se pudo conectar para guardar el recuerdo.');return;}
+  catch(e){if(!sessionActive){clearSensitive();return;}btn.disabled=false;say('No se pudo conectar para guardar el recuerdo.');return;}
   if(!sessionActive){clearSensitive();return;}
   btn.disabled=false;
   if(error){if(sessionActive)say('No se pudo crear la propuesta. Revisa la instalación de la tabla.');return;}
