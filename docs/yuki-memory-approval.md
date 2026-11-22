@@ -56,3 +56,9 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - Si una tarjeta empieza a editarse mientras una inserción está pendiente, el resultado de esa inserción no fuerza una recarga que borre el texto local. La propuesta queda guardada, y el usuario puede actualizar la lista después de conservar sus ediciones.
 - Un error de carga informa que la lista todavía visible puede estar desactualizada; no afirma que los datos mostrados sean recientes.
 - Las pruebas automatizadas de estas situaciones usan un cliente Supabase simulado. La validación con cuentas reales sigue pendiente.
+
+## Revisión de cambios paralelos y sorpresas
+- Si una operación detecta un conflicto, antes de recargar el panel se revisan **todas** las tarjetas visibles con ediciones sin guardar, no solo la tarjeta que originó el conflicto.
+- Cuando otra tarjeta cambia mientras una actualización está pendiente, la recarga automática se pospone para no borrar el nuevo borrador. Un aviso explica que debe actualizarse la lista después de conservar las ediciones.
+- Las tarjetas con visibilidad `surprise` indican explícitamente que están excluidas del contexto de Gemini incluso si se aprobaron. La integración de Gemini permanece desactivada por defecto.
+- Estas garantías tienen pruebas de DOM simulado; sigue faltando validación de dos sesiones reales y revisión manual de accesibilidad.
