@@ -23,6 +23,8 @@ async function scenario(name,handle,expected){
  let updateGate=null;
  let switchedUser=false;
  let preflightInvocations=0;
+ let consentValue=false;
+ let consentWrites=0;
  let preflightGate=null;
  let preflightCountOverride=null;
  const db={
@@ -30,6 +32,7 @@ async function scenario(name,handle,expected){
   auth:{getUser:async()=>{if(failAuth)throw Error('Network unavailable');return {data:{user:handle===null?null:(switchedUser?{id:'different-account'}:user)},error:null};},onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
   from(table){
    if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle},error:null})})})};
+   if(table==='yuki_memory_ai_consent')return {select:()=>({eq:()=>({maybeSingle:async()=>({data:{enabled:consentValue},error:null})})}),upsert:async row=>{assert.equal(row.owner_id,user.id);consentWrites++;consentValue=row.enabled;return {error:null};}};
    if(table==='yuki_memory_proposals'){
     proposalsQueried++;
     return {
@@ -54,6 +57,20 @@ async function scenario(name,handle,expected){
  assert.equal(window.document.getElementById('preflight').disabled,!['jesus','julisa'].includes(handle),name+': preflight requires authorized profile');
  if(['jesus','julisa'].includes(handle)){
   assert.equal(typeof authListener,'function','auth listener registered');
+  const consent=window.document.getElementById('ai-consent');
+  assert.equal(consent.disabled,false,'owner can manage independent consent');
+  assert.equal(consent.checked,false,'Gemini consent is disabled by default');
+  window.confirm=()=>true;
+  consent.checked=true;
+  consent.dispatchEvent(new window.Event('change'));
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(consentWrites,1,'Gemini consent must be explicitly saved');
+  assert.equal(consentValue,true,'consent enabled only by owner action');
+  consent.checked=false;
+  consent.dispatchEvent(new window.Event('change'));
+  await new Promise(resolve=>setTimeout(resolve,30));
+  assert.equal(consentWrites,2,'Gemini consent can be revoked');
+  assert.equal(consentValue,false,'revocation is persisted');
   window.document.getElementById('preflight').click();
   await new Promise(resolve=>setTimeout(resolve,30));
   assert.equal(preflightInvocations,1,'owner can call isolated authenticated preflight');
@@ -432,6 +449,7 @@ async function scenario(name,handle,expected){
   assert.equal(window.document.getElementById('visibility').value,'private','account switch restores safest privacy default');
   assert.equal(window.document.getElementById('refresh').disabled,true,'account switch disables refresh');
   assert.equal(window.document.getElementById('preflight').disabled,true,'account switch disables backend preflight');
+  assert.equal(window.document.getElementById('ai-consent').disabled,true,'account switch locks Gemini consent');
   assert.equal(window.document.getElementById('more').disabled,true,'account switch disables pagination');
   assert.equal(window.document.getElementById('memory-count').textContent,'0 / 4000 caracteres','account switch resets draft length indicator');
   assert.equal(window.document.getElementById('load-info').textContent,'','account switch clears loaded-memory metadata');
@@ -441,6 +459,7 @@ async function scenario(name,handle,expected){
   authListener('SIGNED_OUT',null);
   assert.equal(window.document.getElementById('memory').value,'','draft cleared on sign-out');
   assert.equal(window.document.getElementById('propose').disabled,true,'submission disabled on sign-out');
+  assert.equal(window.document.getElementById('ai-consent').disabled,true,'consent disabled on sign-out');
   assert.equal(window.document.getElementById('items').children.length,0,'items cleared on sign-out');
   const queriesAfterSignout=proposalsQueried;
   const actionsAfterSignout=mutations.length;
@@ -471,6 +490,7 @@ async function preflightSignoutScenario(){
   functions:{invoke:async()=>{await delayed;return {data:{ok:true,approvedVisibleCount:1,excludedSurpriseCount:0,memoryTextReturned:false,geminiUsed:false},error:null};}},
   from(table){
    if(table==='profiles')return {select:()=>({eq:()=>({single:async()=>({data:{handle:'jesus'},error:null})})})};
+   if(table==='yuki_memory_ai_consent')return {select:()=>({eq:()=>({maybeSingle:async()=>({data:{enabled:false},error:null})})})};
    if(table==='yuki_memory_proposals')return {select:()=>({eq:()=>({order:()=>({limit:async()=>{queries++;return {data:[],error:null};}})})})};
    throw Error('Unexpected table '+table);
   }
