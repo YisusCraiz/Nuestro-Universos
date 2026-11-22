@@ -300,13 +300,16 @@ async function scenario(name,handle,expected){
   let finishInsert;
   insertGate=new Promise(resolve=>{finishInsert=resolve;});
   draft.value='Memory currently being saved';
+  window.document.getElementById('visibility').value='shared';
   window.document.getElementById('propose').click();
   await new Promise(resolve=>setTimeout(resolve,10));
   draft.value='Next private memory draft';
+  window.document.getElementById('visibility').value='surprise';
   finishInsert();
   await new Promise(resolve=>setTimeout(resolve,40));
   assert.equal(draft.value,'Next private memory draft','new draft typed during save survives completed insertion');
   assert.equal(inserted.at(-1).memory_text,'Memory currently being saved','saved memory uses initial draft text');
+  assert.equal(inserted.at(-1).visibility,'shared','saved memory privacy is the value selected at submission, not later changes');
   insertGate=null;
   inserted.pop();
   window.document.getElementById('visibility').value='surprise';
