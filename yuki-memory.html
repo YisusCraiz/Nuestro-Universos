@@ -126,7 +126,7 @@ small,.muted{color:#c9bdd7}.stats{display:flex;gap:10px;flex-wrap:wrap}.stats sp
   if(!text){say('Escribe un recuerdo primero.');return;}
   if(text.length>4000){say('El recuerdo supera el límite de 4000 caracteres.');return;}
   btn.disabled=true;
-  try{await requireSession();}catch(e){say(e.message);btn.disabled=false;return;}
+  try{await requireSession();}catch(e){say(e.message);if(sessionActive)btn.disabled=false;return;}
   let error;
   try{({error}=await db.from('yuki_memory_proposals').insert({owner_id:user.id,memory_text:text,visibility:document.getElementById('visibility').value,status:'pending'}));}
   catch(e){btn.disabled=false;say('No se pudo conectar para guardar el recuerdo.');return;}
