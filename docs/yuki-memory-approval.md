@@ -39,10 +39,10 @@ Panel en rama, **aún no fusionado ni publicado**. La tabla `public.yuki_memory_
 - La interfaz de importación exige sesión de Supabase y perfil `jesus`; la verdadera barrera de acceso a los datos es RLS, no la verificación del navegador.
 
 ## Integración Gemini preparada (sin activar)
-- `supabase/functions/yuki-chat/index.ts` consulta `yuki_memory_proposals` **solo** si `YUKI_REVIEWED_MEMORY_AI_ENABLED=true` y el perfil autenticado es `jesus`.
+- `supabase/functions/yuki-chat/index.ts` consulta `yuki_memory_proposals` **solo** cuando el propietario autenticado (`jesus` o `julisa`) activó individualmente `yuki_memory_ai_consent.enabled=true`.
 - Filtra `owner_id` con el UUID del JWT, `status='approved'`, y limita a 20 registros. Se usa el cliente con JWT del usuario y RLS; no se usa el cliente administrador para leer propuestas.
-- Son obligatorios **dos** controles independientes: `YUKI_REVIEWED_MEMORY_AI_ENABLED=true` (activación técnica) y `YUKI_REVIEWED_MEMORY_OWNER_CONSENT=true` (consentimiento explícito del propietario para enviar los recuerdos aprobados a Gemini). El consentimiento de un recuerdo para almacenamiento **no** implica consentimiento para procesamiento por IA.
-- Por defecto ambos controles están apagados; este cambio en la rama no despliega la Edge Function. No habilitar hasta confirmar consentimiento informado y completar pruebas reales de ambas cuentas, revocación y ausencia de filtraciones.
+- La aprobación de una propuesta y la activación personal de Gemini son permisos independientes. Aprobar un recuerdo para almacenarlo **no** implica consentimiento para enviarlo a la IA.
+- El consentimiento está apagado por defecto para cada perfil y se puede revocar en su panel. No comparte recuerdos automáticamente con la pareja.
 - La función ya tenía un sistema **anterior y separado** de recuerdos (`yuki_chat_memories` / `yuki_memories`). Este cambio no modifica sus políticas ni los permisos de recuerdos compartidos preexistentes.
 
 ## Refuerzos de seguridad y errores de red (noviembre 2026)
@@ -97,3 +97,12 @@ Se añadió `tests/yuki-memory-preflight-runtime.cjs`, que ejecuta el **handler 
 - Se añadió una prueba aislada de cierre de sesión mientras la respuesta de preflight estaba pendiente: al regresar, el resultado antiguo no aparece y el botón permanece desactivado.
 - GitHub Actions aprobó las pruebas del navegador y del backend. Se desplegó únicamente `yuki-memory-preflight` **versión 2**, con `verify_jwt=true`, y se verificó el código publicado; `yuki-chat` sigue intacta y Gemini continúa sin acceso a los nuevos recuerdos.
 - La ejecución real con JWT de ambas cuentas todavía requiere validación manual autorizada.
+
+## Integración para ambos perfiles (22 noviembre 2026)
+- El panel `yuki-memory.html` acepta exclusivamente perfiles autenticados `jesus` y `julisa`, con propuestas separadas por `owner_id=auth.uid()` y RLS. Julie puede gestionar **sus propios** recuerdos, nunca los privados de Yisus; Yisus no puede editar ni leer los de Julie.
+- `public.yuki_memory_ai_consent` guarda el opt-in separado por cuenta, desactivado por defecto, y permite revocar desde el panel. Tiene cuatro políticas RLS (una por operación) y no concede lectura a `anon`. La prueba SQL de aislamiento `supabase/yuki-memory-ai-consent-security-test.sql` se ejecutó con `ROLLBACK` sin conservar datos de prueba.
+- `yuki-chat` v9 consulta el consentimiento con el JWT vigente antes de recuperar **únicamente** los recuerdos propios aprobados, con visibilidad `private` o `shared`. Los de tipo sorpresa quedan excluidos. Al revocar, las próximas solicitudes no los consultan; esto no elimina mensajes o solicitudes ya enviados a Gemini ni cancela una solicitud en curso.
+- La función `yuki-memory-preflight` v3 permite el conteo seguro con ambos perfiles sin devolver contenido.
+- El permiso verbal informado por Yisus no habilita la IA por sí solo. **Cada titular debe activar explícitamente la casilla en su panel** antes de compartir los recuerdos autorizados con Gemini.
+- El nuevo código de conversación se desplegó a la función existente tras pruebas de escenario aislado; falta una prueba de conversación auténtica por cada titular para declarar Gemini verificada de extremo a extremo.
+- No se ha implementado compartición cruzada automática de recuerdos: `shared` solo marca intención futura, y la otra persona no los recibe.
