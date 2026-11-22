@@ -20,6 +20,7 @@ async function scenario(name,handle,expected){
  let failMemoryLoad=false;
  let throwMemoryLoad=false;
  let insertGate=null;
+ let updateGate=null;
  let switchedUser=false;
  const db={
   auth:{getUser:async()=>{if(failAuth)throw Error('Network unavailable');return {data:{user:handle===null?null:(switchedUser?{id:'different-account'}:user)},error:null};},onAuthStateChange:callback=>{authListener=callback;return {data:{subscription:{unsubscribe(){}}}}}},
@@ -30,7 +31,7 @@ async function scenario(name,handle,expected){
     return {
      select:()=>({eq:()=>({order:()=>({limit:async()=>{if(throwMemoryLoad)throw Error('Mock disconnected network');return failMemoryLoad?{data:null,error:{message:'Mock network error'}}:{data:inserted.map((x,i)=>({...x,id:'proposal-'+i,created_at:new Date().toISOString(),approved_at:null})),error:null};}})})}),
      insert:async row=>{if(insertGate)await insertGate;inserted.push(row);return {error:null};},
-     update:row=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'update',row});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);if(matches)Object.assign(inserted[0],row);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;},
+     update:row=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{if(updateGate)await updateGate;mutations.push({type:'update',row});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);if(matches)Object.assign(inserted[0],row);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;},
      delete:()=>{const conditions=[];const query={eq:(field,value)=>{conditions.push([field,value]);return query;},select:async()=>{mutations.push({type:'delete'});const matches=mutationRows&&inserted[0]&&conditions.every(([field,value])=>field==='id'?value==='proposal-0':field==='owner_id'?value===user.id:inserted[0][field]===value);return {data:matches?[{id:'proposal-0'}]:[],error:null};}};return query;}
     };
    }
@@ -326,6 +327,26 @@ async function scenario(name,handle,expected){
   assert.equal(mutations.length,previousMutations,'cancelled action with another dirty card cannot mutate');
   assert.equal(secondDraft.value,'Unsubmitted edits in another card','cancelled cross-card action preserves draft');
   window.confirm=()=>true;
+  // Another card can become dirty while a confirmed update is in flight.
+  let releaseUpdate;
+  updateGate=new Promise(resolve=>{releaseUpdate=resolve;});
+  const beforeConcurrentAction=proposalsQueried;
+  const cardsDuringUpdate=[...window.document.querySelectorAll('#items article')];
+  const otherLocalEdit=cardsDuringUpdate[1].querySelector('textarea');
+  const restoreDuringUpdate=[...cardsDuringUpdate[0].querySelectorAll('button')].find(x=>x.textContent==='Volver a pendiente');
+  assert.ok(restoreDuringUpdate,'rejected memory can be restored during concurrency test');
+  restoreDuringUpdate.click();
+  await new Promise(resolve=>setTimeout(resolve,10));
+  otherLocalEdit.value='Another card edited after update started';
+  releaseUpdate();
+  await new Promise(resolve=>setTimeout(resolve,40));
+  assert.equal(otherLocalEdit.value,'Another card edited after update started','concurrent update cannot erase another card draft');
+  assert.equal(proposalsQueried,beforeConcurrentAction+1,'concurrent update skips full reload when another card becomes dirty');
+  assert.ok(window.document.getElementById('notice').textContent.includes('Conservamos las ediciones'),'concurrent update explains deferred refresh');
+  updateGate=null;
+  otherLocalEdit.value=otherLocalEdit.defaultValue;
+  refresh.click();
+  await new Promise(resolve=>setTimeout(resolve,30));
   inserted.splice(1);
   // Simulate a guarded update conflict followed by a failed list refresh.
   failMemoryLoad=true;
