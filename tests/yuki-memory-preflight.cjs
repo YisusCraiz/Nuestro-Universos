@@ -5,7 +5,7 @@ assert.ok(source.includes("request.method!=='POST'"),'Preflight must reject non-
 for(const required of [
  "request.headers.get('Authorization')",
  "db.auth.getUser(match[1])",
- "profile?.handle!=='jesus'",
+ "!['jesus','julisa'].includes(profile?.handle)",
  ".eq('owner_id',uid)",
  ".eq('status','approved')",
  ".in('visibility',['private','shared'])",
@@ -18,5 +18,5 @@ for(const required of [
 assert.ok(!source.includes('GEMINI_API_KEY'),'Preflight must not have Gemini credentials');
 assert.ok(!source.includes('SUPABASE_SERVICE_ROLE_KEY'),'Preflight must not bypass RLS');
 assert.ok(!source.includes('memory_text'),'Preflight must not query memory content');
-assert.ok(source.includes('return respond({code:\'forbidden\'},403)'),'Preflight must deny Julie');
+assert.ok(source.includes('return respond({code:\'forbidden\'},403)'),'Preflight must deny unsupported profiles');
 console.log('PASS: preflight is JWT-gated, owner-only, RLS-scoped, count-only and no Gemini');
