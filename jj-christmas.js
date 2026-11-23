@@ -46,12 +46,30 @@ async function christmasArrival() {
   const screen = document.createElement('div');
   screen.className='winter-arrival';
   screen.setAttribute('role','status');
+  screen.innerHTML=`<div class="winter-arrival-scene" aria-hidden="true">
+    <div class="winter-arrival-convoy">
+      <span class="winter-arrival-sprite winter-arrival-yisus"></span>
+      <span class="winter-arrival-sprite winter-arrival-tobey"></span>
+      <span class="winter-arrival-sprite winter-arrival-sleigh"></span>
+    </div>
+  </div>`;
   const caption=document.createElement('strong');
   caption.textContent=say('Bienvenidos a nuestra Navidad','Welcome to our Christmas');
   screen.append(caption);
   document.body.append(screen);
-  await new Promise(resolve=>setTimeout(resolve,2000));
-  screen.remove();
+  const art=['arrival-plaza-v1.webp','arrival-sprites-v1.webp'].map(file=>new Promise((resolve,reject)=>{
+    const image=new Image();
+    image.onload=resolve;
+    image.onerror=reject;
+    image.src='assets/christmas/'+file;
+  }));
+  const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Reveal both layers together. Keep the original plaza if the new art is slow or unavailable.
+  void Promise.all(art).then(()=>{
+    if(screen.isConnected)screen.classList.add('winter-arrival-ready');
+  }).catch(()=>{});
+  try{await new Promise(resolve=>setTimeout(resolve,still?1600:2900));}
+  finally{screen.remove();}
 }
 
 const snowControl = document.createElement('label');
