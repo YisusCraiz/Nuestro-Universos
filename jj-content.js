@@ -7,27 +7,6 @@ function songDownloadButton(post){
   return `<button type="button" class="text-button" data-download-song="${esc(post.id)}">${bi('Descargar canción','Download song')}</button>`;
 }
 
-async function downloadSong(button,post){
-  if(post?.kind!=='music'||!post.audio_path||!state.profile||!ensureLive())return;
-  const owner=state.profile.id;
-  const extension=post.audio_path.match(/\.[a-z0-9]{1,6}$/i)?.[0]||'';
-  const title=post.title.replace(/[<>:"/\\|?*\x00-\x1f]/g,' ').slice(0,100).trim().replace(/\.+$/,'')||say('Canción','Song');
-  const name=title.toLowerCase().endsWith(extension.toLowerCase())?title:title+extension;
-  button.disabled=true;
-  try{
-    const {data,error}=await db.storage.from('universe').createSignedUrl(post.audio_path,300);
-    if(error)throw error;
-    if(state.profile?.id!==owner||!button.isConnected)return;
-    const url=new URL(data.signedUrl);
-    url.searchParams.set('download',name);
-    window.location.assign(url.href);
-  }catch{
-    if(state.profile?.id===owner&&button.isConnected)toast(say('No se pudo descargar la canción. Inténtalo de nuevo.','Could not download the song. Try again.'));
-  }finally{
-    button.disabled=false;
-  }
-}
-
 const lifePostCard=postCard;
 postCard=function(p){CONTENT.posts.set(p.id,p);const html=lifePostCard(p).replace('<h3 translate="no">',`<h3 translate="no" data-post-text="${p.id}" data-field="title">`).replace('<p translate="no">',`<p translate="no" data-post-text="${p.id}" data-field="body" data-short="true">`);return html.replace('</article>',`<div class="card-body post-controls">${songDownloadButton(p)}${p.author_id===state.profile.id?`<button class="text-button" data-edit-post="${p.id}">${bi('Editar','Edit')}</button>`:''}<button class="text-button" data-request-post="${p.id}">${bi('Solicitar eliminación','Request deletion')}</button><span class="translation-note" data-translation-note="${p.id}"></span></div></article>`);};
 document.addEventListener('click',e=>{
