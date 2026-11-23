@@ -21,7 +21,7 @@ async function main(){
    const url=new URL(route.request().url());
    if(url.hostname!=='universe.test')return route.abort();
    // A failed seasonal stylesheet must not leave the mobile menu unstyled.
-   if(url.pathname==='/jj-christmas-interface.css')return route.abort();
+   if(['/jj-christmas-interface.css','/jj-christmas-notices.css'].includes(url.pathname))return route.abort();
    if(url.pathname==='/regalos-jxj.html')return route.fulfill({body:'<title>Regalos JXJ</title>',contentType:'text/html'});
    const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
    return route.fulfill({path:file}).catch(()=>route.abort());

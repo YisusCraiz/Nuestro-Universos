@@ -1,0 +1,22 @@
+.christmas-notice-tabs{display:none}
+html[data-season="christmas"] #jj-notifications .christmas-notice-tabs{display:grid;grid-template-columns:1fr 1.3fr;gap:4px;flex:none;padding:4px;background:#3a2545;margin:6px 8px 0;border-radius:11px}
+html[data-season="christmas"] #jj-push-toggle{display:none}
+.christmas-notice-tabs button{min-height:44px;padding:4px;border:0;border-radius:8px;background:none;color:#fff0f5;cursor:pointer;font-size:.83rem}
+.christmas-notice-tabs [aria-pressed="true"]{background:#ffd196;color:#352039}
+html[data-season="christmas"] #jj-notice-panel{background:#24182e;color:#fff0f5;border-color:#bc8561;width:min(380px,var(--edge-width));max-height:min(480px,var(--edge-height))}
+html[data-season="christmas"] #jj-notice-panel header{background:#34223f}
+html[data-season="christmas"] #jj-inbox .notice time b{color:#ffd196}
+html[data-season="christmas"] #jj-inbox .notice time span{color:#e4cde8}
+@media(max-width:760px){
+ html[data-season="christmas"] #jj-notice-panel{
+  right:calc(var(--edge-view-right,0px) + max(12px,var(--edge-safe-right),(var(--edge-view-width,100vw) - 380px)/2));
+  bottom:calc(var(--edge-view-bottom,0px) + var(--edge-safe-bottom));border-radius:18px 18px 0 0;
+ }
+}
+.christmas-notice-icon{display:none}
+html[data-season="christmas"] #jj-inbox .notice strong{display:flex;align-items:center;gap:7px}
+html[data-season="christmas"] #jj-inbox .christmas-notice-icon{
+ display:grid;place-items:center;flex:none;width:27px;height:27px;border-radius:8px;
+ background:#49304f;color:#ffd196;font-size:1rem
+}
+html[data-season="christmas"] #jj-notifications:has(#jj-notice-panel:not([hidden])){z-index:62}
