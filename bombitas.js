@@ -1,9 +1,31 @@
 'use strict';
 const BBSkins=[['casual','De diario','Everyday',0,'#faf7ec'],['catshirt','Camiseta gatuna','Cat tee',3,'#e6b4cf'],['sharkshirt','Camiseta tiburón','Shark tee',3,'#80bfd1'],['cat','Disfraz de gato','Cat costume',6,'#b4a2cf'],['shark','Disfraz tiburón','Shark costume',6,'#69a7c1'],['pajamas','Pijama de gatitos','Kitten pajamas',4,'#a8d6c1'],['ninja','Ninja nocturno','Night ninja',7,'#494e7c'],['yukata','Yukata lunar','Moon yukata',8,'#d99bac']];
 BBSkins.push(['five-more-minutes','Cinco minutos más','Five more minutes',4,'#13738a']);
+const BBExtraSkins=[
+ ['arcade-neon','Arcade neón','Neon arcade',6,'#654896'],
+ ['cafe-medianoche','Café de medianoche','Midnight café',5,'#967456'],
+ ['exploradores-astrales','Exploradores astrales','Astral explorers',8,'#7674c4'],
+ ['dia-de-lluvia','Día de lluvia','Rainy day',6,'#5e9991']
+];
+BBSkins.push(...BBExtraSkins);
+const BBExtraArt=new Image();
+BBExtraArt.onload=()=>window.dispatchEvent(new Event('bb-art-ready'));
+let BBExtraRequested=false;
 const matchingPajamas = {};
 const BBArt=new Image();BBArt.onload=()=>window.dispatchEvent(new Event('bb-art-ready'));BBArt.src='assets/bombitas/characters-v2.png';
 function bbCharacter(ctx,x,y,size,handle,skin='casual',time=0){
+ const extraIndex=BBExtraSkins.findIndex(([id])=>id===skin);
+ if(extraIndex>=0){
+   if(!BBExtraRequested){BBExtraRequested=true;BBExtraArt.src='assets/bombitas/shared-outfits-v1.webp';}
+   if(BBExtraArt.naturalWidth){
+     const cell=extraIndex*2+(handle==='julisa'?1:0);
+     const cw=BBExtraArt.naturalWidth/4,ch=BBExtraArt.naturalHeight/2;
+     ctx.drawImage(BBExtraArt,cell%4*cw,Math.floor(cell/4)*ch,cw,ch,
+       x-size*.62,y-size*.94+Math.sin(time/110)*size*.025,size*1.24,size*1.24);
+     return;
+   }
+   skin='casual';
+ }
  if(skin==='five-more-minutes'){
    const profile=handle==='julisa'?'julisa':'jesus';
    if(!matchingPajamas[profile]){

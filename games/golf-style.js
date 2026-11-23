@@ -3,6 +3,7 @@
 const golfHandles=['jesus','julisa'];
 const outfitSets=[
  {ids:['casual','catshirt','sharkshirt','cat','shark','pajamas','ninja','yukata'],file:'characters-v2.png',cols:4,rows:4},
+ {ids:['arcade-neon','cafe-medianoche','exploradores-astrales','dia-de-lluvia'],file:'shared-outfits-v1.webp',cols:4,rows:2},
  {ids:['ghost','pumpkin','vampire','skeleton','frankenstein','kitsune','witch','devil','zombie'],file:'halloween-characters-v1.png',cols:6,rows:3}
 ];
 const winterGolfOutfits=['christmas-santa','christmas-reindeer'];

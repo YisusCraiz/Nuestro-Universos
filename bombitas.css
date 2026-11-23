@@ -4,3 +4,11 @@
 @media(max-width:480px){.bb-room-panel{padding:15px}.bb-members{gap:8px}.bb-member{padding:10px}.bb-badge{font-size:13px}.bb-rule-inputs{gap:10px}.bb-rule-inputs label{max-width:47%}.bb-rule-inputs input{width:100%}.bb-invite strong{font-size:22px}.bb-card canvas{height:155px}.bb-stage:not(.bb-immersive) canvas{max-height:52svh}}
 .bombitas [hidden]{display:none!important}
 .bb-wager-panel{padding:14px 16px;margin:14px 0;border:1px solid #8ee7ce55;background:#102e3040;border-radius:14px}.bb-wager-panel p{margin:5px 0 12px;line-height:1.5}.bb-wager-panel .row{flex-wrap:wrap}.bb-rule-inputs small{font-size:12px;opacity:.8}
+
+.wardrobe-preview-dialog { max-width: 34rem; margin-inline: auto; }
+.wardrobe-fit-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .7rem; margin-block: 1rem; }
+.wardrobe-fit-grid figure { margin: 0; min-width: 0; padding: .45rem; border-radius: .9rem; border: 1px solid #ffffff26; background: radial-gradient(ellipse at 50% 34%,#836ba747,transparent 74%),#171828; text-align: center; }
+.wardrobe-fit-grid canvas { display: block; width: min(100%,9rem); height: auto; margin: auto; }
+.wardrobe-fit-grid figcaption { font-weight: 650; }
+#wardrobe-preview-status:empty, #wardrobe-status:empty { display: none; }
+#wardrobe-all[aria-pressed=true], #wardrobe-owned[aria-pressed=true] { outline: 2px solid currentColor; outline-offset: 2px; }
