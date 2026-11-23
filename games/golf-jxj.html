@@ -26,6 +26,31 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 .golf-people{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;color:var(--muted);font-size:.8rem}.golf-people span{border:1px solid var(--line);padding:5px 9px;border-radius:20px}.golf-people i{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#8b9bb1}.golf-people .golf-online{background:#80dfad;box-shadow:0 0 6px #80dfad80}.skin-sample{width:88px;height:82px;background:#14253a80;border:0;box-shadow:none}
 #wager{width:min(590px,calc(100% - 22px));max-height:85dvh;overflow:auto;color:var(--ink);background:#182c41;border:1px solid #7fa4c2;border-radius:16px;padding:16px}#wager::backdrop{background:#0c1422af}#wagerDetails{padding:10px 12px;margin:12px 0;background:#21394e;border-radius:10px}#wagerDetails h3{margin:0;color:var(--gold)}#wagerDetails p{margin:6px 0}#wagerBreakdown{font-size:.8rem;color:var(--muted)}#wagerActions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}#wagerStatus:empty,#wagerScores:empty,#wagerBreakdown:empty{display:none}#wagerStatus{color:var(--gold)}
 .golf-contact{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-weight:650}.golf-contact input{width:auto;accent-color:var(--gold)}.golf-contact-note{color:var(--muted);font-size:.8rem;margin:0 0 10px}
+.golf-menu{margin:14px 0;padding:clamp(14px,3vw,25px);border:1px solid var(--line);border-radius:18px;background:#192b3c}
+.golf-menu h2,#wagerTitle{margin:0;color:var(--gold);font:700 1.4rem Georgia}
+.golf-menu h3{margin:0 0 8px;font-size:.95rem}
+.golf-menu p,.room-help,.room-field small{color:var(--muted);font-size:.85rem}
+.golf-menu p{margin:6px 0 13px}
+.golf-online-menu{background:linear-gradient(120deg,#24394d,#272d47);border-color:#8f805e}
+.golf-room-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.golf-room-buttons button{display:grid;gap:4px;text-align:left;padding:12px 14px}
+.golf-room-buttons small{font-size:.8rem;font-weight:500}
+.golf-menu .mode-grid button:first-child{border-color:var(--line)}
+#wager{padding:clamp(14px,4vw,24px)}
+#wager .shop-heading{margin-bottom:14px}
+#wagerBalance{font-size:.85rem}
+#wager button,#wager select,#wagerCodeInput,#wagerStake{min-height:44px}
+.room-form,.room-field{display:grid;gap:8px}
+.room-form{gap:13px}
+.room-field select,.room-field input{width:100%}
+.room-help{margin:0}
+.room-toggle{display:flex;align-items:center;gap:8px;min-height:44px}
+.room-toggle input{width:18px;height:18px;accent-color:var(--gold)}
+.room-stake{padding:12px;background:#122437;border:1px solid var(--line);border-radius:10px}
+#wagerSummary{margin:0;padding:10px 12px;border-left:3px solid var(--gold);background:#20384d;font-size:.88rem}
+.room-footer{display:flex;justify-content:flex-end;margin-top:12px}
+#wagerActions .room-code{flex-basis:100%;font-size:1.25rem;letter-spacing:.12em;user-select:all}
+@media(max-width:530px){.golf-room-buttons{grid-template-columns:1fr}}
 </style>
 <main>
 <header><div><h1>Golf J×J</h1><p>Yisus & Julie · Nuestro Universo</p></div><button class="signature" id="language" lang="en">English</button></header>
@@ -39,19 +64,30 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <div class="member julie"><span class="chibi-stage"><span class="chibi-body julie" aria-hidden="true"></span><i aria-hidden="true">☾</i></span><strong>Julie</strong><small data-en="Pink Moon">Luna rosa</small></div>
 </div>
 </div>
-<section class="world-selector" aria-labelledby="world-heading">
-<h2 id="world-heading" data-en="Choose a circuit">Elige un circuito</h2>
-<div id="worldChoices" class="world-choices"></div>
+<section class="golf-menu golf-online-menu" aria-labelledby="rooms-heading">
+<h2 id="rooms-heading" data-en="Online rooms">Salas en línea</h2>
+<p data-en="Each player plays from their own device. The room keeps both scores.">Cada quien juega desde su dispositivo. La sala guarda los dos marcadores.</p>
+<div class="golf-room-buttons">
+<button id="wagerLobby" class="primary" type="button"><strong data-en="Create room">Crear sala</strong><small data-en="Pick a circuit and get an invitation code">Elige el circuito y genera un código de invitación</small></button>
+<button id="wagerJoinLobby" type="button"><strong data-en="Join a room">Unirse a una sala</strong><small data-en="Enter the invitation code you received">Escribe el código de invitación que te enviaron</small></button>
+</div>
 </section>
-<label class="golf-contact"><input id="ballContact" type="checkbox"> <span data-en="Ball collisions">Choque entre bolas</span></label>
-<p class="golf-contact-note" data-en="In local duels, both players’ balls can bump. Other modes use a gray practice ball.">En duelo local se empujan las dos bolas. En los demás modos hay una bola gris de práctica.</p>
+<section class="golf-menu" aria-labelledby="quick-heading">
+<h2 id="quick-heading" data-en="Quick play">Juego rápido</h2>
+<div class="world-selector" aria-labelledby="world-heading">
+<h3 id="world-heading" data-en="Circuit for duels and score challenges">Circuito para el duelo y el reto de marcador</h3>
+<div id="worldChoices" class="world-choices"></div>
+</div>
 <div class="mode-grid">
 <button id="localMode" type="button"><strong data-en="Play together">Duelo en casa</strong><small data-en="Take turns on one screen">Turnos en la misma pantalla</small></button>
-<button id="farMode" type="button"><strong data-en="Distance challenge">Reto a distancia</strong><small data-en="Play separately, then trade score codes">Jueguen por separado y comparen por código</small></button>
+<button id="farMode" type="button"><strong data-en="Score challenge">Reto de marcador</strong><small data-en="Play without a room and share your score after the round">Jueguen sin sala y compartan su marcador al terminar</small></button>
 <button id="practiceMode" type="button"><strong data-en="Practice a hole">Practicar un hoyo</strong><small data-en="Pick a course and retry freely">Elige un campo y repítelo a tu ritmo</small></button>
 </div>
-<button id="wagerLobby" class="shop-trigger" type="button" data-en="Create match">Crear partida</button>
-<button id="wagerJoinLobby" class="shop-trigger" data-en="Join with code">Unirse con código</button>
+</section>
+<details class="guide"><summary data-en="Play settings on this device">Ajustes de juego en este dispositivo</summary>
+<label class="golf-contact"><input id="ballContact" type="checkbox"> <span data-en="Ball collisions">Choque entre bolas</span></label>
+<p class="golf-contact-note" data-en="In local duels, both players’ balls can bump. Other modes use a gray practice ball.">En duelo local se empujan las dos bolas. En los demás modos hay una bola gris de práctica.</p>
+</details>
 <button id="shopLobby" type="button" data-en="Ball Album · Shop and equip" class="shop-trigger">Álbum de bolas · Tienda y equipamiento</button>
 <section id="records" class="records" hidden><h2 data-en="Personal bests on this device">Mejores rondas en este dispositivo</h2><div id="recordList"></div></section>
 <details class="guide"><summary data-en="How to play">Cómo jugar</summary><ol>
@@ -61,7 +97,7 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 </ol></details>
 </section>
 <section id="game" hidden>
-<div class="controls"><button id="back" data-en="Back to club">Volver al club</button><label id="whoLabel" hidden><span data-en="Playing as">Juegas como</span> <select id="who"><option>Yisus</option><option>Julie</option></select></label><label id="courseLabel" hidden><span data-en="Hole">Hoyo</span> <select id="coursePick"></select></label><button id="wagerGame" hidden type="button" data-en="View wager">Ver apuesta</button><button id="shopGame" type="button" data-en="Ball skins">Skins de bola</button><button id="sound" type="button" aria-pressed="false"></button><button class="reset" id="reset" data-en="Restart">Reiniciar</button></div>
+<div class="controls"><button id="back" data-en="Back to club">Volver al club</button><label id="whoLabel" hidden><span data-en="Playing as">Juegas como</span> <select id="who"><option>Yisus</option><option>Julie</option></select></label><label id="courseLabel" hidden><span data-en="Hole">Hoyo</span> <select id="coursePick"></select></label><button id="wagerGame" hidden type="button" data-en="View room">Ver sala</button><button id="shopGame" type="button" data-en="Ball skins">Skins de bola</button><button id="sound" type="button" aria-pressed="false"></button><button class="reset" id="reset" data-en="Restart">Reiniciar</button></div>
 <section class="arena" aria-label="Partida">
 <div class="row" id="scores"></div>
 <div class="bar"><div><div class="track" id="track"></div><strong id="label" tabindex="-1"></strong><span id="turn" aria-live="polite"></span></div><label><span id="powerLabel">Potencia · 0%</span><progress id="power" max="100" value="0"></progress></label></div>
@@ -79,7 +115,7 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <div class="aim-controls"><button id="aimMode" type="button" aria-pressed="false">Cambiar a toque para apuntar</button><label id="aimControl" hidden><span data-en="Power">Fuerza</span> <input id="aimForce" type="range" min="5" max="100" value="55"></label><button id="fire" data-en="Shoot" class="primary" type="button" hidden disabled>Golpear</button></div>
 <p id="tip"></p>
 </section>
-<section id="result" hidden><div class="result-title"><div id="resultFaces" aria-hidden="true"></div><h2 id="headline" tabindex="-1"></h2></div><div id="roundNotes" class="round-notes"></div><div class="table-wrap" id="detail"></div><div id="remote" hidden><p data-en="Send your code to the other player, then paste theirs here to compare scores.">Mándale tu código a tu rival y pega aquí el suyo para comparar la ronda.</p><input id="code" readonly aria-label="Tu código"><button id="copy">Copiar código</button><input id="rival" maxlength="20" placeholder="Código rival" aria-label="Código rival"><button id="compare" data-en="Compare" class="primary">Comparar</button></div><p id="verdict" aria-live="polite" hidden></p><button id="wagerResult" class="primary" hidden data-en="Open wager scores">Abrir marcador de apuesta</button> <button id="again" class="primary">Jugar revancha</button></section>
+<section id="result" hidden><div class="result-title"><div id="resultFaces" aria-hidden="true"></div><h2 id="headline" tabindex="-1"></h2></div><div id="roundNotes" class="round-notes"></div><div class="table-wrap" id="detail"></div><div id="remote" hidden><p data-en="Send your code to the other player, then paste theirs here to compare scores.">Mándale tu código a tu rival y pega aquí el suyo para comparar la ronda.</p><input id="code" readonly aria-label="Tu código"><button id="copy">Copiar código</button><input id="rival" maxlength="20" placeholder="Código rival" aria-label="Código rival"><button id="compare" data-en="Compare" class="primary">Comparar</button></div><p id="verdict" aria-live="polite" hidden></p><button id="wagerResult" class="primary" hidden data-en="View room scores">Ver marcador de la sala</button> <button id="again" class="primary">Jugar revancha</button></section>
 </section>
 <dialog id="shop" aria-labelledby="shopTitle">
  <header class="shop-heading"><div><h2 id="shopTitle" data-en="Golf Ball Album">Álbum de bolas</h2><p id="shopWallet"></p></div><button id="closeShop" type="button" data-en="Close">Cerrar</button></header>
@@ -87,16 +123,24 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
  <p id="shopStatus" role="status"></p><div id="skinGrid" class="skin-grid"></div>
 </dialog>
 <dialog id="wager" aria-labelledby="wagerTitle">
-<header class="shop-heading"><div><h2 id="wagerTitle" data-en="Golf rooms">Salas de golf</h2><p id="wagerBalance"></p></div><button id="wagerClose" data-en="Close">Cerrar</button></header>
-<p data-en="Both players must agree to the stake and confirm the scores. The winner takes the pot. A draw, cancellation or expiry returns the coins.">Ambos aceptan la cantidad y confirman los resultados. Quien gana se lleva el bote. En empate, anulación o vencimiento se devuelven las monedas.</p>
-<section id="wagerOffer" hidden><form id="wagerForm">
-<p><label><span data-en="Circuit">Circuito</span> <select id="wagerCircuit"></select></label></p>
-<label><span data-en="JJ per player (0 for no wager)">JJ por jugador (0 sin apuesta)</span> <input id="wagerStake" type="number" min="0" max="1000" step="1" value="0" required></label>
-<button type="submit" class="primary" data-en="Create room">Crear sala</button>
-</form></section>
-<form id="wagerJoin" hidden><label><span data-en="Room code">Código de sala</span> <input id="wagerCodeInput" autocomplete="off" spellcheck="false" maxlength="10" required></label> <button class="primary" type="submit" data-en="Join room">Entrar a la sala</button></form>
+<header class="shop-heading"><div><h2 id="wagerTitle">Salas de golf</h2><p id="wagerBalance"></p></div><button id="wagerClose" type="button" data-en="Close">Cerrar</button></header>
+<form id="wagerForm" class="room-form" hidden>
+<label class="room-field"><strong data-en="Circuit">Circuito</strong><select id="wagerCircuit"></select></label>
+<label class="room-toggle"><input id="wagerUseStake" type="checkbox" aria-controls="wagerStakeFields"><strong data-en="Play for JJ coins">Jugar con apuesta de monedas JJ</strong></label>
+<div id="wagerStakeFields" class="room-stake" hidden>
+<label class="room-field"><strong data-en="JJ per player">JJ por jugador</strong><input id="wagerStake" type="number" inputmode="numeric" min="1" max="1000" step="1" value="1" required disabled></label>
+<p class="room-help" data-en="Both players accept the stake and confirm the scores. A draw, cancellation or expiry refunds reserved coins.">Ambos aceptan la apuesta y confirman el marcador. En empate, cancelación o vencimiento se devuelven las monedas reservadas.</p>
+</div>
+<output id="wagerSummary" for="wagerCircuit wagerUseStake wagerStake"></output>
+<button type="submit" class="primary" data-en="Generate invitation code">Generar código de invitación</button>
+</form>
+<form id="wagerJoin" class="room-form" hidden>
+<label class="room-field"><strong data-en="Invitation code">Código de invitación</strong><input id="wagerCodeInput" autocomplete="off" spellcheck="false" maxlength="10" pattern="[A-Fa-f0-9]{10}" aria-describedby="room-code-help" required></label>
+<p id="room-code-help" class="room-help" data-en="Use the 10 characters shared by the player who created the room.">Usa los 10 caracteres que te compartió quien creó la sala.</p>
+<button class="primary" type="submit" data-en="Join room">Entrar a la sala</button>
+</form>
 <section id="wagerDetails" hidden><h3 id="wagerMatchTitle"></h3><p id="wagerInfo"></p><p id="wagerScores"></p><p id="wagerBreakdown"></p><div id="wagerActions"></div></section>
-<p id="wagerStatus" role="status"></p><button id="wagerRefresh" type="button" data-en="Refresh wager">Actualizar apuesta</button>
+<p id="wagerStatus" role="status"></p><div class="room-footer"><button id="wagerRefresh" type="button" data-en="Refresh room status">Actualizar estado de la sala</button></div>
 </dialog>
 </main>
 <script src="golf-courses.js?v=12"></script>
@@ -105,7 +149,7 @@ button,input,select{font:inherit;color:inherit}button,select{border:1px solid va
 <script src="../assets/supabase.js"></script>
 <script src="golf-shop.js?v=17"></script>
 <script src="golf-style.js?v=15"></script>
-<script src="golf-wager.js?v=16"></script>
+<script src="golf-wager.js?v=19"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esText=new WeakMap();
