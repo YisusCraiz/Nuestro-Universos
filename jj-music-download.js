@@ -1,6 +1,7 @@
 'use strict';
 
 const SONG_DEDICATION='hecho por Jesús para Julissa';
+const SONG_ARTIST='JxJ';
 const SONG_DEFAULT_COVER='assets/icon-512.png';
 let songDownloadInProgress=false;
 
@@ -89,13 +90,14 @@ function songId3Frame(id,...parts){
 
 function tagSongMp3(audio,cover,title){
   const titleFrame=songId3Frame('TIT2',Uint8Array.of(1),songId3Unicode(title));
+  const artistFrame=songId3Frame('TPE1',Uint8Array.of(0),SONG_ARTIST);
   const commentFrame=songId3Frame('COMM',Uint8Array.of(1,115,112,97),
     songId3Unicode(''),Uint8Array.of(0,0),songId3Unicode(SONG_DEDICATION));
   const coverFrame=songId3Frame('APIC',Uint8Array.of(0),'image/jpeg',Uint8Array.of(0,3,0),cover);
-  const size=titleFrame.size+commentFrame.size+coverFrame.size;
+  const size=titleFrame.size+artistFrame.size+commentFrame.size+coverFrame.size;
   // The ID3v2.3 tag size is sync-safe, while individual frame sizes are ordinary integers.
   const header=Uint8Array.of(73,68,51,3,0,0,(size>>>21)&127,(size>>>14)&127,(size>>>7)&127,size&127);
-  return new Blob([header,titleFrame,commentFrame,coverFrame,audio],{type:'audio/mpeg'});
+  return new Blob([header,titleFrame,artistFrame,commentFrame,coverFrame,audio],{type:'audio/mpeg'});
 }
 
 async function downloadSong(button,post){
