@@ -20,6 +20,8 @@ async function main(){
   await page.route('**/*',route=>{
    const url=new URL(route.request().url());
    if(url.hostname!=='universe.test')return route.abort();
+   // A failed seasonal stylesheet must not leave the mobile menu unstyled.
+   if(url.pathname==='/jj-christmas-interface.css')return route.abort();
    if(url.pathname==='/regalos-jxj.html')return route.fulfill({body:'<title>Regalos JXJ</title>',contentType:'text/html'});
    const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':url.pathname));
    return route.fulfill({path:file}).catch(()=>route.abort());
@@ -50,6 +52,14 @@ async function main(){
   }
   await trigger.tap();
   await menu.waitFor();
+  const layout=await menu.evaluate(dialog=>({
+   display:getComputedStyle(dialog).display,
+   bottom:Math.round(dialog.getBoundingClientRect().bottom),
+   viewport:window.innerHeight,
+   shortcuts:getComputedStyle(dialog.querySelector('.arcade-quick')).display,
+   overflow:getComputedStyle(dialog.querySelector('.arcade-body')).overflowY
+  }));
+  assert.deepEqual(layout,{display:'flex',bottom:layout.viewport,viewport:layout.viewport,shortcuts:'grid',overflow:'auto'});
   assert.equal(await trigger.getAttribute('aria-expanded'),'true');
   assert.equal(await trigger.getAttribute('aria-controls'),'jj-arcade-menu');
   await menu.getByRole('heading',{name:'Juntos en otra aventura'}).waitFor();
