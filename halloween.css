@@ -27,3 +27,9 @@
 
 @media(min-width:761px){.sidebar{overflow-y:auto}.sidebar-bottom{flex-shrink:0}}
 @media(max-width:760px){.season-ribbon>span{white-space:nowrap}.season-ribbon>span:first-child{font-size:.85rem}.season-ribbon img{width:110px;flex-shrink:1;min-width:0}.season-ribbon>span:last-child{font-size:1.05rem}}
+
+.crown-ending { max-width: 48rem; margin: 0 auto 1.1rem; overflow: hidden; border: 1px solid #e9c58a62; border-radius: .9rem; background: #19172b; color: #f5edf8; }
+.crown-ending img { display: block; width: 100%; height: auto; aspect-ratio: 3/2; object-fit: cover; }
+.crown-ending figcaption { padding: clamp(.75rem, 3vw, 1.25rem); }
+.crown-ending h3 { color: #f8dfa5; font-family: Georgia,serif; font-size: clamp(1.15rem,3vw,1.6rem); margin: 0 0 .35rem; }
+.crown-ending p { color: #dbd0e3; margin: 0; }

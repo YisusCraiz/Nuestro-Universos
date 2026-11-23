@@ -29,7 +29,64 @@ function applySeason(mode){JJ.settings=mode;JJ.season=currentTheme(mode);documen
 try{applySeason(localStorage.getItem('jj-season')||JJ_SEASONS.default);}catch{applySeason(JJ_SEASONS.default);}
 async function loadSeason(){if(!state.demo&&db){const {data,error}=await db.from('app_settings').select('season').eq('id',1).single();if(error)throw error;applySeason(data.season);}}
 function seasonRibbon(){const design=JJ_SEASONS.designs[JJ.season];return `<div class="season-ribbon" aria-hidden="true"><span>${design.symbols}</span><img src="${design.image}" alt=""><span>J & J</span></div>`;}
-function crownTable(data){return `<div class="crown-board"><div><div class="eyebrow">${bi('Nuestro salón de coronas','Our crown hall')}</div><h2>${bi('Dos nombres. Muchas aventuras.','Two names. So many adventures.')}</h2></div><div class="crown-people">${[...data.crowns].sort((a,b)=>b.total-a.total).map(p=>`<div><span class="avatar ${p.handle}">${p.name[0]}</span><strong>${esc(p.name)} ${p.wears?'👑':''}</strong><span>${p.total} ${bi('coronas','crowns')}</span></div>`).join('')}</div><p class="hint">${bi('La corona cambia cada 14 días. Próximo cierre:','The crown changes every 14 days. Next closing:')} ${jjDate(data.period_end)} · ${bi('Empate exacto: corona para ambos.','Exact tie: a crown for both.')}</p></div>`;}
+const crownEndings={
+ jesus:{
+  title:['Jesús lleva la delantera','Jesús takes the lead'],
+  scene:['De traje negro, Jesús alza suavemente el mentón de Julie. Ella, con vestido azul marino, se sonroja al cruzar miradas.','In a black suit, Jesús gently lifts Julie’s chin. In her navy dress, she blushes as their eyes meet.']
+ },
+ julisa:{
+  title:['Julie lleva la delantera','Julie takes the lead'],
+  scene:['Julie, con vestido azul marino, alza suavemente el mentón de Jesús. Él, de traje negro, se sonroja al mirarla.','In her navy dress, Julie gently lifts Jesús’s chin. In his black suit, he blushes as he looks at her.']
+ },
+ empate:{
+  title:['Empate en coronas','Tied for crowns'],
+  scene:['Jesús y Julie se abrazan y se miran de cerca, él con traje negro y ella con vestido azul marino.','Jesús and Julie hold each other close and meet each other’s eyes, him in a black suit and her in a navy dress.']
+ }
+};
+function crownEnding(crowns){
+ const totals=['jesus','julisa'].map(handle=>{
+  const total=crowns.find(player=>player.handle===handle)?.total;
+  return total==null||total===''?NaN:Number(total);
+ });
+ if(!totals.every(total=>Number.isSafeInteger(total)&&total>=0))return '';
+ const [jesus,julisa]=totals;
+ const result=jesus===julisa?'empate':jesus>julisa?'jesus':'julisa';
+ const {title,scene}=crownEndings[result];
+ return `<figure class="crown-ending" data-crown-ending="${result}">
+  <img src="assets/crowns/final-${result}-v1.webp" width="1080" height="720" loading="lazy" decoding="async" alt="">
+  <figcaption><h3>${bi(...title)}</h3><p>${bi(...scene)}</p></figcaption>
+ </figure>`;
+}
+function crownTable(data){
+ const crowns=data.crowns;
+ return `<div class="crown-board" id="crown-hall" data-period-end="${esc(data.period_end||'')}">
+  <div><div class="eyebrow">${bi('Nuestro salón de coronas','Our crown hall')}</div><h2>${bi('Dos nombres. Muchas aventuras.','Two names. So many adventures.')}</h2></div>
+  <div class="crown-people">${[...crowns].sort((a,b)=>b.total-a.total).map(p=>`<div><span class="avatar ${esc(p.handle)}">${esc(p.name[0])}</span><strong>${esc(p.name)} ${p.wears?'👑':''}</strong><span>${esc(String(p.total))} ${bi('coronas','crowns')}</span></div>`).join('')}</div>
+  <p class="hint">${bi('La corona cambia cada 14 días. Próximo cierre:','The crown changes every 14 days. Next closing:')} ${jjDate(data.period_end)} · ${bi('Empate exacto: corona para ambos.','Exact tie: a crown for both.')}</p>
+  ${crownEnding(crowns)}
+ </div>`;
+}
+function watchCrownClosing(version,owner){
+ if(state.demo)return;
+ const clock=new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'America/Matamoros'});
+ let busy=false;
+ const current=()=>state.version===version&&state.profile?.id===owner&&state.page==='home';
+ async function refresh(){
+  const hall=$('#crown-hall');
+  if(!current()||busy||document.hidden||!hall?.dataset.periodEnd)return;
+  const parts=Object.fromEntries(clock.formatToParts(new Date()).map(({type,value})=>[type,value]));
+  if(`${parts.year}-${parts.month}-${parts.day}`<hall.dataset.periodEnd)return;
+  busy=true;
+  try{
+   const next=await rpc('jj_dashboard');
+   if(current()&&hall.isConnected&&next.period_end>hall.dataset.periodEnd)hall.outerHTML=crownTable(next);
+  }catch{/* A later refresh can retry the rollover if the connection is down. */}
+  finally{busy=false;}
+ }
+ const timer=setInterval(refresh,60000);
+ document.addEventListener('visibilitychange',refresh);
+ JJ.cleanups.push(()=>{clearInterval(timer);document.removeEventListener('visibilitychange',refresh);});
+}
 function scoreTable(game,rows){const meta=JJ.games[game];const sorted=Object.entries(names).map(([handle,name])=>({name,score:rows.find(x=>x.game===game&&x.profiles.handle===handle)?.best})).sort((a,b)=>a.score==null?b.score==null?0:1:b.score==null?-1:meta.lower?a.score-b.score:b.score-a.score);return `<table class="leaderboard"><thead><tr><th>${bi('Lugar','Place')}</th><th>${bi('Jugador','Player')}</th><th>${bi('Récord','Best')}</th></tr></thead><tbody>${sorted.map((r,i)=>`<tr><td>${r.score==null?'—':i===1&&r.score===sorted[0].score?'1 =':i+1}</td><td>${esc(r.name)}</td><td>${r.score==null?bi('Por jugar','Not played'):meta.lower?(r.score/1000).toFixed(2)+' s':r.score+' pts'}</td></tr>`).join('')}</tbody></table>`;}
 const oldGameScores=gameScores;
 gameScores=async()=>{const data=await getDashboard();return Object.fromEntries(Object.keys(JJ.games).map(game=>[game,data.scores.filter(r=>r.game===game)]));};
@@ -51,7 +108,7 @@ navigate=async function(page){jjCleanup();let navigationVersion;try{
     $('#main')?.insertAdjacentHTML('afterbegin',seasonRibbon());
     const profileBox=$('.sidebar-bottom strong');const c=d.crowns.find(x=>x.handle===state.profile.handle);if(profileBox&&c?.wears)profileBox.append(' 👑');if(c?.wears&&$('.welcome em'))$('.welcome em').append(' 👑');
     if($('.sidebar-bottom'))$('.sidebar-bottom').insertAdjacentHTML('afterbegin',`<div class="coin-pill">✦ ${d.coins} JJ</div>`);
-    if(page==='home'){$('#main').insertAdjacentHTML('beforeend',crownTable(d));decorateHome();}
+    if(page==='home'){$('#main').insertAdjacentHTML('beforeend',crownTable(d));watchCrownClosing(v,state.profile.id);decorateHome();}
   }
 }catch(error){if(state.profile&&state.page===page&&navigationVersion===state.version){$('#main').innerHTML=`<div class="empty"><h2>${bi('Falta conectar la actualización','Connect the update')}</h2><p>${bi('Revisa ACTUALIZAR-VIDA-COMPARTIDA.md y aplica las actualizaciones que te falten. No repitas archivos antiguos ni borres tablas.','Check ACTUALIZAR-VIDA-COMPARTIDA.md and apply any missing updates. Do not rerun old files or delete tables.')}</p>${jjButton('jj-retry','Reintentar','Try again')}</div>`;$('#jj-retry').onclick=()=>navigate(page);}console.error(error);}};
 const originalLogout=logout;logout=async()=>{jjCleanup();return originalLogout();};
