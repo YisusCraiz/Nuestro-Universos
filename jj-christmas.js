@@ -1,7 +1,13 @@
 'use strict';
+const winterCostumes = [
+  ['christmas-lights','Suéter enredado','Tangled sweater',6,'#62447a'],
+  ['christmas-delivery-elf','Elfos de paquetería','Parcel elves',7,'#386653'],
+  ['christmas-snowman','Nieve de bolsillo','Pocket snow',8,'#a2d4db']
+];
 const winterOutfits = [
   ['christmas-santa','Santa de terciopelo','Velvet Santa',8,'#a92342'],
-  ['christmas-reindeer','Reno cascabel','Jingle reindeer',8,'#aa6738']
+  ['christmas-reindeer','Reno cascabel','Jingle reindeer',8,'#aa6738'],
+  ...winterCostumes
 ];
 BBSkins.push(...winterOutfits);
 const winterSprites = new Map();
@@ -9,7 +15,10 @@ const drawOtherOutfits = bbCharacter;
 bbCharacter = function(ctx,x,y,size,handle,skin,time=0) {
   const row = winterOutfits.findIndex(item=>item[0]===skin);
   if(row<0) return drawOtherOutfits(ctx,x,y,size,handle,skin,time);
-  const path = 'assets/christmas/sprite-'+row+'-'+(handle==='julisa'?1:0)+'.webp';
+  const character=handle==='julisa'?1:0;
+  const legacyRows=winterOutfits.length-winterCostumes.length;
+  const atlas=row>=legacyRows;
+  const path=atlas?'assets/christmas/costumes-v1.webp':'assets/christmas/sprite-'+row+'-'+character+'.webp';
   if(!winterSprites.has(path)) {
     const image = new Image();
     image.onload = ()=>window.dispatchEvent(new Event('bb-art-ready'));
@@ -18,7 +27,11 @@ bbCharacter = function(ctx,x,y,size,handle,skin,time=0) {
   }
   const image = winterSprites.get(path);
   if(!image.naturalWidth) return drawOtherOutfits(ctx,x,y,size,handle,'casual',time);
-  ctx.drawImage(image,x-size*.62,y-size*.94+Math.sin(time/110)*size*.025,size*1.24,size*1.24);
+  const target=[x-size*.62,y-size*.94+Math.sin(time/110)*size*.025,size*1.24,size*1.24];
+  if(atlas){
+    const width=image.naturalWidth/2,height=image.naturalHeight/winterCostumes.length;
+    ctx.drawImage(image,character*width,(row-legacyRows)*height,width,height,...target);
+  }else ctx.drawImage(image,...target);
 };
 function seasonalSale(id,now=new Date()) {
   const day = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Matamoros',month:'2-digit',day:'2-digit'}).formatToParts(now);

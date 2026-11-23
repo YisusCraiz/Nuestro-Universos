@@ -2,9 +2,10 @@
 
 const golfHandles=['jesus','julisa'];
 const outfitSets=[
- {ids:['casual','catshirt','sharkshirt','cat','shark','pajamas','ninja','yukata'],file:'characters-v2.png',cols:4,rows:4},
- {ids:['arcade-neon','cafe-medianoche','exploradores-astrales','dia-de-lluvia'],file:'shared-outfits-v1.webp',cols:4,rows:2},
- {ids:['ghost','pumpkin','vampire','skeleton','frankenstein','kitsune','witch','devil','zombie'],file:'halloween-characters-v1.png',cols:6,rows:3}
+ {ids:['casual','catshirt','sharkshirt','cat','shark','pajamas','ninja','yukata'],file:'bombitas/characters-v2.png',cols:4,rows:4},
+ {ids:['arcade-neon','cafe-medianoche','exploradores-astrales','dia-de-lluvia'],file:'bombitas/shared-outfits-v1.webp',cols:4,rows:2},
+ {ids:['ghost','pumpkin','vampire','skeleton','frankenstein','kitsune','witch','devil','zombie'],file:'bombitas/halloween-characters-v1.png',cols:6,rows:3},
+ {ids:['christmas-lights','christmas-delivery-elf','christmas-snowman'],file:'christmas/costumes-v1.webp',cols:2,rows:3}
 ];
 const winterGolfOutfits=['christmas-santa','christmas-reindeer'];
 const golfImages=new Map();
@@ -66,7 +67,7 @@ function drawGolfPlayer(ctx,ball,player,time){
  }else if(outfit!=='casual'){
   const set=outfitSets.find(set=>set.ids.includes(outfit));
   if(set){
-   const image=golfImage('bombitas/'+set.file), index=set.ids.indexOf(outfit)*2+player;
+   const image=golfImage(set.file), index=set.ids.indexOf(outfit)*2+player;
    if(image.naturalWidth){
     const w=image.naturalWidth/set.cols,h=image.naturalHeight/set.rows,dw=76*w/h;
     ctx.drawImage(image,index%set.cols*w,Math.floor(index/set.cols)*h,w,h,x-dw/2,y-76,dw,76);painted=true;

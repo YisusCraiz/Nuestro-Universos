@@ -191,6 +191,10 @@ const UniversePets=[
 UniversePets.push({"id": "halloween-ghost", "es": "Bu, el fantasmita", "en": "Boo the Ghost", "price": 180, "skin": "pajamas", "family": "halloween", "art": "assets/pets/halloween-ghost-v1.svg"},{"id": "halloween-skeleton", "es": "Huesitos bailarín", "en": "Dancing Bones", "price": 220, "skin": "casual", "family": "halloween", "art": "assets/pets/halloween-skeleton-v1.svg"},{"id": "halloween-pumpkin", "es": "Calabacita andante", "en": "Walking Pumpkin", "price": 200, "skin": "witch", "family": "halloween", "art": "assets/pets/halloween-pumpkin-v1.svg"},{"id": "halloween-bat", "es": "Alitas de medianoche", "en": "Midnight Wings", "price": 190, "skin": "devil", "family": "halloween", "art": "assets/pets/halloween-bat-v1.svg"},{"id": "halloween-cat", "es": "Michi hechicero", "en": "Little Witch Cat", "price": 240, "skin": "cat", "family": "halloween", "art": "assets/pets/halloween-cat-v1.svg"});
 
 UniversePets.push(
-  {id:'christmas-fox',es:'Menta, zorro de las estrellas',en:'Mint the star fox',price:200,skin:'christmas-santa',family:'christmas',art:'assets/christmas/sprite-0-2.webp'},
-  {id:'christmas-owl',es:'Nival, búho de escarcha',en:'Frost the snow owl',price:220,skin:'christmas-reindeer',family:'christmas',art:'assets/christmas/sprite-1-2.webp'}
+  {id:'christmas-fox',es:'Menta, zorro de las estrellas',en:'Mint the star fox',price:200,skin:'christmas-santa',family:'christmas',art:'assets/christmas/menta-v2.webp'},
+  {id:'christmas-owl',es:'Nival, búho de escarcha',en:'Frost the snow owl',price:220,skin:'christmas-reindeer',family:'christmas',art:'assets/christmas/nival-v2.webp'},
+  {id:'christmas-carrot',es:'Nariz Prestada',en:'Borrowed Nose',price:180,skin:'christmas-snowman',family:'christmas',art:'assets/christmas/nariz-prestada-v1.webp'},
+  {id:'christmas-sparky',es:'Cortocircuito, reno de luces',en:'Sparky the tangled reindeer',price:200,skin:'christmas-lights',family:'christmas',art:'assets/christmas/cortocircuito-v1.webp'},
+  {id:'christmas-slippy',es:'Resbalón, pingüino de calcetines',en:'Slippy the penguin',price:170,skin:'christmas-delivery-elf',family:'christmas',art:'assets/christmas/resbalon-v1.webp'},
+  {id:'christmas-cookie',es:'Migaja, galleta de jengibre',en:'Crumb the gingerbread cookie',price:190,skin:'christmas-delivery-elf',family:'christmas',art:'assets/christmas/migaja-v1.webp'}
 );

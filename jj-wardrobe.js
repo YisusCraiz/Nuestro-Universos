@@ -13,7 +13,7 @@ navigate=async function(page){if(page!=='shop')return wardrobeNavigate(page);if(
 async function wardrobePage(v){
  const user=state.profile.id;
  const current=()=>v===state.version&&state.profile?.id===user;
- const newIds=new Set(BBExtraSkins.map(([id])=>id));
+ const newIds=new Set([...BBExtraSkins,...winterCostumes].map(([id])=>id));
  let data, ownedOnly=false, busy=false;
  $('#main').innerHTML=lifeHeading('Tienda y armario','Shop & wardrobe',
   'Prueba un atuendo con los dos personajes antes de equiparlo.',
@@ -37,7 +37,7 @@ async function wardrobePage(v){
   $('#wardrobe-balance').textContent=`✦ ${data.coins} JJ · `+say('disponibles','available');
   $('#wardrobe-all').setAttribute('aria-pressed',String(!ownedOnly));
   $('#wardrobe-owned').setAttribute('aria-pressed',String(ownedOnly));
-  const outfits=[...BBExtraSkins,...BBSkins.filter(([id])=>!newIds.has(id))]
+  const outfits=[...winterCostumes,...BBExtraSkins,...BBSkins.filter(([id])=>!newIds.has(id))]
    .filter(([id])=>(!newIds.has(id)||Object.hasOwn(data.catalog,id))&&(!ownedOnly||data.owned.includes(id)));
   const grid=$('#wardrobe-grid');
   grid.innerHTML=outfits.map(([id,es,en,defaultPrice])=>{
