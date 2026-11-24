@@ -17,7 +17,9 @@ function streamSticker(index) {
 
 function liveChatMarkup() {
   return `<aside id="stream-chat" class="stream-card stream-chat" aria-labelledby="stream-chat-title" hidden>
-    <header><span class="stream-chat-icon" aria-hidden="true">✦</span><h2 id="stream-chat-title">${bi('Chat del directo','Stream chat')}</h2></header>
+    <header><span class="stream-chat-icon" aria-hidden="true">✦</span><h2 id="stream-chat-title">${bi('Chat del directo','Stream chat')}</h2>
+      <label class="stream-chat-translate"><input type="checkbox" checked>${bi('Traducir con MyMemory','Translate with MyMemory')}</label>
+    </header>
     <div class="stream-chat-log" role="log" aria-labelledby="stream-chat-title"></div>
     <div class="stream-composer">
       <div id="stream-stickers" class="stream-stickers" hidden></div>
@@ -39,10 +41,13 @@ function mountLiveChat(root, user, valid) {
   const status = $('.stream-chat-status', root);
   const stickers = $('#stream-stickers', root);
   const selector = $('[data-stream-stickers]', root);
+  const translate = $('.stream-chat-translate input', root);
+  translate.checked = liveTranslationPreference();
   const buttons = () => [...form.querySelectorAll('button'), ...stickers.querySelectorAll('button')];
   const notify = (es, en) => status.textContent = say(es, en);
-  let session, reading, sending, signature, pending, updates = 0, pickerVersion = 0;
+  let session, reading, sending, signature, pending, updates = 0, pickerVersion = 0, lastRows = [];
   const current = id => valid() && id && id === session;
+  const translation = mountLiveTranslation(log, () => translate.checked, () => current(session));
   const closeStickers = () => {
     pickerVersion++;
     stickers.hidden = true;
@@ -54,6 +59,8 @@ function mountLiveChat(root, user, valid) {
     const key = rows.map(m => [m.id,m.path]).join(',');
     if (key === signature) return;
     signature = key;
+    lastRows = rows;
+    translation.beforeRender();
     const fragment = document.createDocumentFragment();
     for (const message of rows) {
       const item = document.createElement('article');
@@ -65,9 +72,7 @@ function mountLiveChat(root, user, valid) {
       time.textContent = new Date(message.created_at).toLocaleTimeString(UniverseI18n.locale(), {hour:'2-digit', minute:'2-digit'});
       item.append(label, time);
       if (message.body) {
-        const text = document.createElement('p');
-        text.textContent = message.body;
-        item.append(text);
+        translation.decorate(item, message);
       } else if (message.builtin != null) {
         const sticker = streamSticker(message.builtin);
         if (sticker) item.insertAdjacentHTML('beforeend', sticker.markup);
@@ -201,6 +206,19 @@ function mountLiveChat(root, user, valid) {
     }
   }
 
+  function refreshLanguage() {
+    translation.reset();
+    signature = undefined;
+    form.elements.message.placeholder = say('Escribe un mensaje…','Write a message…');
+    form.elements.message.setAttribute('aria-label', say('Mensaje','Message'));
+    render(lastRows, session);
+  }
+  translate.onchange = () => {
+    try { localStorage.setItem('jj-live-translate', translate.checked ? 'on' : 'off'); } catch {}
+    refreshLanguage();
+  };
+  window.addEventListener('universe-language', refreshLanguage);
+
   const timer = setInterval(read, 2200);
   return {
     update(id) {
@@ -208,6 +226,8 @@ function mountLiveChat(root, user, valid) {
       session = id;
       root.hidden = !id;
       signature = undefined;
+      lastRows = [];
+      translation.reset();
       pending = null;
       sending = null;
       stickers.replaceChildren();
@@ -221,6 +241,8 @@ function mountLiveChat(root, user, valid) {
     },
     close() {
       session = null;
+      translation.reset();
+      window.removeEventListener('universe-language', refreshLanguage);
       clearInterval(timer);
     }
   };

@@ -139,3 +139,8 @@
 }
 
 .stream-room .stream-pack-sticker { overflow: hidden; }
+
+.stream-chat header { flex-wrap: wrap; }
+.stream-chat .stream-chat-translate { display: inline-flex; align-items: center; gap: 5px; color: var(--stream-muted); font-size: .75rem; cursor: pointer; }
+.stream-chat .stream-chat-translate input { width: auto; margin: 0; padding: 0; accent-color: #b9cbff; }
+.stream-chat-translation-action { background: none; border: 0; padding: 2px 0; color: var(--stream-periwinkle); font-size: .75rem; text-decoration: underline; text-underline-offset: 2px; }
