@@ -112,9 +112,12 @@
 .stream-composer form { display: grid; gap: 8px; }
 .stream-composer-actions { justify-content: space-between; }
 .stream-chat-status { font-size: .875rem; color: var(--stream-muted); }
-.stream-stickers { display: grid; grid-template-columns: repeat(auto-fit, minmax(42px, 1fr)); gap: 5px; max-height: 142px; overflow: auto; }
-.stream-stickers button { display: grid; place-items: center; padding: 3px; min-height: 44px; border: 1px solid var(--stream-line); border-radius: 7px; background: #0d172c; }
-.stream-stickers button:hover { background: #324368; }
+.stream-sticker-packs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+.stream-sticker-packs button { min-height: 36px; padding: 4px 8px; border: 1px solid var(--stream-line); border-radius: 7px; background: #222e4a; color: var(--stream-periwinkle); font-size: .8rem; font-weight: 700; line-height: 1.2; }
+.stream-sticker-packs button[aria-pressed="true"] { background: #b9cbff; border-color: #b9cbff; color: #101935; }
+.stream-sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 5px; max-height: 156px; overflow: auto; overscroll-behavior: contain; }
+.stream-sticker-grid button { display: grid; place-items: center; padding: 3px; min-height: 44px; border: 1px solid var(--stream-line); border-radius: 7px; background: #0d172c; }
+.stream-sticker-grid button:hover { background: #324368; }
 .stream-stickers img, .stream-room .stream-stickers .chibi-sticker { display: block; width: 40px; height: 40px; object-fit: contain; }
 .stream-archive .stream-mast p { margin-top: 10px; color: var(--stream-muted); }
 .stream-clip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(205px, 100%), 1fr)); gap: 12px; }
@@ -134,3 +137,5 @@
   .stream-room { gap: 12px; }
   .stream-view-controls, .stream-program, .stream-studio { padding-inline: 11px; }
 }
+
+.stream-room .stream-pack-sticker { overflow: hidden; }

@@ -1,5 +1,20 @@
 'use strict';
 
+function streamSticker(index) {
+  if (index >= 0 && index < 12) {
+    return {label:say(...stickerNames[index % 6]), markup:chibi(index)};
+  }
+  const pack = streamStickerPacks.find(p => index >= p.start && index < p.start + p.items.length);
+  if (!pack) return null;
+  const [es, en, box] = pack.items[index - pack.start];
+  const [, , width, height] = box;
+  const label = pack.name + ' · ' + say(es, en);
+  return {
+    label,
+    markup:`<svg class="chibi-sticker stream-pack-sticker" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(label)}"><svg width="${width}" height="${height}" viewBox="${box.join(' ')}" overflow="hidden"><image href="${pack.src}" width="${pack.width}" height="${pack.height}"/></svg></svg>`
+  };
+}
+
 function liveChatMarkup() {
   return `<aside id="stream-chat" class="stream-card stream-chat" aria-labelledby="stream-chat-title" hidden>
     <header><span class="stream-chat-icon" aria-hidden="true">✦</span><h2 id="stream-chat-title">${bi('Chat del directo','Stream chat')}</h2></header>
@@ -54,7 +69,9 @@ function mountLiveChat(root, user, valid) {
         text.textContent = message.body;
         item.append(text);
       } else if (message.builtin != null) {
-        item.insertAdjacentHTML('beforeend', chibi(message.builtin));
+        const sticker = streamSticker(message.builtin);
+        if (sticker) item.insertAdjacentHTML('beforeend', sticker.markup);
+        else item.append(say('Sticker no disponible','Sticker unavailable'));
       } else if (message.path) {
         appendSticker(item, message);
       } else {
@@ -132,17 +149,40 @@ function mountLiveChat(root, user, valid) {
     const text = form.elements.message.value.trim();
     if (text || pending) send({p_body:text});
   };
-  selector.onclick = async () => {
+  selector.onclick = () => {
     if (!stickers.hidden) return closeStickers();
-    const id = session;
-    if (!current(id) || pending) return;
+    if (!current(session) || pending) return;
     stickers.hidden = false;
-    const picker = ++pickerVersion;
     selector.setAttribute('aria-expanded', 'true');
-    stickers.innerHTML = Array.from({length:12}, (_, index) => `<button type="button" data-builtin="${index}" title="${esc(say(...stickerNames[index%6]))}">${chibi(index)}</button>`).join('');
-    stickers.querySelectorAll('[data-builtin]').forEach(button => {
-      button.onclick = () => send({p_builtin:Number(button.dataset.builtin)});
-    });
+    stickers.innerHTML = `<div class="stream-sticker-packs" role="group" aria-label="${say('Colecciones de stickers','Sticker collections')}">
+      ${streamStickerPacks.map(pack => `<button type="button" data-pack="${pack.start}">${pack.name}</button>`).join('')}
+      <button type="button" data-pack="0">${bi('Más stickers','More stickers')}</button>
+    </div><div class="stream-sticker-grid"></div>`;
+    showPack(state.profile.handle === 'julisa' ? 22 : 12);
+  };
+
+  stickers.onclick = event => {
+    const button = event.target.closest('button');
+    if (!button || pending || sending) return;
+    if (button.dataset.pack != null) showPack(Number(button.dataset.pack));
+    else if (button.dataset.builtin != null) send({p_builtin:Number(button.dataset.builtin)});
+    else if (button.dataset.custom) send({p_sticker:button.dataset.custom});
+  };
+
+  async function showPack(start) {
+    const id = session;
+    const picker = ++pickerVersion;
+    const grid = $('.stream-sticker-grid', stickers);
+    stickers.querySelectorAll('[data-pack]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.pack) === start)));
+    const pack = streamStickerPacks.find(p => p.start === start);
+    const count = pack?.items.length ?? 12;
+    grid.innerHTML = Array.from({length:count}, (_, offset) => {
+      const index = start + offset;
+      const {label, markup} = streamSticker(index);
+      return `<button type="button" data-builtin="${index}" title="${esc(label)}" aria-label="${esc(label)}">${markup}</button>`;
+    }).join('');
+    grid.scrollTop = 0;
+    if (pack) return;
     try {
       const data = await affectionCall();
       if (!current(id) || picker !== pickerVersion) return;
@@ -150,15 +190,16 @@ function mountLiveChat(root, user, valid) {
         const button = document.createElement('button');
         button.type = 'button';
         button.title = sticker.title;
+        button.setAttribute('aria-label', sticker.title);
+        button.dataset.custom = sticker.id;
         button.disabled = !!sending;
         appendSticker(button, sticker);
-        button.onclick = () => send({p_sticker:sticker.id});
-        stickers.append(button);
+        grid.append(button);
       }
     } catch {
       if (current(id) && picker === pickerVersion && !sending) notify('No se pudieron cargar los stickers subidos.','Could not load uploaded stickers.');
     }
-  };
+  }
 
   const timer = setInterval(read, 2200);
   return {
