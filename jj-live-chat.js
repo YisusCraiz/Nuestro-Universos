@@ -45,7 +45,7 @@ function mountLiveChat(root, user, valid) {
   translate.checked = liveTranslationPreference();
   const buttons = () => [...form.querySelectorAll('button'), ...stickers.querySelectorAll('button')];
   const notify = (es, en) => status.textContent = say(es, en);
-  let session, reading, sending, signature, pending, updates = 0, pickerVersion = 0, lastRows = [];
+  let session, reading, sending, signature, pending, updates = 0, pickerVersion = 0, lastRows = [], visible = true;
   const current = id => valid() && id && id === session;
   const translation = mountLiveTranslation(log, () => translate.checked, () => current(session));
   const closeStickers = () => {
@@ -101,7 +101,7 @@ function mountLiveChat(root, user, valid) {
 
   async function read() {
     const id = session;
-    if (!current(id) || reading === id || sending === id || document.hidden || state.demo) return;
+    if (!visible || !current(id) || reading === id || sending === id || document.hidden || state.demo) return;
     reading = id;
     const update = updates;
     try {
@@ -221,10 +221,16 @@ function mountLiveChat(root, user, valid) {
 
   const timer = setInterval(read, 2200);
   return {
+    setVisible(next) {
+      if (visible === next) return;
+      visible = next;
+      root.hidden = !visible || !session;
+      if (visible) read();
+    },
     update(id) {
       if (session === id) return;
       session = id;
-      root.hidden = !id;
+      root.hidden = !id || !visible;
       signature = undefined;
       lastRows = [];
       translation.reset();

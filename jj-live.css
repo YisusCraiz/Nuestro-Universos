@@ -62,7 +62,11 @@
 .stream-badge.is-live { color: #ffbbd1; }
 .stream-badge.is-live::before { content: ''; width: .55em; height: .55em; border-radius: 50%; background: #ff819e; }
 .stream-view-controls, .stream-studio { display: grid; gap: 10px; padding: 14px 16px; }
-.stream-view-controls { border-bottom: 1px solid var(--stream-line); }
+.stream-view-controls { border-top: 1px solid var(--stream-line); }
+.stream-video-options > .stream-tools { margin-block: 7px; }
+#live-state { min-width: 0; }
+#live-chat-toggle { margin-left: auto; flex-shrink: 0; }
+#live-chat-toggle[aria-expanded="false"] { background: #b9cbff; border-color: #b9cbff; color: #101935; }
 .stream-tools, .stream-composer-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .stream-button {
   display: inline-flex;
@@ -131,6 +135,27 @@
 @media (max-width: 880px) {
   .stream-stage { grid-template-columns: minmax(0, 1fr); }
   .stream-chat-log { height: 215px; }
+}
+@media (max-width: 760px) {
+  .stream-room { padding: 10px; border-radius: 16px; }
+  .stream-mast { gap: 9px; padding-top: 8px; }
+  .stream-mast h1 { font-size: clamp(1.65rem, 7.9vw, 2.5rem); }
+  .stream-stage { gap: 10px; }
+  .stream-screen { min-height: 0; }
+  .stream-program { gap: 7px; padding-block: 10px; }
+  .stream-host { flex-basis: 34px; width: 34px; height: 34px; border-radius: 11px; font-size: 1.05rem; }
+  .stream-program h2 { font-size: .94rem; }
+  .stream-program .stream-badge { font-size: .72rem; }
+  .stream-view-controls { padding-block: 8px; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+  .stream-video-options { min-width: 0; }
+  .stream-video-options[open] { grid-column: 1 / -1; }
+  .stream-chat-log { height: clamp(95px, 21dvh, 205px); }
+  .stream-chat header { padding: 9px 11px; }
+  .stream-chat .stream-composer input[name="message"] { font-size: 1rem; }
+}
+@media (max-width: 375px) {
+  .stream-program .stream-host { display: none; }
+  #live-chat-toggle { padding-inline: 8px; }
 }
 @media (max-width: 450px) {
   .stream-mast { align-items: start; }

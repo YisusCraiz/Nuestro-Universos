@@ -35,6 +35,9 @@ async function livePage(v) {
   const julie = state.profile.handle === 'julisa' && !state.demo;
   const valid = () => state.version === v && state.profile?.id === user;
   let frameKey, publisherLinks, acting = false, endRecording, fillInitialLinks;
+  const chatPreference = 'jj-live-chat-hidden:' + user;
+  let chatOpen = true;
+  try { chatOpen = localStorage.getItem(chatPreference) !== 'true'; } catch {}
   $('#main').innerHTML = `<div class="stream-room">
     <header class="stream-mast">
       <div><p class="stream-channel">J & J <span aria-hidden="true">✦</span> ${bi('Para Julie','For Julie')}</p>
@@ -47,7 +50,11 @@ async function livePage(v) {
     <div class="stream-stage">
       <section class="stream-card stream-player">
         <div id="live-view"></div>
-        <div class="stream-program"><div class="stream-host" aria-hidden="true">J</div><div id="live-state" role="status"></div></div>
+        <div class="stream-program">
+          <div class="stream-host" aria-hidden="true">J</div><div id="live-state" role="status"></div>
+          <button id="live-chat-toggle" type="button" class="stream-button" aria-controls="stream-chat" aria-expanded="false" hidden></button>
+        </div>
+        <div id="live-actions"></div>
         <p id="live-error" role="status"></p>
       </section>
       ${liveChatMarkup()}
@@ -55,6 +62,17 @@ async function livePage(v) {
     ${owner ? liveStudioMarkup() : ''}
   </div>`;
   const chat = mountLiveChat($('#stream-chat'), user, valid);
+  const chatToggle = $('#live-chat-toggle');
+  function paintChatToggle() {
+    chatToggle.innerHTML = chatOpen ? bi('Ocultar chat','Hide chat') : bi('Mostrar chat','Show chat');
+    chatToggle.setAttribute('aria-expanded', String(chatOpen && !chatToggle.hidden));
+  }
+  chatToggle.onclick = () => {
+    chatOpen = !chatOpen;
+    try { localStorage.setItem(chatPreference, String(!chatOpen)); } catch {}
+    chat.setVisible(chatOpen);
+    paintChatToggle();
+  };
   const clips = $('#live-go-clips');
   if (clips) clips.onclick = () => navigate('streamclips');
 
@@ -63,7 +81,10 @@ async function livePage(v) {
     const d = JJLive.user === user ? JJLive.data : null;
     const urls = liveUrls(d);
     const session = d?.live ? d.session : null;
+    chatToggle.hidden = !session;
+    chat.setVisible(chatOpen);
     chat.update(session || null);
+    paintChatToggle();
     const status = $('#live-state');
     const statusKey = String(d?.live);
     if (status.dataset?.state !== statusKey) {
@@ -104,10 +125,12 @@ async function livePage(v) {
     $('#live-view').innerHTML = `<div id="live-screen" class="stream-screen">
       <div class="stream-placeholder"><span aria-hidden="true">${urls.view?'▶':'✦'}</span>
         <p>${urls.view ? bi('El directo está listo para abrir','The stream is ready to open') : bi('Te esperamos en el próximo directo','See you at the next stream')}</p>
-      </div></div>
-      ${urls.view ? `<div class="stream-view-controls">
+      </div></div>`;
+    $('#live-actions').innerHTML = urls.view ? `<div class="stream-view-controls">
+        <div>${jjButton('live-watch','Ver aquí','Watch here','stream-button stream-primary')}</div>
+        <details class="stream-video-options" ${window.matchMedia?.('(max-width: 760px)').matches ? '' : 'open'}>
+        <summary>${bi('Opciones del directo','Stream options')}</summary>
         <div class="stream-tools">
-          ${jjButton('live-watch','Ver aquí','Watch here','stream-button stream-primary')}
           <a class="stream-button" href="${esc(urls.view)}" target="_blank" rel="noopener noreferrer">${bi('Abrir VDO.Ninja','Open VDO.Ninja')}</a>
           ${urls.room ? `<a class="stream-button" href="${esc(urls.room)}" target="_blank" rel="noopener noreferrer">${bi('Sala de voz','Voice room')}</a>` : ''}
         </div>
@@ -119,7 +142,8 @@ async function livePage(v) {
           <p>${bi('Si falta el sonido, toca el video. Si el directo sigue cargando, comprueba que el emisor esté abierto y prueba Volver a cargar video.','If there is no sound, tap the video. If the stream keeps loading, check that the publisher is open and try Reload video.')}</p>
           ${jjButton('live-reload-page','Recargar Nuestro Universo','Reload Our Universe','stream-button')}
         </details>
-      </div>` : ''}`;
+        </details>
+      </div>` : '';
     if (!urls.view) return;
     const screen = $('#live-screen');
     const watch = $('#live-watch');
