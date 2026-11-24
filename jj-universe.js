@@ -1,21 +1,22 @@
 'use strict';
 // Keep legacy routes for saved links, game preparation and notification targets.
-const UniverseGroups={games:['games','puzzles','secretpuzzle','truth','bombitas'],musicas:['music','playlists','musicalbums','videos']};
-menus.push(['musicas','♫','Musicas'],['musicalbums','◉','Álbumes'],['comics','▤','Comics'],['news','✦','Noticias']);
+const UniverseGroups={games:['games','puzzles','secretpuzzle','truth','bombitas'],musicas:['music','playlists','musicalbums','videos','streamclips']};
+menus.push(['musicas','♫','Musicas'],['musicalbums','◉','Álbumes'],['streamclips','✂','Streamclips'],['comics','▤','Comics'],['news','✦','Noticias']);
 const universeAllowed=sectionAllowed;
-sectionAllowed=function(page){if(page==='novios')return false;if(page==='games')return UniverseGroups.games.some(universeAllowed);if(page==='musicalbums')return universeAllowed('music')||universeAllowed('playlists');if(page==='musicas')return UniverseGroups.musicas.some(universeAllowed);return universeAllowed(page);};
+sectionAllowed=function(page){if(page==='novios')return false;if(page==='games')return UniverseGroups.games.some(universeAllowed);if(page==='musicalbums')return universeAllowed('music')||universeAllowed('playlists');if(page==='streamclips')return ['jesus','julisa'].includes(state.profile?.handle)&&['music','playlists','videos'].some(universeAllowed);if(page==='musicas')return UniverseGroups.musicas.some(sectionAllowed);return universeAllowed(page);};
 const universeVisibility=paintSectionVisibility;
 paintSectionVisibility=function(){universeVisibility();document.querySelectorAll('[data-nav]').forEach(el=>{if(['novios','puzzles','secretpuzzle','truth','bombitas',...UniverseGroups.musicas].includes(el.dataset.nav))el.hidden=true;});};
 function universeCards(items){return `<div class="universe-grid">${items.map(([id,icon,es,en])=>`<button class="game-panel universe-card" data-universe-route="${id}"><span class="game-symbol" aria-hidden="true">${icon}</span><strong>${bi(es,en)}</strong><span>${bi('Abrir','Open')} →</span></button>`).join('')}</div>`;}
 function bindUniverseCards(){document.querySelectorAll('[data-universe-route]').forEach(b=>b.onclick=()=>{const id=b.dataset.universeRoute;if(id==='golf')return openUniverseGolf();if(['wordsearch','maze'].includes(id))return startPuzzle(id);if(id==='tictactoe')return tttPage();if(id==='wands'){jjCleanup();clearTimers();return duoPage('wands',++state.version).catch(lifeError);}return navigate(id);});}
 const universeNavigate=navigate;
-navigate=async function(page){if(!state.profile)return;if(page==='novios')page='profile';if(!['games','musicas','musicalbums','comics','news'].includes(page))return universeNavigate(page);try{await loadSections();if(!sectionAllowed(page))return universeNavigate('home');jjCleanup();clearTimers();state.page=page;const v=++state.version;rememberRoute(historyRoute(page));shell();window.scrollTo(0,0);
+navigate=async function(page){if(!state.profile)return;if(page==='novios')page='profile';if(!['games','musicas','musicalbums','streamclips','comics','news'].includes(page))return universeNavigate(page);try{await loadSections();if(!sectionAllowed(page))return universeNavigate('home');jjCleanup();clearTimers();state.page=page;const v=++state.version;rememberRoute(historyRoute(page));shell();window.scrollTo(0,0);
  if(page==='games'){if(universeAllowed('games'))await games(v);else $('#main').innerHTML=lifeHeading('Un ratito para jugar','A little time to play','Juega a tu ritmo.','Play at your pace.');if(v!==state.version)return;if(sectionAllowed('puzzles')){
    $('#main .page-heading').insertAdjacentHTML('afterend',universeCards([['wordsearch','🔎','Sopa de letras','Word search'],['maze','🌀','Laberinto','Maze']]));
    bindUniverseCards();
   }}
- else if(page==='musicas'){$('#main').innerHTML=`<section class="page-heading music-hero"><h1>${bi('Música','Music')}</h1><p>${bi('La banda sonora de Jesús y Julissa','Jesús and Julissa’s soundtrack')}</p></section><div class="music-hub">`+universeCards([['music','♫','Nuestra música','Our music'],['playlists','☷','Playlists','Playlists'],['musicalbums','◉','Álbumes','Albums'],['videos','▷','Videoclips','Music videos']].filter(([id])=>sectionAllowed(id)))+'</div>';bindUniverseCards();}
+ else if(page==='musicas'){$('#main').innerHTML=`<section class="page-heading music-hero"><h1>${bi('Música','Music')}</h1><p>${bi('La banda sonora de Jesús y Julissa','Jesús and Julissa’s soundtrack')}</p></section><div class="music-hub">`+universeCards([['music','♫','Nuestra música','Our music'],['playlists','☷','Playlists','Playlists'],['musicalbums','◉','Álbumes','Albums'],['videos','▷','Videoclips','Music videos'],['streamclips','✂','Streamclips','Streamclips']].filter(([id])=>sectionAllowed(id)))+'</div>';bindUniverseCards();}
  else if(page==='musicalbums')await musicAlbumsPage(v);
+ else if(page==='streamclips')await streamclipsPage(v);
  else if(page==='comics')await universeComics(v);else await universeNews(v);
  }catch(e){console.error(e);$('#main').innerHTML=`<p>${page==='news'?bi('No se pudo cargar el tablón. Comprueba tu conexión.','Could not load the announcement board. Check your connection.'):bi('No se pudo cargar. Comprueba la conexión y aplica SQL 27 para Comics y títulos.','Could not load. Check your connection and apply SQL 27 for Comics and titles.')}</p>${jjButton('universe-retry','Reintentar','Retry')}`;$('#universe-retry').onclick=()=>navigate(page);}};
 async function universeNews(v){

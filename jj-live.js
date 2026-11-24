@@ -8,17 +8,222 @@ async function liveRequest(args={}){let timer;try{return await Promise.race([rpc
 async function readLive(){if(!state.profile||state.demo||JJLive.busy)return;const user=state.profile.id;JJLive.busy=true;try{const d=await liveRequest();JJLive.error=null;if(state.profile?.id!==user)return;if(JJLive.user!==user){JJLive.user=user;JJLive.data=null;JJLive.seen=null;}if(!JJLive.data||d.revision>=JJLive.data.revision)JJLive.data=d;paintLiveBanner();if(state.profile.handle==='julisa'&&d.live&&JJLive.seen!==d.session){JJLive.seen=d.session;toast(say('Jesús te invita a ver su transmisión ♡','Jesús invites you to watch his stream ♡'));}window.dispatchEvent(new Event('jj-live-state'));}catch(e){if(state.profile?.id===user){JJLive.user=user;JJLive.error=e;window.dispatchEvent(new Event('jj-live-state'));}}finally{JJLive.busy=false;}}
 function paintLiveBanner(){const old=$('#jj-live-banner');if(!state.profile||state.page!=='home'||!JJLive.data?.live||JJLive.user!==state.profile.id){old?.remove();return;}if(old)return;const b=document.createElement('button');b.id='jj-live-banner';b.className='live-banner';b.innerHTML=bi('◉ Jesús anunció una transmisión · Ver juntos','◉ Jesús announced a stream · Watch together');b.onclick=()=>navigate('live');$('#main')?.prepend(b);}
 async function livePageRoute(){if(!state.profile)return;if(typeof sectionAllowed==='function'&&!sectionAllowed('live'))return navigate('home');jjCleanup();clearTimers();state.page='live';const version=++state.version;shell();window.scrollTo(0,0);await livePage(version);}
-async function livePage(v){const user=state.profile.id,owner=state.profile.handle==='jesus';let frameKey='',acting=false;
- const valid=()=>state.version===v&&state.profile?.id===user;
- $('#main').innerHTML=`<section class="live-hero"><div class="eyebrow">J & J · ${bi('Un ratito juntos','A little time together')}</div><h1>${bi('En vivo contigo','Live with you')}</h1><p>${bi('Tu sitio a mi lado, aunque estemos lejos.','Your place beside me, even when we are far apart.')}</p></section><section class="game-panel"><div id="live-state"></div><p id="live-error" role="status"></p><button id="live-refresh" class="btn secondary">${bi('Actualizar estado','Refresh status')}</button></section><section id="live-view" class="game-panel"></section>${owner?`<section class="game-panel"><h2>${bi('Tu transmisión','Your stream')}</h2><p>${bi('1. Prepara tus enlaces. 2. Abre tu cámara o comparte pantalla. 3. Cuando veas tu señal, anuncia el directo. Mantén abierto el emisor. OBS es opcional.','1. Prepare your links. 2. Open your camera or share your screen. 3. Once you see your feed, announce your stream. Keep the publisher open. OBS is optional.')}</p><p id="live-setup-status" role="status"></p>${jjButton('live-prepare','1 · Preparar mi directo','1 · Prepare my stream')}<div id="live-owner-links"></div><div class="row">${jjButton('live-start','3 · Anunciar directo / renovar','3 · Announce stream / renew')}${jjButton('live-stop','Terminé','I am done','btn secondary')}</div><details><summary>${bi('Configurar enlaces (una sola vez)','Set up links (once)')}</summary><p>${bi('Genera enlaces permanentes o pega tu enlace de espectador. Se guardan en Supabase, no en el código público.','Generate permanent links or paste your viewer link. They are saved in Supabase, not in the public code.')}</p>${jjButton('live-generate','Generar enlaces nuevos','Generate new links','btn secondary')}<form id="live-form" class="stack"><label>${bi('Enlace para ver · ?view=','Viewer link · ?view=')}<input name="view" type="url" required autocomplete="off" spellcheck="false"></label><label>${bi('Sala de voz opcional · nombre con letras y números','Optional voice room · letters and numbers')}<input name="room" maxlength="49" pattern="[A-Za-z0-9]*" autocomplete="off"></label><button class="btn" type="submit">${bi('Guardar enlaces','Save links')}</button></form><p>${bi('Cambiar los enlaces requiere terminar el aviso actual. Conserva el enlace del emisor para reutilizarlo.','Changing links requires ending the current announcement. Keep the publisher link to reuse it.')}</p></details></section>`:''}<section class="game-panel"><h2>${bi('Para escuchar y hablar','Listening and talking')}</h2><p>${bi('Pulsa Ver aquí para cargar VDO.Ninja. Si no se oye, toca reproducir o abre VDO.Ninja. La sala de voz opcional se abre aparte; tú eliges si autorizas el micrófono.','Press Watch here to load VDO.Ninja. If you cannot hear it, tap play or open VDO.Ninja. The optional voice room opens separately; you choose whether to allow your microphone.')}</p><p>${bi('El aviso lo activa Jesús y caduca a las cuatro horas. No confirma que esté llegando video. Para hablar en privado con tus amigos conectados, usa pulsar para hablar en Discord y no pulses esa tecla cuando hables con Julissa.','Jesús activates the announcement, which expires after four hours. It does not confirm that video is arriving. To talk privately while your friends are connected, use push-to-talk in Discord and do not press that key when speaking to Julissa.')}</p></section>`;
- function paint(){if(!valid())return;const d=JJLive.user===user?JJLive.data:null,urls=liveUrls(d);$('#live-state').innerHTML=d?`<h2>${d.live?bi('◉ Transmisión anunciada','◉ Stream announced'):bi('Ahora no hay una transmisión anunciada','No stream is announced right now')}</h2><p>${d.live?bi('Jesús te invita a acompañarlo.','Jesús invites you to join him.'):bi('Vuelve cuando Jesús esté listo.','Come back when Jesús is ready.')}</p>`:bi('No se pudo consultar el estado. Pulsa Actualizar.','Could not check the status. Press Refresh.');
-  const key=JSON.stringify([d?.live,d?.guest_url,d?.stream_id,d?.password,d?.room_id]);if(key!==frameKey){frameKey=key;$('#live-view').innerHTML=d?.live&&urls.view?`<div class="row">${jjButton('live-watch','Ver aquí','Watch here')}<a class="btn secondary" href="${esc(urls.view)}" target="_blank" rel="noopener noreferrer">${bi('Abrir VDO.Ninja','Open VDO.Ninja')}</a>${urls.room?`<a class="text-button" href="${esc(urls.room)}" target="_blank" rel="noopener noreferrer">${bi('Entrar a nuestra sala de voz','Join our voice room')}</a>`:''}</div><div id="live-screen"></div>`:`<div class="live-empty">♡<p>${bi('Reservado para nuestros ratitos juntos.','Reserved for our time together.')}</p></div>`;if($('#live-watch'))$('#live-watch').onclick=()=>{stopJJPlayer();const frame=document.createElement('iframe');frame.title=say('Transmisión de Jesús en VDO.Ninja','Jesús’s stream on VDO.Ninja');frame.src=urls.view;frame.allow='autoplay; fullscreen; picture-in-picture; camera; microphone; display-capture';frame.referrerPolicy='no-referrer';frame.className='live-screen';$('#live-screen').replaceChildren(frame);$('#live-watch').textContent=say('Volver a cargar video','Reload video');const help=document.createElement('p');help.textContent=say('Si sigue cargando, comprueba que el emisor esté abierto y transmitiendo. Prueba también Abrir VDO.Ninja.','If loading continues, check that the publisher is open and streaming. Also try Open VDO.Ninja.');$('#live-screen').append(help);};const recovery=document.createElement('div');recovery.className='live-recovery';recovery.style.cssText='margin-top:12px;display:grid;gap:8px';const reload=document.createElement('button');reload.type='button';reload.id='live-reload-page';reload.className='btn secondary';reload.textContent=say('↻ Recargar Nuestro Universo','↻ Reload Our Universe');reload.onclick=()=>window.location.reload();const hint=document.createElement('p');hint.className='muted';hint.setAttribute('role','note');hint.textContent=say('¿No se escucha? Primero toca el video para activar el sonido. Si «Volver a cargar video» no lo soluciona, pulsa «Recargar Nuestro Universo». La página se abrirá de nuevo y tendrás que entrar otra vez a En vivo contigo y tocar Ver aquí.','No sound? First tap the video to enable audio. If Reload video does not help, tap Reload Our Universe. The page will reopen; return to Live with you and tap Watch here again.');recovery.append(reload,hint);$('#live-view').append(recovery);}
-  if(JJLive.error)$('#live-error').textContent=liveError(JJLive.error);else if(!acting)$('#live-error').textContent='';if(owner){$('#live-owner-links').innerHTML=urls.push?`<p><a class="btn secondary" href="${esc(urls.push)}" target="_blank" rel="noopener noreferrer">${bi('2 · Abrir cámara / OBS','2 · Open camera / OBS')}</a> <a class="btn secondary" href="${esc(urls.push.replace('#','&screenshare#'))}" target="_blank" rel="noopener noreferrer">${bi('2 · Compartir pantalla','2 · Share screen')}</a></p>${urls.room?`<p><a href="${esc(urls.room)}" target="_blank" rel="noopener noreferrer">${bi('Abrir nuestra sala de voz','Open our voice room')}</a></p>`:''}`:'';$('#live-start').disabled=acting||!urls.view||!d?.enabled||!!JJLive.error;$('#live-prepare').disabled=acting||!d||!!urls.view||!!d.live||!!JJLive.error;$('#live-generate').disabled=acting||!!d?.live;$('#live-form').querySelector('button').disabled=acting||!!d?.live;$('#live-setup-status').textContent=acting?say('Guardando…','Saving…'):urls.push?say('Enlaces listos. Abre el emisor en el paso 2.','Links ready. Open the publisher in step 2.'):urls.view?say('Enlace externo listo. Abre tu emisor original antes de anunciar.','External link ready. Open your original publisher before announcing.'):say('Pulsa Preparar mi directo para crear y guardar tus enlaces.','Press Prepare my stream to create and save your links.');$('#live-stop').disabled=acting;if(d&&!d.enabled)$('#live-error').textContent=liveError({message:'SECTION_HIDDEN'});}
- }
- async function send(action,payload={}){if(acting||!ensureLive())return;acting=true;paint();try{const d=await liveRequest({p_action:action,p_data:payload});if(!valid())return;JJLive.user=user;JJLive.data=d;JJLive.error=null;$('#live-error').textContent=say('Guardado.','Saved.');paintLiveBanner();}catch(e){if(valid()){JJLive.error=e;$('#live-error').textContent=liveError(e);}}finally{acting=false;if(valid())paint();}}
- $('#live-refresh').onclick=()=>readLive();if(owner){$('#live-prepare').onclick=()=>{const random=()=>crypto.randomUUID().replaceAll('-','');return send('save',{stream_id:'JJ'+random(),password:random(),room_id:'JJVoice'+random()});};$('#live-start').onclick=()=>send('start');$('#live-stop').onclick=()=>send('stop');$('#live-generate').onclick=()=>{const random=()=>crypto.randomUUID().replaceAll('-','');const d={stream_id:'JJ'+random(),password:random(),room_id:'JJVoice'+random()};$('#live-form').elements.view.value=liveUrls(d).view;$('#live-form').elements.room.value=d.room_id;};$('#live-form').onsubmit=e=>{e.preventDefault();try{const d=parseLiveLink(e.target.elements.view.value);d.room_id=e.target.elements.room.value.trim();send('save',d);}catch(error){$('#live-error').textContent=liveError(error);}};}
- window.addEventListener('jj-live-state',paint);JJ.cleanups.push(()=>window.removeEventListener('jj-live-state',paint));await readLive();if(!valid())return;paint();if(owner&&JJLive.user===user){const d=JJLive.data;$('#live-form').elements.view.value=liveUrls(d).view||'';$('#live-form').elements.room.value=d?.room_id||'';}
+function liveStudioMarkup() {
+  return `<section class="stream-card stream-studio">
+    <h2>${bi('Panel de transmisión','Broadcast controls')}</h2>
+    <p id="live-setup-status" role="status"></p>
+    <div class="stream-tools">${jjButton('live-prepare','Preparar directo','Prepare stream','stream-button')}</div>
+    <div class="stream-tools" id="live-owner-links"></div>
+    <div class="stream-tools">
+      ${jjButton('live-start','Anunciar directo','Announce stream','stream-button stream-primary')}
+      ${jjButton('live-stop','Terminé','I am done','stream-button')}
+    </div>
+    <details><summary>${bi('Configurar enlaces','Set up links')}</summary>
+      <p>${bi('Genera enlaces o pega el enlace de espectador de VDO.Ninja. Termina el aviso actual antes de cambiarlos.','Generate links or paste the VDO.Ninja viewer link. End the current announcement before changing them.')}</p>
+      ${jjButton('live-generate','Generar enlaces nuevos','Generate new links','stream-button')}
+      <form id="live-form" class="stack">
+        <label>${bi('Enlace para ver · ?view=','Viewer link · ?view=')}<input name="view" type="url" required autocomplete="off" spellcheck="false"></label>
+        <label>${bi('Sala de voz opcional · letras y números','Optional voice room · letters and numbers')}<input name="room" maxlength="49" pattern="[A-Za-z0-9]*" autocomplete="off"></label>
+        <button class="stream-button stream-primary">${bi('Guardar enlaces','Save links')}</button>
+      </form>
+    </details></section>`;
+}
+
+async function livePage(v) {
+  const user = state.profile.id;
+  const owner = state.profile.handle === 'jesus';
+  const julie = state.profile.handle === 'julisa' && !state.demo;
+  const valid = () => state.version === v && state.profile?.id === user;
+  let frameKey, publisherLinks, acting = false, endRecording, fillInitialLinks;
+  $('#main').innerHTML = `<div class="stream-room">
+    <header class="stream-mast">
+      <div><p class="stream-channel">J & J <span aria-hidden="true">✦</span> ${bi('Para Julie','For Julie')}</p>
+      <h1>${bi('En vivo contigo','Live with you')}</h1></div>
+      <div class="stream-tools">
+        ${typeof sectionAllowed !== 'function' || sectionAllowed('streamclips') ? jjButton('live-go-clips','Streamclips','Streamclips','stream-button') : ''}
+        ${jjButton('live-refresh','Actualizar estado','Refresh status','stream-button')}
+      </div>
+    </header>
+    <div class="stream-stage">
+      <section class="stream-card stream-player">
+        <div id="live-view"></div>
+        <div class="stream-program"><div class="stream-host" aria-hidden="true">J</div><div id="live-state" role="status"></div></div>
+        <p id="live-error" role="status"></p>
+      </section>
+      ${liveChatMarkup()}
+    </div>
+    ${owner ? liveStudioMarkup() : ''}
+  </div>`;
+  const chat = mountLiveChat($('#stream-chat'), user, valid);
+  const clips = $('#live-go-clips');
+  if (clips) clips.onclick = () => navigate('streamclips');
+
+  function paint() {
+    if (!valid()) return;
+    const d = JJLive.user === user ? JJLive.data : null;
+    const urls = liveUrls(d);
+    const session = d?.live ? d.session : null;
+    chat.update(session || null);
+    const status = $('#live-state');
+    const statusKey = String(d?.live);
+    if (status.dataset?.state !== statusKey) {
+      status.innerHTML = `<span class="stream-badge ${d?.live?'is-live':''}">${d?.live
+        ? bi('Directo anunciado','Stream announced') : d ? bi('Fuera de línea','Offline') : bi('Consultando estado…','Checking status…')}</span>
+        <h2>${bi('El directo de Jesús','Jesús’s stream')}</h2>`;
+      if (status.dataset) status.dataset.state = statusKey;
+    }
+    const key = JSON.stringify([d?.live, session, urls.view, urls.room]);
+    if (key !== frameKey) {
+      frameKey = key;
+      endRecording?.();
+      endRecording = null;
+      paintViewer(d?.live ? urls : {}, key);
+    }
+    $('#live-error').textContent = JJLive.error ? liveError(JJLive.error) : '';
+    if (!owner) return;
+    const publisher = urls.push ? `<a class="stream-button" href="${esc(urls.push)}" target="_blank" rel="noopener noreferrer">${bi('Abrir cámara / OBS','Open camera / OBS')}</a>
+      <a class="stream-button" href="${esc(urls.push.replace('#','&screenshare#'))}" target="_blank" rel="noopener noreferrer">${bi('Compartir pantalla','Share screen')}</a>` : '';
+    const links = publisher + (urls.room ? `<a class="stream-button" href="${esc(urls.room)}" target="_blank" rel="noopener noreferrer">${bi('Sala de voz','Voice room')}</a>` : '');
+    if (links !== publisherLinks) {
+      $('#live-owner-links').innerHTML = links;
+      publisherLinks = links;
+    }
+    $('#live-start').innerHTML = d?.live ? bi('Renovar aviso','Renew announcement') : bi('Anunciar directo','Announce stream');
+    $('#live-start').disabled = acting || !urls.view || !d?.enabled || !!JJLive.error;
+    $('#live-prepare').disabled = acting || !d || !!urls.view || !!d.live || !!JJLive.error;
+    $('#live-stop').disabled = acting;
+    $('#live-generate').disabled = acting || !!d?.live;
+    $('#live-form').querySelector('button').disabled = acting || !!d?.live;
+    $('#live-setup-status').textContent = acting ? say('Guardando…','Saving…') : urls.view
+      ? say('Abre el emisor y anuncia el directo cuando tu señal esté lista.','Open the publisher and announce the stream when your feed is ready.')
+      : say('Prepara tus enlaces para poder emitir.','Prepare your links to start streaming.');
+    if (d && !d.enabled) $('#live-error').textContent = liveError({message:'SECTION_HIDDEN'});
+  }
+
+  function paintViewer(urls, key) {
+    $('#live-view').innerHTML = `<div id="live-screen" class="stream-screen">
+      <div class="stream-placeholder"><span aria-hidden="true">${urls.view?'▶':'✦'}</span>
+        <p>${urls.view ? bi('El directo está listo para abrir','The stream is ready to open') : bi('Te esperamos en el próximo directo','See you at the next stream')}</p>
+      </div></div>
+      ${urls.view ? `<div class="stream-view-controls">
+        <div class="stream-tools">
+          ${jjButton('live-watch','Ver aquí','Watch here','stream-button stream-primary')}
+          <a class="stream-button" href="${esc(urls.view)}" target="_blank" rel="noopener noreferrer">${bi('Abrir VDO.Ninja','Open VDO.Ninja')}</a>
+          ${urls.room ? `<a class="stream-button" href="${esc(urls.room)}" target="_blank" rel="noopener noreferrer">${bi('Sala de voz','Voice room')}</a>` : ''}
+        </div>
+        ${julie ? `<div class="stream-tools">
+          ${jjButton('live-record','Grabar clip','Record clip','stream-button stream-clip-action')}
+          ${jjButton('live-upload-clip','Subir clip','Upload clip','stream-button')}
+        </div><p id="live-clip-status" role="status"></p>` : ''}
+        <details><summary>${bi('Ayuda de reproducción','Playback help')}</summary>
+          <p>${bi('Si falta el sonido, toca el video. Si el directo sigue cargando, comprueba que el emisor esté abierto y prueba Volver a cargar video.','If there is no sound, tap the video. If the stream keeps loading, check that the publisher is open and try Reload video.')}</p>
+          ${jjButton('live-reload-page','Recargar Nuestro Universo','Reload Our Universe','stream-button')}
+        </details>
+      </div>` : ''}`;
+    if (!urls.view) return;
+    const screen = $('#live-screen');
+    const watch = $('#live-watch');
+    const record = julie ? $('#live-record') : null;
+    let frame;
+    function play() {
+      endRecording?.();
+      stopJJPlayer();
+      frame = document.createElement('iframe');
+      frame.title = say('Transmisión de Jesús en VDO.Ninja','Jesús’s stream on VDO.Ninja');
+      frame.src = urls.view;
+      frame.allow = 'autoplay; fullscreen; picture-in-picture; camera; microphone; display-capture';
+      frame.referrerPolicy = 'no-referrer';
+      frame.className = 'live-screen';
+      screen.replaceChildren(frame);
+      watch.textContent = say('Volver a cargar video','Reload video');
+      watch.classList?.remove('stream-primary');
+      if (!record) return;
+      record.disabled = false;
+      record.textContent = say('Grabar clip','Record clip');
+      const hint = $('#live-clip-status');
+      hint.textContent = say('Graba hasta 30 s desde ahora. Elige esta pestaña y activa Compartir audio. Si el navegador no puede recortar el video, se grabará la pestaña completa.','Record up to 30 s from now. Choose this tab and enable Share audio. If your browser cannot crop the video, the whole tab will be recorded.');
+      endRecording = streamclipControls(screen, record, hint, () => valid() && frameKey === key && !$('#modal').open);
+    }
+    watch.onclick = play;
+    $('#live-reload-page').onclick = () => window.location.reload();
+    if (record) {
+      record.disabled = true;
+      $('#live-upload-clip').onclick = () => streamclipForm();
+    }
+  }
+
+  async function send(action, payload = {}) {
+    if (acting || !ensureLive()) return;
+    acting = true;
+    paint();
+    try {
+      const d = await liveRequest({p_action:action,p_data:payload});
+      if (!valid()) return;
+      JJLive.user = user;
+      if (!JJLive.data || d.revision >= JJLive.data.revision) JJLive.data = d;
+      JJLive.error = null;
+      paintLiveBanner();
+    } catch (e) {
+      if (valid()) JJLive.error = e;
+    } finally {
+      acting = false;
+      if (valid()) paint();
+    }
+  }
+
+  $('#live-refresh').onclick = () => readLive();
+  if (owner) {
+    const generate = () => {
+      const random = () => crypto.randomUUID().replaceAll('-', '');
+      return {stream_id:'JJ'+random(),password:random(),room_id:'JJVoice'+random()};
+    };
+    const form = $('#live-form');
+    const showLinks = d => {
+      form.elements.view.value = liveUrls(d).view || '';
+      form.elements.room.value = d?.room_id || '';
+    };
+    $('#live-prepare').onclick = () => send('save', generate());
+    $('#live-start').onclick = () => send('start');
+    $('#live-stop').onclick = () => send('stop');
+    $('#live-generate').onclick = () => showLinks(generate());
+    form.onsubmit = e => {
+      e.preventDefault();
+      try {
+        const d = parseLiveLink(form.elements.view.value);
+        d.room_id = form.elements.room.value.trim();
+        send('save', d);
+      } catch (error) {
+        $('#live-error').textContent = liveError(error);
+      }
+    };
+    fillInitialLinks = () => {
+      if (JJLive.user === user && !form.elements.view.value && !form.elements.room.value) showLinks(JJLive.data);
+    };
+    fillInitialLinks();
+  }
+  window.addEventListener('jj-live-state', paint);
+  JJ.cleanups.push(() => {
+    window.removeEventListener('jj-live-state', paint);
+    endRecording?.();
+    chat.close();
+  });
+  paint();
+  await readLive();
+  if (valid()) {
+    paint();
+    fillInitialLinks?.();
+  }
 }
 const liveNavigate=navigate;navigate=async function(page){if(page==='live')return livePageRoute();await liveNavigate(page);if(state.profile){paintLiveBanner();readLive();}};
 setInterval(()=>{if(!document.hidden)readLive();},8000);
-const liveLogout=logout;logout=async function(){JJLive.user=null;JJLive.data=null;JJLive.seen=null;return liveLogout();};
+const liveLogout = logout;
+logout = async function() {
+  const onLivePage = state.page === 'live';
+  await liveLogout();
+  if (!state.profile) {
+    if (onLivePage) jjCleanup();
+    JJLive.user = null;
+    JJLive.data = null;
+    JJLive.seen = null;
+  }
+};
