@@ -98,6 +98,7 @@ universeComics=async function(v){
  if(v!==state.version)return;
  const options=[['es','Español','Español'],['en','English','English'],['unassigned','Sin clasificar','Unassigned']];
  if(comicLanguageFilter===null){const preferred=say('es','en');comicLanguageFilter=rows.some(r=>comicLanguage(r)===preferred)?preferred:options.find(([code])=>rows.some(r=>comicLanguage(r)===code))?.[0]||preferred;}
+ const pdfPreviews=new Map();
  const paint=()=>{
   if(v!==state.version)return;
   const selected=rows.filter(r=>comicLanguage(r)===comicLanguageFilter).sort((a,b)=>a.position-b.position||String(a.created_at||'').localeCompare(String(b.created_at||'')));
@@ -113,11 +114,31 @@ universeComics=async function(v){
   document.querySelectorAll('[data-edit-comic]').forEach(b=>b.onclick=()=>universeComicForm(rows.find(r=>r.id===b.dataset.editComic)));
   document.querySelectorAll('[data-read-comic]').forEach(b=>b.onclick=()=>universeReadComic(rows.find(r=>r.id===b.dataset.readComic)));
   document.querySelectorAll('[data-comic-cover]').forEach(img=>{
-   const row=rows.find(r=>r.id===img.dataset.comicCover),path=comicCover(row);if(!path)return;
+   const row=rows.find(r=>r.id===img.dataset.comicCover);
+   const path=row.giftPdf?.cover_path||comicCover(row);
+   if(!path&&!row.giftPdf)return;
    const current=()=>v===state.version&&img.isConnected,placeholder=img.nextElementSibling;
    let retry;
    const failed=()=>{if(!current())return;img.style.opacity='0';placeholder.hidden=false;placeholder.textContent=say('Portada pendiente','Cover unavailable');if(!retry){retry=document.createElement('button');retry.className='text-button';retry.textContent=say('Reintentar portada','Retry cover');retry.onclick=load;img.closest('.comic-card').append(retry);}retry.disabled=false;};
-   const load=async()=>{if(retry)retry.disabled=true;try{await comicImage(path,img,current,row.giftBucket);}catch{failed();}};
+   const load=async()=>{
+    if(retry)retry.disabled=true;
+    try{
+     if(path){
+      await comicImage(path,img,current,row.giftBucket);
+     }else{
+      if(!pdfPreviews.has(row.id)){
+       const storage=db.storage.from(row.giftBucket);
+       const preview=GiftPdfCover.firstPage(()=>GiftPdfCover.signedUrl(storage,row.giftPdf.path)).catch(error=>{
+        pdfPreviews.delete(row.id);
+        throw error;
+       });
+       pdfPreviews.set(row.id,preview);
+      }
+      const source=await pdfPreviews.get(row.id);
+      if(current())img.src=source;
+     }
+    }catch{failed();}
+   };
    img.onload=()=>{if(!current())return;img.style.opacity='1';placeholder.hidden=true;retry?.remove();retry=null;};img.onerror=failed;load();
   });
  };paint();

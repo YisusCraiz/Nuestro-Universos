@@ -5,9 +5,10 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Regalos JXJ · Nuestro Universo</title>
-<link rel="stylesheet" href="regalos-jxj.css?v=comic-destinations">
+<link rel="stylesheet" href="regalos-jxj.css?v=pdf-covers">
 <script src="config.js"></script>
 <script src="assets/supabase.js"></script>
+<script src="jj-gift-pdf-cover.js?v=1"></script>
 <main id="page">
 <header class="gift-header">
  <a id="home" class="back-link" href="./#volver-regalos" data-t="back">← Atrás</a>
@@ -168,6 +169,12 @@ const tr = {
  download:['Descargar','Download'], viewFile:['Abrir','Open'], addComic:['Guardar PDF en Cómics','Save PDF to Comics'],
  addPages:['Guardar imágenes como páginas de cómic','Save images as comic pages'],
  pdfHint:['Puedes elegir dónde irá cada PDF cuando el destinatario abra el regalo.','Choose where each PDF goes when the recipient opens the gift.'],
+ addCover:['Añadir portada (opcional)','Add cover (optional)'],
+ useFirstPage:['Usar primera página del PDF','Use first PDF page'],
+ customCover:['Portada personalizada','Custom cover'],
+ firstPageCover:['Portada de la primera página','First-page cover'],
+ previewUnavailable:['Vista previa de portada no disponible','Cover preview unavailable'],
+ coverInvalid:['Elige una imagen JPG, PNG o WebP de hasta 20 MB.','Choose a JPG, PNG or WebP image up to 20 MB.'],
  pdfDestination:['Destino del PDF','PDF destination'],
  attachmentOnly:['Solo en el regalo','Gift only'],
  comicsEs:['Cómics · Español','Comics · Spanish'],
@@ -217,6 +224,7 @@ let account = null;
 let displayedGift=null;
 let savedFiles=[], pickedFiles=[], draftCode='';
 const uploads=new WeakMap();
+const coverPreviews=new WeakMap();
 const bucket = 'jj-secret-gifts';
 const config = window.UNIVERSE_CONFIG;
 const client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
@@ -481,6 +489,85 @@ async function printable(gift) {
 function attachmentsFor(gift){
   return gift?.attachments ?? (gift?.attachment ? [{path:gift.attachment}] : []);
 }
+function pdfCoverControls(file,name){
+  const controls=document.createElement('div');
+  const label=document.createElement('label');
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/jpeg,image/png,image/webp';
+  input.setAttribute('aria-label',t('addCover')+' · '+name);
+  input.onchange=()=>{
+    const image=input.files[0];
+    if(!image)return;
+    if(!['image/jpeg','image/png','image/webp'].includes(image.type)||!image.size||image.size>20*1024*1024){
+      input.value='';
+      status('coverInvalid');
+      return;
+    }
+    status('');
+    file.coverFile=image;
+    drawDraftFiles();
+  };
+  label.append(fileText('span','addCover'),input);
+  controls.append(label);
+  if(file.coverFile||file.cover_path){
+    const note=fileText('p','customCover');
+    note.className='hint';
+    const reset=fileText('button','useFirstPage');
+    reset.type='button';
+    reset.onclick=()=>{
+      delete file.coverFile;
+      delete file.cover_path;
+      drawDraftFiles();
+    };
+    controls.append(note,reset);
+  }else{
+    const note=fileText('p','useFirstPage');
+    note.className='hint';
+    controls.append(note);
+  }
+  return controls;
+}
+function filePreviewUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+function previewPdfCover(file, name){
+  const figure=document.createElement('figure');
+  figure.className='pdf-cover-preview';
+  const img=document.createElement('img');
+  img.alt=name;
+  img.hidden=true;
+  const caption=fileText('figcaption',file.coverFile||file.cover_path?'customCover':'firstPageCover');
+  figure.append(img,caption);
+  const key=file.coverFile||file.cover_path||file.file||file.path;
+  const helper=window.GiftPdfCover;
+  if(!helper)return figure;
+  const storage=client.storage.from(bucket);
+  let entry=coverPreviews.get(file);
+  if(entry?.key!==key){
+    let promise;
+    if(file.coverFile)promise=filePreviewUrl(file.coverFile);
+    else if(file.cover_path)promise=helper.signedUrl(storage,file.cover_path);
+    else promise=helper.firstPage(()=>file.file||helper.signedUrl(storage,file.path));
+    entry={key,promise};
+    coverPreviews.set(file,entry);
+  }
+  const unavailable=()=>{
+    delete caption.dataset.fileText;
+    caption.textContent=t('previewUnavailable');
+    img.hidden=true;
+    if(coverPreviews.get(file)===entry)coverPreviews.delete(file);
+  };
+  img.onload=()=>{img.hidden=false;};
+  img.onerror=unavailable;
+  entry.promise.then(url=>{if(figure.isConnected)img.src=url;},unavailable);
+  return figure;
+}
 function drawDraftFiles(){
   const list=$('draftFiles');
   list.replaceChildren();
@@ -505,7 +592,7 @@ function drawDraftFiles(){
       select.value=file.comic_language || '';
       select.onchange=()=>{file.comic_language=select.value || null;};
       field.append(fileText('span','pdfDestination'),select);
-      row.append(field);
+      row.append(field,pdfCoverControls(file,label));
     }
     list.append(row);
   }
@@ -552,7 +639,8 @@ function renderDraftSummary(){
   ];
   const pdfDestinations=[...savedFiles,...pickedFiles].filter(file=>fileKind(file)==='pdf').map((file,index)=>{
     const item=document.createElement('li');
-    item.textContent=(file.name || t('pdf')+' '+(index+1))+' · '+t(comicDestination(file.comic_language)||'attachmentOnly');
+    const name=file.name || t('pdf')+' '+(index+1);
+    item.append(name+' · '+t(comicDestination(file.comic_language)||'attachmentOnly'),previewPdfCover(file,name));
     return item;
   });
   $('reviewDetails').replaceChildren(...details.filter(([,value])=>value).map(([key,value])=>{
@@ -716,6 +804,33 @@ $('lookup').onsubmit = event => {
   event.preventDefault();
   run(async()=>{await stopScan();await lookup($('lookup').elements.code.value);});
 };
+async function uploadDraftFile(owner,file,mime){
+  let path=uploads.get(file);
+  if(path?.startsWith(owner+'/'))return path;
+  path=owner+'/'+crypto.randomUUID();
+  const result=await client.storage.from(bucket).upload(path,file,{contentType:mime});
+  if(result.error)throw result.error;
+  uploads.set(file,path);
+  return path;
+}
+async function draftAttachments(){
+  const files=[...savedFiles,...pickedFiles];
+  let owner;
+  if(files.some(file=>file.file||file.coverFile)){
+    const login=await client.auth.getUser();
+    if(login.error)throw login.error;
+    owner=login.data.user.id;
+  }
+  const attachments=[];
+  for(const {file,name,mime,path,comic_language,coverFile,cover_path} of files){
+    attachments.push({
+      path:file?await uploadDraftFile(owner,file,mime):path,
+      name,comic_language,
+      cover_path:coverFile?await uploadDraftFile(owner,coverFile,coverFile.type):cover_path
+    });
+  }
+  return attachments;
+}
 $('openGift').onclick = () => run(async () => {
   const gift = await rpc('redeem',{code});
   await showGift(gift);
@@ -734,29 +849,13 @@ $('draft').onsubmit = event => {
     status('saving');
     renderDraftStep();
     try{
-      const attachments=[...savedFiles];
+      const attachments=await draftAttachments();
       if (!draftCode) draftCode=crypto.randomUUID().replaceAll('-','').toUpperCase();
       const payload={
         id:selected?.id,recipient:f.recipient.value,sender_note:f.sender_note.value,title:f.title.value,body:f.body.value,
         code:f.code.value.trim()||draftCode,theme:f.theme.value,attachments,coins:Number(f.coins.value || 0),
         card:f.card.value,opens_at:f.date.value ? new Date(f.date.value).toISOString() : null,enabled:f.enabled.checked
       };
-      if (pickedFiles.length) {
-        const login = await client.auth.getUser();
-        if (login.error) throw login.error;
-        const owner=login.data.user.id;
-        for (const {file,name,mime,comic_language} of pickedFiles) {
-          let uploaded=uploads.get(file);
-          if (!uploaded || !uploaded.path.startsWith(owner+'/')) {
-            const path=owner+'/'+crypto.randomUUID();
-            const result=await client.storage.from(bucket).upload(path,file,{contentType:mime});
-            if (result.error) throw result.error;
-            uploaded={path,name};
-            uploads.set(file,uploaded);
-          }
-          attachments.push({...uploaded,comic_language});
-        }
-      }
       const gift=await rpc('save',payload);
       account.gifts=[gift,...account.gifts.filter(item=>item.id!==gift.id)];
       edit(gift,true);

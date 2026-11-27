@@ -48,6 +48,8 @@ async function setup() {
   await db.exec(readFileSync(migrations+'20261118021500_jj_gift_presentation_and_private_comics.sql', 'utf8'));
   const migration = readdirSync(migrations).find(file => file.endsWith('_jj_gift_comic_destinations.sql'));
   await db.exec(readFileSync(migrations+migration, 'utf8'));
+  const covers = readdirSync(migrations).find(file => file.endsWith('_jj_gift_pdf_covers.sql'));
+  await db.exec(readFileSync(migrations+covers, 'utf8'));
 }
 
 async function asUser(id) {
@@ -59,10 +61,17 @@ async function giftRpc(action, data = {}) {
 async function comics() {
   return (await db.query('select public.jj_received_comics_api() as result')).rows[0].result;
 }
+async function coverReadable(path) {
+  return (await db.query('select public.jj_secret_can_read($1) as readable',[path])).rows[0].readable;
+}
 function page(hash, id) {
   const {window} = new JSDOM(html, {url:'https://example.test/regalos-jxj.html#'+hash, runScripts:'outside-only'});
   window.HTMLElement.prototype.scrollIntoView = () => {};
   window.UNIVERSE_CONFIG = {};
+  window.GiftPdfCover = {
+    firstPage: async () => 'data:image/webp;base64,UklGRg==',
+    signedUrl: async () => 'https://example.test/cover'
+  };
   window.supabase = {createClient: () => ({
     auth:{
       getSession:async () => ({data:{session:{}}}),
@@ -113,6 +122,10 @@ function page(hash, id) {
     languages()[index].value=language;
     languages()[index].dispatchEvent(new editor.Event('change'));
   }
+  const coverInputs=()=>[...button('draftFiles').querySelectorAll('input[type=file]')];
+  assert.equal(coverInputs().length,3);
+  Object.defineProperty(coverInputs()[0],'files',{value:[new editor.File(['cover'],'Portada.png',{type:'image/png'})]});
+  coverInputs()[0].dispatchEvent(new editor.Event('change'));
   button('langEn').click();
   assert.deepEqual(languages().map(select=>select.value),['es','en','']);
   assert.equal(languages()[0].selectedOptions[0].textContent,'Comics · Spanish');
@@ -121,16 +134,28 @@ function page(hash, id) {
   assert.match(button('reviewDetails').textContent,/Historia ES\.pdf · Cómics · Español/);
   assert.match(button('reviewDetails').textContent,/Story EN\.PDF · Cómics · Inglés/);
   assert.match(button('reviewDetails').textContent,/Adjunto\.pdf · Solo en el regalo/);
+  assert.deepEqual([...button('reviewDetails').querySelectorAll('figcaption')].map(caption=>caption.textContent),[
+    'Portada personalizada','Portada de la primera página','Portada de la primera página'
+  ]);
+  await until(()=>button('reviewDetails').querySelector('img').getAttribute('src')?.startsWith('data:image/png'));
   fields.enabled.checked = true;
   button('draftNext').click();
   await until(() => !button('print').hidden && !button('draft').inert);
   const {gifts:[gift]} = await giftRpc('list');
   assert.deepEqual(gift.attachments.map(file=>file.comic_language),['es','en',undefined,undefined]);
   assert.equal(gift.attachments[1].mime,'application/pdf');
+  const coverPath=gift.attachments[0].cover_path;
+  assert.ok(coverPath.startsWith(sender+'/'));
+  assert.equal(gift.attachments[1].cover_path,undefined);
+  assert.equal(await coverReadable(coverPath),true);
   button('resumeEdit').click();
   assert.deepEqual(languages().map(select=>select.value),['es','en','']);
   await assert.rejects(giftRpc('save',{id:gift.id,attachments:[{...gift.attachments[3],comic_language:'en'}]}), /INVALID_ATTACHMENT/);
   await assert.rejects(giftRpc('save',{id:gift.id,attachments:[{...gift.attachments[0],comic_language:'fr'}]}), /INVALID_ATTACHMENT/);
+  await assert.rejects(giftRpc('save',{id:gift.id,attachments:[{...gift.attachments[0],cover_path:gift.attachments[1].path}]}), /INVALID_ATTACHMENT/);
+  const foreignCover=recipient+'/foreign.png';
+  await db.query('insert into storage.objects values ($1,$2,$3)', ['jj-secret-gifts',foreignCover,'{"mimetype":"image/png"}']);
+  await assert.rejects(giftRpc('save',{id:gift.id,attachments:[{...gift.attachments[0],cover_path:foreignCover}]}), /INVALID_ATTACHMENT/);
   await assert.rejects(giftRpc('redeem',{code:gift.code}), /GIFT_UNAVAILABLE/);
   editor.close();
 
@@ -140,6 +165,7 @@ function page(hash, id) {
   await until(() => !received('gift').hidden);
   assert.equal(received('attachmentLinks').hidden,true);
   assert.deepEqual(await comics(),[]);
+  assert.equal(await coverReadable(coverPath),false);
   received('openGift').click();
   await until(() => !received('attachmentLinks').hidden);
   assert.deepEqual([...received('attachmentLinks').querySelectorAll('a[href]')].map(link=>link.hash),[
@@ -149,6 +175,8 @@ function page(hash, id) {
   await giftRpc('redeem',{code:gift.code});
   const list = await comics();
   assert.equal(list.length,2);
+  assert.equal(list.find(item=>item.language==='es').files[0].cover_path,coverPath);
+  assert.equal(await coverReadable(coverPath),true);
   assert.deepEqual(Object.fromEntries(list.map(item=>[item.language,item.files[0].name])),{es:'Historia ES.pdf',en:'Story EN.PDF'});
   const manual = received('attachmentLinks').querySelectorAll('details')[1];
   manual.querySelector('button').click();
@@ -156,6 +184,8 @@ function page(hash, id) {
   assert.equal((await comics()).length,3);
   await asUser(sender);
   assert.deepEqual(await comics(),[]);
+  await asUser('00000000-0000-4000-8000-000000000003');
+  assert.equal(await coverReadable(coverPath),false);
   receiver.close();
   console.log('Gift PDF destinations, redemption, privacy and manual fallback passed');
 })().catch(error => {

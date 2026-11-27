@@ -18,5 +18,26 @@ const {JSDOM}=require('jsdom'),fs=require('node:fs'),assert=require('node:assert
  await w.universeReadComic(rows[0]);assert.equal(w.document.querySelectorAll('#universe-reader img').length,2);assert.equal(w.document.querySelectorAll('#universe-reader h3,#universe-reader section').length,0);assert.equal(w.$('#universe-reader').textContent,'');assert.match(w.$('#universe-reader img').src,/owner\/a/);
  // First visit must expose legacy comics instead of opening an empty Spanish filter.
  const source=fs.readFileSync('jj-comics-bilingual.js','utf8');const fresh=new JSDOM('<main id="main"></main>',{runScripts:'outside-only',url:'https://example.test'}),f=fresh.window;for(const key of ['state','say','bi','esc','lifeHeading','jjButton','db'])f[key]=w[key];f.$=s=>f.document.querySelector(s);f.universeComics=()=>{};f.universeReadComic=()=>{};f.universeComicForm=()=>{};f.lifeRows=async()=>[rows[3]];f.eval(source);await f.universeComics(1);assert.equal(f.$('#comic-language-filter').value,'unassigned');assert.equal(f.document.querySelectorAll('.comic-card').length,1);fresh.window.close();
+ // Received PDFs use the cover saved with that file, or render page one when absent.
+ const pdfRows=[
+  {id:'received-es',title:'De regalo',language:'es',files:[{path:'partner/es-pdf',mime:'application/pdf',cover_path:'partner/es-cover'}]},
+  {id:'received-en',title:'Gift',language:'en',files:[{path:'partner/en-pdf',mime:'application/pdf'}]}
+ ];
+ w.lifeRows=async()=>[];
+ w.db.rpc=async()=>({data:pdfRows});
+ const pdfSources=[];
+ w.GiftPdfCover={
+  signedUrl:async(storage,path)=>(await storage.createSignedUrl(path)).data.signedUrl,
+  firstPage:async source=>{pdfSources.push(await source());return 'data:image/webp;base64,UklGRg==';}
+ };
+ await w.universeComics(1);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(w.$('[data-comic-cover="received-es"]').src,'https://example.test/partner/es-cover');
+ assert.equal(pdfSources.length,0);
+ const language=w.$('#comic-language-filter');
+ language.value='en';language.dispatchEvent(new w.Event('change'));
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(w.$('[data-comic-cover="received-en"]').src,'data:image/webp;base64,UklGRg==');
+ assert.deepEqual(pdfSources,['https://example.test/partner/en-pdf']);
  let resolve;w.db.storage.from=()=>({createSignedUrl:()=>new Promise(r=>resolve=r)});const old=w.universeReadComic({...rows[0],pages:['owner/a']});w.modal('<p>New modal</p>');resolve({data:{signedUrl:'https://example.test/image.png'}});await old;assert.equal(w.$('#modal-body').textContent,'New modal');dom.window.close();console.log('PASS: unified cover gallery, selected language, owner editing, sorting, cover upload/reset, metadata preservation, continuous reader and stale modal protection.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

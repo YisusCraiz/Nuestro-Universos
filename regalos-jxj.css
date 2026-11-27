@@ -68,6 +68,9 @@ summary { cursor: pointer; color: var(--accent); padding: .35rem 0; font-weight:
 #draftFiles { padding-inline-start: 1.3rem; }
 #draftFiles li { margin: .25rem 0 .75rem; }
 #draftFiles label { margin: .35rem 0 0; max-width: 22rem; }
+.pdf-cover-preview { margin: .35rem 0 .7rem; }
+.pdf-cover-preview img { display: block; width: auto; max-width: 100%; max-height: 10rem; border-radius: .35rem; }
+.pdf-cover-preview figcaption { color: var(--muted); font-size: .85rem; }
 #extras, #deliverySettings { margin-top: .7rem; }
 #extras[open] summary, #deliverySettings[open] summary { margin-bottom: .55rem; }
 #draftPreview[data-theme=christmas], main[data-theme=christmas] #gift { background: #213b34; border-color: #ae9873; }
