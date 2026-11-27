@@ -36,8 +36,8 @@ function toggleInbox(open){
  if(open){renderInbox();activityTick();}
 }
 function noticeRoute(n){return ['music','memories','messages'].includes(n.kind)?n.kind:null;}
-function noticeText(n){if(noticeRoute(n))return bi(esc(noticePlain(n,'es')),esc(noticePlain(n,'en')));return n.kind==='crown'?bi(`${esc(n.name)} ganó una corona 👑`,`${esc(n.name)} won a crown 👑`):n.kind==='online'?bi(`${esc(n.name)} se conectó`,`${esc(n.name)} came online`):bi(`${esc(n.name)} se desconectó`,`${esc(n.name)} went offline`);}
-function noticePlain(n,lang=UniverseI18n.language){const page=noticeRoute(n);if(page){const labels={music:['subió una canción','uploaded a song'],memories:['guardó un recuerdo','saved a memory'],messages:['escribió una cartita','wrote a letter']};return n.name+' '+labels[page][lang==='en'?1:0];}return n.kind==='crown'?say(`${n.name} ganó una corona 👑`,`${n.name} won a crown 👑`):n.kind==='online'?say(`${n.name} se conectó`,`${n.name} came online`):say(`${n.name} se desconectó`,`${n.name} went offline`);}
+function noticeText(n){if(n.kind==='heist'||noticeRoute(n))return bi(esc(noticePlain(n,'es')),esc(noticePlain(n,'en')));return n.kind==='crown'?bi(`${esc(n.name)} ganó una corona 👑`,`${esc(n.name)} won a crown 👑`):n.kind==='online'?bi(`${esc(n.name)} se conectó`,`${esc(n.name)} came online`):bi(`${esc(n.name)} se desconectó`,`${esc(n.name)} went offline`);}
+function noticePlain(n,lang=UniverseI18n.language){if(n.kind==='heist')return lang==='en'?'Julie opened your vault · −300 JJ':'Julie abrió tu bóveda · −300 JJ';const page=noticeRoute(n);if(page){const labels={music:['subió una canción','uploaded a song'],memories:['guardó un recuerdo','saved a memory'],messages:['escribió una cartita','wrote a letter']};return n.name+' '+labels[page][lang==='en'?1:0];}return n.kind==='crown'?say(`${n.name} ganó una corona 👑`,`${n.name} won a crown 👑`):n.kind==='online'?say(`${n.name} se conectó`,`${n.name} came online`):say(`${n.name} se desconectó`,`${n.name} went offline`);}
 function paintBell(){
  noticeDock.hidden=!state.profile;
  if(noticeDock.hidden)toggleInbox(false);
@@ -57,7 +57,7 @@ async function activityTick(readThrough=null){
  if(JJActivity.busy)return;const generation=JJActivity.generation;JJActivity.busy=true;
  try{const data=await rpc('jj_activity',{p_session:JJActivity.session,p_action:'ping',p_read_through:readThrough});if(generation!==JJActivity.generation||state.profile?.id!==user)return;
   const fresh=data.notices.filter(n=>!JJActivity.seen.has(n.id)&&!n.read_at);data.notices.forEach(n=>JJActivity.seen.add(n.id));
-  const announce=JJActivity.initial?fresh.filter(n=>n.kind==='crown'):fresh;
+  const announce=JJActivity.initial?fresh.filter(n=>n.kind==='crown'||n.kind==='heist'):fresh;
   if(announce.length)toast(announce.length===1?noticePlain(announce[0]):say(`Tienes ${announce.length} avisos nuevos. Abre la campana.`,`You have ${announce.length} new notices. Open the bell.`));
   JJActivity.initial=false;JJActivity.error=false;JJActivity.data=data;paintBell();if(!noticePanel.hidden)renderInbox();
  }catch(error){if(generation===JJActivity.generation){JJActivity.error=true;paintBell();if(!noticePanel.hidden)renderInbox();}}

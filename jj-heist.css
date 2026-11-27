@@ -1,0 +1,227 @@
+#heist-home,
+#jj-heist {
+  --heist-ink: #10142b;
+  --heist-panel: #171c39;
+  --heist-text: #fff1cf;
+  --heist-gold: #ffd47d;
+  color: var(--heist-text);
+  background: var(--heist-ink);
+  border: 1px solid #b6874e;
+  border-radius: 18px;
+}
+#heist-home {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(210px, 1fr);
+  align-items: center;
+  overflow: hidden;
+  margin-block: 24px;
+}
+#heist-home > div:not(.heist-room-art) { padding: clamp(16px, 4vw, 34px); }
+#heist-home h2 {
+  color: var(--heist-gold);
+  font-family: Georgia, serif;
+  font-size: clamp(1.65rem, 5vw, 2.65rem);
+  line-height: 1.05;
+  margin: 0 0 6px;
+}
+#heist-home p { margin: 0 0 12px; }
+.heist-room-art {
+  width: 100%;
+  aspect-ratio: 1;
+  background: #181c37 url('assets/jj-heist.webp') no-repeat 0 0 / 200% 200%;
+}
+.heist-art-memory { background-position: 100% 0; }
+.heist-art-lasers { background-position: 0 100%; }
+.heist-art-dial { background-position: 100% 100%; }
+.heist-summary { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.heist-summary strong {
+  color: var(--heist-gold);
+  font: 700 1.45rem Georgia, serif;
+}
+.heist-summary > span {
+  background: #28223f;
+  border: 1px solid #9b6844;
+  padding: 5px 9px;
+  border-radius: 10px;
+}
+#jj-heist {
+  width: min(92vw, 820px);
+  max-width: none;
+  max-height: min(94dvh, 920px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+}
+#jj-heist::backdrop { background: #070817dc; backdrop-filter: blur(4px); }
+.heist-header,
+.heist-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px clamp(12px, 3vw, 26px);
+  gap: 10px;
+}
+.heist-header { border-bottom: 1px solid #9b6844; }
+.heist-header h2 { color: var(--heist-gold); font: 700 clamp(1.45rem, 5vw, 2.25rem) Georgia, serif; margin: 0 0 3px; }
+.heist-header p { margin: 0; }
+.heist-close,
+.heist-symbols button,
+.heist-directions button {
+  padding: 0;
+  border: 1px solid #ba8748;
+  border-radius: 9px;
+  background: linear-gradient(#25294c,#151b35);
+  color: var(--heist-gold);
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.heist-close { font-size: 1.45rem; }
+.heist-button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #ffdb93;
+  border-radius: 10px;
+  background: linear-gradient(#ffe2a3,#dea348);
+  color: #231629;
+  font: 700 1rem/1.25 system-ui,sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.heist-secondary { background: #242541; color: var(--heist-text); }
+#jj-heist button:focus-visible, #heist-home button:focus-visible { outline: 3px solid #9aeadb; outline-offset: 3px; }
+#jj-heist button:disabled { cursor: default; opacity: .65; }
+.heist-rules, .heist-game { padding: clamp(12px, 3vw, 26px); }
+#jj-heist > .heist-art-cover { aspect-ratio: 1; max-width: 280px; float: right; margin: 12px; border-radius: 12px; }
+.heist-rules ol { padding-left: 1.3em; }
+.heist-rules li p { margin: 3px 0 10px; }
+.heist-result { border: 1px solid #bd934f; background: #2b2344; border-radius: 12px; padding: 12px; }
+.heist-result strong { color: var(--heist-gold); }
+.heist-result p { margin: .4em 0 0; }
+.heist-win strong { font: 700 2rem Georgia,serif; }
+.heist-win { animation: heist-victory 1.1s ease-out both; }
+@keyframes heist-victory { 0% { box-shadow: 0 0 30px #ffcb57; } 100% { box-shadow: none; } }
+.heist-hud { padding: 0 0 10px; color: var(--heist-gold); font-variant-numeric: tabular-nums; }
+.heist-hud strong { font-size: 1.45rem; }
+.heist-urgent { color: #ff9d9e; }
+.heist-game-layout {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1fr);
+  gap: 14px;
+}
+.heist-game-layout .heist-room-art { border-radius: 13px; border: 1px solid #a4764d; }
+.heist-controls h3 { color: var(--heist-gold); font: 700 1.32rem Georgia, serif; margin: 0; }
+.heist-controls p { margin: 6px 0 10px; }
+.heist-controls > .heist-button { width: 100%; }
+.heist-symbols, .heist-board, .heist-directions { display: grid; gap: 5px; }
+.heist-symbols { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.heist-symbols button { min-height: 48px; font-size: 1.8rem; }
+.heist-symbols .heist-glow:disabled { opacity: 1; background: #fff0ab; color: #402241; box-shadow: 0 0 12px #ffd677; }
+.heist-progress { color: var(--heist-gold); font-weight: 700; }
+.heist-board { grid-template-columns: repeat(5,minmax(0,1fr)); gap: 3px; }
+.heist-tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 32px;
+  aspect-ratio: 1.25;
+  background: #322746;
+  color: var(--heist-gold);
+  border: 1px solid #755a6b;
+  border-radius: 4px;
+}
+.heist-tile.heist-player::after { content: '●'; color: #d2fff0; text-shadow: 0 0 10px #4affcd; font-size: 1.2rem; position: absolute; }
+.heist-tile[data-tile="2"] { background: #5d4729; }
+.heist-tile[data-beam]::before { content: ''; position: absolute; z-index: 1; top: -2px; left: -2px; right: -2px; height: 3px; background: #4a936d; }
+.heist-tile[data-beam="gap"]::before { left: 25%; right: 25%; border: 1px dashed #88f5cc; background: transparent; }
+.heist-tile[data-beam="warning"]::before { background: #f1bc6e; }
+.heist-tile[data-beam="live"]::before { background: #ff699f; box-shadow: 0 0 8px #ff4493; }
+.heist-legend { display: flex; flex-wrap: wrap; gap: 5px 12px; font-size: .875rem; }
+.heist-legend > span::before { content: '● '; }
+.heist-off::before { color: #88f5cc; }
+.heist-warning::before { color: #f1bc6e; }
+.heist-live::before { color: #ff699f; }
+.heist-directions { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.heist-directions button { font-size: 1.3rem; }
+.heist-dial {
+  width: min(52vw, 205px);
+  aspect-ratio: 1;
+  position: relative;
+  margin: 10px auto;
+  border: 4px double #e0b872;
+  border-radius: 50%;
+  background: conic-gradient(from 230.4deg,#8de9ba 0deg var(--heist-arc,94deg),#463353 var(--heist-arc,94deg));
+}
+.heist-dial-inner {
+  position: absolute;
+  inset: 18%;
+  border: 2px solid #b58649;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#765c63 0 1deg, transparent 1deg 30deg), radial-gradient(circle,#354366,#15213b);
+}
+.heist-needle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 46%;
+  background: #ffeab8;
+  box-shadow: 0 0 8px #ffcd60;
+  transform-origin: 50% 0;
+  transform: translateX(-50%) rotate(calc(var(--heist-angle,0deg) + 180deg));
+  border-radius: 5px;
+}
+.heist-end { margin-top: 16px; }
+.heist-end summary { cursor: pointer; }
+.heist-feedback { margin: 0; color: #ffcfb2; padding: 0 16px; }
+.heist-feedback:not(:empty) { padding-bottom: 12px; }
+@media (max-width: 620px) {
+  #heist-home { grid-template-columns: minmax(0, 1fr); }
+  #jj-heist { width: calc(100% - 14px); max-height: calc(100dvh - 18px); }
+  #jj-heist > .heist-art-cover { max-width: none; float: none; margin: 0; }
+  .heist-game-layout { display: block; }
+  .heist-game-layout .heist-room-art {
+    aspect-ratio: auto;
+    height: clamp(70px, 16dvh, 145px);
+    width: 100%;
+    background-size: 200% auto;
+    margin-bottom: 12px;
+  }
+  .heist-game-layout .heist-art-memory { background-position: 100% 17%; }
+  .heist-game-layout .heist-art-lasers { background-position: 0 74%; }
+  .heist-game-layout .heist-art-dial { background-position: 100% 80%; }
+}
+@media (prefers-reduced-motion: reduce) { .heist-win { animation: none; } }
+.heist-retry { padding: 0 16px 12px; }
+.heist-win-door {
+  width: 66px;
+  height: 66px;
+  float: right;
+  display: grid;
+  place-items: center;
+  position: relative;
+  border: 4px double #ffd47d;
+  border-radius: 50%;
+  background: radial-gradient(circle,#f7be58,#24193c 65%);
+  overflow: hidden;
+}
+.heist-win-door::after {
+  content: '✦';
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset: 1px;
+  border: 2px solid #dab168;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#242b58 0 25deg,#353669 25deg 30deg);
+  color: #ffd47d;
+  transform-origin: left;
+  animation: heist-vault-open 1s ease-out .12s both;
+}
+.heist-win-door span { position: absolute; color: #fff3a9; }
+.heist-win-door span:first-child { transform: translate(-13px,-9px); }
+.heist-win-door span:last-child { transform: translate(13px,8px); }
+@keyframes heist-vault-open { from { transform: rotateY(0deg); } to { transform: rotateY(112deg); } }
+@media (prefers-reduced-motion: reduce) { .heist-win-door::after { animation: none; transform: rotateY(112deg); } }
