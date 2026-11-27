@@ -48,14 +48,16 @@
   menus.push([eventPage, '✦', 'Nuestro aniversario'], [shortsPage, '▸', 'Shorts JxJ'], [previewPage, '▧', 'Vista previa del aniversario']);
   const previousAllowed = sectionAllowed;
   sectionAllowed = function(page) {
-    if (page === eventPage) return isCouple();
+    if (page === eventPage) return isCouple() && previousAllowed('flowers');
     if (page === previewPage) return isOwner();
-    if (page === shortsPage) return isCouple() && unlocked === state.profile.id;
+    if (page === shortsPage) return isCouple() && previousAllowed('flowers') && unlocked === state.profile.id;
     return previousAllowed(page);
   };
   const previousVisibility = paintSectionVisibility;
   paintSectionVisibility = function() {
     previousVisibility();
+    const card = $('#anniversary-home');
+    if (card) card.hidden = !sectionAllowed(eventPage);
     for (const route of [eventPage,previewPage]) {
       const link = document.querySelector(`[data-nav="${route}"]`);
       if (link) link.hidden = true;
@@ -104,9 +106,9 @@
   const previousHome = home;
   home = function() {
     previousHome();
-    if (!isCouple() || state.demo) return;
+    if (!isCouple() || state.demo || (isOwner() && localStorage.getItem('jj-show-anniversary-home') !== 'yes')) return;
     const welcome = $('.welcome');
-    welcome.insertAdjacentHTML('afterend', `<section id="anniversary-home" class="ann-panel ann-entry">
+    welcome.insertAdjacentHTML('afterend', `<section id="anniversary-home" ${sectionAllowed(eventPage) ? '' : 'hidden'} class="ann-panel ann-entry">
       <div><h2>${bi('Nuestro aniversario','Our anniversary')}</h2>
       <p>${bi('Una aventura para jugar juntos.','An adventure to play together.')}</p></div>
       ${button('enter','Abrir aniversario','Open anniversary')}</section>`);
@@ -122,7 +124,9 @@
     (heading || main).insertAdjacentHTML(heading?'afterend':'afterbegin', `<section class="ann-panel" id="anniversary-profile">
       <h2>${bi('Nuestro aniversario','Our anniversary')}</h2>
       <div class="ann-actions">${button('preview','Ver vista previa','Open preview')} ${button('enter','Abrir aniversario','Open anniversary')}</div>
+      <label><input type="checkbox" id="ann-show-home" ${localStorage.getItem('jj-show-anniversary-home')==='yes'?'checked':''}> ${bi('Mostrar en mi Inicio','Show on my Home screen')}</label>
       <p>${bi('Explora todas las escenas desde tu perfil.','Explore every scene from your profile.')}</p></section>`);
+    $('#ann-show-home').onchange = event => localStorage.setItem('jj-show-anniversary-home',event.target.checked?'yes':'no');
     $('#anniversary-profile [data-anniversary-action="preview"]').onclick = () => navigate(previewPage);
     $('#anniversary-profile [data-anniversary-action="enter"]').onclick = () => navigate(eventPage);
   };
@@ -131,6 +135,7 @@
   navigate = async function(page) {
     if (![eventPage,shortsPage,previewPage].includes(page)) return previousNavigate(page);
     if (!isCouple() || (page === previewPage && !isOwner())) return previousNavigate('home');
+    if (!isOwner() && !previousAllowed('flowers')) return previousNavigate('home');
     jjCleanup();
     clearTimers();
     state.page = page;
