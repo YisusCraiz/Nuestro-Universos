@@ -1,0 +1,141 @@
+.ann-panel {
+  --ann-ink: #faf1e5;
+  --ann-peach: #ffd6ac;
+  --ann-line: #a88ab5;
+  width: min(100%, 760px);
+  margin: clamp(18px, 4vw, 38px) auto;
+  padding: clamp(16px, 5vw, 38px);
+  color: var(--ann-ink);
+  background: linear-gradient(150deg, #20263e, #17182a 63%, #2d243a);
+  border: 1px solid #79668c;
+  border-radius: 22px;
+  box-shadow: 0 18px 56px #120e21a0;
+}
+.ann-panel h1,.ann-panel h2 {color: var(--ann-peach);margin: 0 0 .7rem;line-height: 1.15}
+.ann-panel p {line-height: 1.55;margin: .75rem 0}
+.ann-panel .btn {min-height: 44px;white-space: normal}
+.ann-panel .btn:disabled {opacity: .55}
+.ann-panel button:focus-visible,.ann-panel summary:focus-visible {outline: 2px solid var(--ann-peach);outline-offset: 3px}
+.ann-panel details {margin-top: 1rem}
+.ann-panel summary {cursor: pointer;min-height: 44px;align-content: center}
+.ann-actions {display: flex;align-items: center;flex-wrap: wrap;gap: .6rem;margin: 1rem 0}
+.ann-actions .btn {margin: 0}
+.ann-status {color: var(--ann-peach)}
+.ann-status:empty {margin: .45rem 0}
+.ann-clue {display: grid;grid-template-columns: repeat(2,minmax(0,1fr));gap: .45rem;padding-inline-start: 2rem}
+.ann-clue li {padding: .5rem .25rem}
+.ann-selection {font-size: 1.2rem;letter-spacing: .1em}
+.ann-beats {display: flex;gap: .8rem;margin: 1rem 0}
+.ann-beats i {width: clamp(38px,13vw,64px);aspect-ratio: 1;border-radius: 50%;background: #3d3854;border: 2px solid var(--ann-line)}
+.ann-beats .lit {background: var(--ann-peach);border-color: #fff;box-shadow: 0 0 18px #ffcf8b}
+.ann-beats .hit {border-color: #baffd0}
+.ann-panel [hidden] {display: none !important}
+.ann-cover,.ann-short {margin: 0 0 1rem}
+.ann-scene {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  width: 100%;
+  aspect-ratio: 3/2;
+  border-radius: 13px;
+  background: #242b43 url('assets/anniversary-jxj/room.webp') center/cover no-repeat;
+}
+.ann-sprite {position: absolute;display: block;width: 46%;aspect-ratio: 1;bottom: 0;object-fit: contain;transform-origin: center 82%;filter: drop-shadow(1px 7px 3px #170e2555)}
+.ann-atlas {background: url('assets/bombitas/characters-v2.png') left top/400% 400% no-repeat}
+.ann-jesus {left: 7%}
+.ann-julisa {right: 6%}
+.ann-atlas.ann-julisa {background-position: 33.333% 0}
+.ann-bouquet,.ann-gift,.ann-flower {position: absolute;z-index: 2;font-size: clamp(20px,6vw,48px);line-height: 1;filter: drop-shadow(0 2px 1px #1614276b)}
+.ann-bouquet {left: 36%;bottom: 25%;transform: rotate(-18deg)}
+.ann-gift {right: 9%;bottom: 11%}
+.ann-flower {left: 37%;bottom: 54%;font-size: clamp(13px,3vw,28px);opacity: 0}
+.ann-cover::before,.ann-short::before {position:absolute;content:'';inset:0;background:#27193624;pointer-events:none}
+.ann-bubble {
+  position: absolute;z-index: 3;top: 5%;left: 4%;max-width: 62%;width: max-content;
+  padding: .45rem .65rem;color: #241a27;background: #fff8e9;border: 2px solid #32253a;
+  border-radius: 13px;font: 700 clamp(.87rem,3.8vw,1.18rem)/1.25 system-ui,sans-serif !important;
+  box-shadow: 0 3px #2c1e3866;
+}
+.ann-bubble[data-speaker="julisa"] {left:auto;right: 4%}
+.ann-bubble::after {content: '';position:absolute;bottom:-7px;left:23%;width:10px;height:10px;background:inherit;border:solid #32253a;border-width:0 2px 2px 0;rotate:45deg}
+.ann-bubble[data-speaker="julisa"]::after {left:auto;right:23%}
+.ann-short .ann-jesus {animation: ann-jesus 38s linear both paused}
+.ann-short .ann-julisa {animation: ann-julie 38s linear both paused}
+.ann-short .ann-bouquet {animation: ann-bouquet 38s linear both paused}
+.ann-short .ann-gift {animation: ann-gift 38s linear both paused}
+.ann-short .ann-flower {animation: ann-flower 38s linear both paused}
+@keyframes ann-jesus {
+  0% {transform: translateX(-116%)}
+  4% {transform: translate(-94%,-4%) rotate(-4deg)}
+  8% {transform: translateX(-76%) rotate(3deg)}
+  12% {transform: translate(-54%,-4%) rotate(-4deg)}
+  16% {transform: translateX(-28%) rotate(2deg)}
+  19%,29% {transform: translateX(0)}
+  31%,33% {transform: translateX(-4%) scaleX(.82)}
+  35% {transform: rotate(-7deg)}
+  39%,76% {transform: none}
+  78% {transform: translateY(-3%) rotate(4deg)}
+  80% {transform: rotate(-3deg)}
+  83% {transform: translateY(-2%) rotate(1deg)}
+  92%,100% {transform: translateX(14%) rotate(3deg)}
+}
+@keyframes ann-julie {
+  0%,17% {transform: none}
+  21%,29% {transform: rotate(-9deg)}
+  33%,59% {transform: none}
+  65%,70% {transform: rotate(8deg) translateX(3%)}
+  73% {transform: none}
+  76% {transform: translateY(-4%) rotate(4deg)}
+  79% {transform: rotate(-3deg)}
+  82% {transform: translateY(-2%) rotate(1deg)}
+  91%,100% {transform: translateX(-11%) rotate(-4deg)}
+}
+@keyframes ann-bouquet {
+  0% {left:-20%;transform:rotate(-24deg)}
+  19%,28% {left:17%;bottom:26%;transform:rotate(-25deg)}
+  33%,81% {left:25%;bottom:23%;transform:rotate(-31deg)}
+  88%,100% {left:49%;bottom:28%;transform:rotate(13deg)}
+}
+@keyframes ann-flower {
+  0%,29% {opacity:0}
+  30% {opacity:1;transform:translate(-105%,108%) rotate(-19deg)}
+  34%,84% {opacity:1;transform:rotate(16deg)}
+  87%,100% {opacity:0}
+}
+@keyframes ann-gift {
+  0%,64% {right:9%;opacity:1}
+  71% {right:0;opacity:0}
+  100% {opacity:0}
+}
+.ann-comic {margin: 0}
+.ann-comic figcaption {color: var(--ann-peach);padding: .7rem 0;font: 500 1.1rem/1.4 Georgia,serif}
+.ann-call {position: absolute;inset: 13% 7% 10%;border: 3px solid #f5dccb;border-radius: 11px;overflow:hidden;background: linear-gradient(90deg,#333650ed 0 49.5%,#efd7d4 49.5% 50.5%,#775f7ce0 50.5%)}
+.ann-call .ann-sprite {width: 50%;bottom: -2%}
+.ann-call .ann-jesus {left: 0}
+.ann-call .ann-julisa {right: 0}
+.ann-frame-0 {filter: brightness(.75)}
+.ann-frame-1 .ann-julisa {transform: rotate(-11deg) translateY(-4%)}
+.ann-frame-2 {filter: brightness(.58) saturate(.85)}
+.ann-frame-2 .ann-jesus {transform: rotate(11deg)}
+.ann-frame-3 {filter: brightness(.49) saturate(.82)}
+.ann-frame-3 .ann-jesus {transform: rotate(24deg) translateY(18%)}
+.ann-frame-3 .ann-julisa {transform: rotate(-21deg) translateY(18%)}
+.ann-frame-4 .ann-call {background: linear-gradient(90deg,#946372df 0 49.5%,#ffe5c7 49.5% 50.5%,#e1a186e0 50.5%)}
+.ann-frame-4 .ann-sprite {transform: translateY(14%)}
+.ann-frame-5 .ann-call {background: linear-gradient(90deg,#715878e8 0 49.5%,#ffe5c7 49.5% 50.5%,#ce8d75ee 50.5%)}
+.ann-puzzle,.ann-deck {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;max-width:540px;margin: .85rem auto}
+.ann-puzzle button,.ann-deck button {
+  aspect-ratio: 1;position: relative;overflow: hidden;display: grid;place-items: center;padding: 0;min-width: 0;
+  background: #29253e;color: var(--ann-ink);border:1px solid var(--ann-line);border-radius: 5px;cursor: pointer;
+}
+.ann-deck button {max-width: 125px;width: 100%;justify-self:center}
+.ann-deck button:disabled {opacity: .35}
+.ann-deck button[aria-pressed="true"] {outline: 3px solid var(--ann-peach);outline-offset: -3px}
+.ann-tile {position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.ann-tile .ann-scene {width:300%;height:200%;aspect-ratio:auto;position:absolute;top:calc(var(--row,0) * -100%);left:calc(var(--column,0) * -100%);border-radius:0}
+.ann-tile-1,.ann-tile-4 {--column:1}
+.ann-tile-2,.ann-tile-5 {--column:2}
+.ann-tile-3,.ann-tile-4,.ann-tile-5 {--row:1}
+@media (prefers-reduced-motion: reduce) {
+  .ann-short .ann-jesus,.ann-short .ann-julisa,.ann-short .ann-bouquet,.ann-short .ann-gift {animation:none}
+}
