@@ -1,0 +1,154 @@
+.profile-hub-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-block: 0 20px;
+}
+
+.profile-hub-tabs button {
+  min-height: 48px;
+  padding: 8px;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  background: var(--surface, #21162c);
+  border: 1px solid var(--line, #72546e);
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.profile-hub-tabs button[aria-pressed="true"] {
+  border-color: var(--gold, #f4cf6b);
+  color: #25192d;
+  background: var(--gold, #f4cf6b);
+  font-weight: 700;
+}
+
+.profile-hub-tabs button:focus-visible {
+  outline: 2px solid var(--gold, #f4cf6b);
+  outline-offset: 3px;
+}
+
+.profile-hub-panel[hidden],
+.profile-hub-panel [hidden] {
+  display: none !important;
+}
+
+.profile-hub-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-hub-panel > * {
+  min-width: 0;
+  margin: 0;
+}
+
+.profile-hub-panel [data-title-owner] {
+  background: radial-gradient(ellipse at 20% 0%, #8966bb37, transparent 68%), var(--surface, #21162c);
+}
+
+.profile-hub-panel .profile-large {
+  margin: 8px 8px 18px 2px;
+}
+
+.profile-large[data-frame="navy"] {
+  box-shadow: 0 0 0 3px #314b83, 0 0 0 6px #8ba6df;
+}
+
+.profile-large[data-frame="gold"] {
+  box-shadow: 0 0 0 3px #6c4625, 0 0 0 6px #f2c771;
+}
+
+.profile-large[data-frame="aurora"] {
+  box-shadow: -3px 0 0 3px #91e4d2, 3px 0 0 3px #e8a4f4;
+}
+
+.profile-bio {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.profile-match-stats,
+.profile-coupons,
+.weekly-tasks {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+
+.profile-coupon,
+.weekly-task,
+.profile-match-stats > div {
+  background: #ffffff09;
+  border: 1px solid var(--line, #72546e);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.profile-coupon > strong,
+.profile-match-stats dd {
+  color: var(--gold, #f4cf6b);
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.profile-medal-list,
+.profile-visible-menus,
+.profile-hub-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-medal-list,
+.profile-visible-menus {
+  list-style: none;
+  padding: 0;
+}
+
+.profile-medal-list li {
+  padding: 4px 10px;
+  border: 1px solid var(--gold, #f4cf6b);
+  border-radius: 999px;
+  overflow-wrap: anywhere;
+}
+
+.profile-hub-links,
+.profile-coupon-picker {
+  margin-block: 14px;
+}
+
+.weekly-route {
+  margin-bottom: 24px;
+}
+
+.weekly-task > div {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.weekly-task progress {
+  width: 100%;
+  accent-color: var(--gold, #f4cf6b);
+}
+
+@media (max-width: 700px) {
+  .profile-hub-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-match-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-match-stats > div {
+    padding: 8px;
+    overflow-wrap: anywhere;
+  }
+}
