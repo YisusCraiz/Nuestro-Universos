@@ -2,7 +2,8 @@
 (() => {
   const eventPage = 'anniversary-jxj';
   const shortsPage = 'shorts-jxj';
-  const opening = Date.parse('2026-12-11T06:00:00Z');
+  const previewPage = 'anniversary-preview';
+  const isOwner = () => state.profile?.handle === 'jesus';
   const isCouple = () => ['jesus', 'julisa'].includes(state.profile?.handle);
   const button = (action, es, en, value = '', disabled = false) =>
     `<button type="button" class="btn" data-anniversary-action="${action}" data-value="${value}" ${disabled ? 'disabled' : ''}>${bi(es,en)}</button>`;
@@ -44,18 +45,21 @@
     : `<span class="ann-sprite ann-${handle} ann-atlas"></span>`).join('');
   let unlocked = null;
 
-  menus.push([eventPage, '✦', 'Nuestro aniversario'], [shortsPage, '▸', 'Shorts JxJ']);
+  menus.push([eventPage, '✦', 'Nuestro aniversario'], [shortsPage, '▸', 'Shorts JxJ'], [previewPage, '▧', 'Vista previa del aniversario']);
   const previousAllowed = sectionAllowed;
   sectionAllowed = function(page) {
-    if (page === eventPage) return isCouple() && previousAllowed('flowers');
+    if (page === eventPage) return isCouple();
+    if (page === previewPage) return isOwner();
     if (page === shortsPage) return isCouple() && unlocked === state.profile.id;
     return previousAllowed(page);
   };
   const previousVisibility = paintSectionVisibility;
   paintSectionVisibility = function() {
     previousVisibility();
-    const link = document.querySelector(`[data-nav="${eventPage}"]`);
-    if (link) link.hidden = true;
+    for (const route of [eventPage,previewPage]) {
+      const link = document.querySelector(`[data-nav="${route}"]`);
+      if (link) link.hidden = true;
+    }
   };
 
   const read = async (action = 'read', value = null, round = null) => {
@@ -71,7 +75,7 @@
   const previousShell = shell;
   shell = function() {
     previousShell();
-    if (isCouple() && !state.demo && Date.now() >= opening && unlocked !== state.profile.id) {
+    if (isCouple() && !state.demo && unlocked !== state.profile.id) {
       const owner = state.profile.id;
       read().then(({data}) => refreshShorts(owner, data)).catch(() => {});
     }
@@ -79,7 +83,7 @@
   const previousFlowers = flowers;
   flowers = async function(version) {
     const pending = previousFlowers(version);
-    if (isCouple() && (state.demo || state.profile.handle === 'jesus' || Date.now() >= opening)) {
+    if (isCouple()) {
       const main = $('#main');
       const append = () => {
         if (state.version !== version || !main.isConnected || $('#anniversary-event-card',main)) return;
@@ -97,11 +101,36 @@
     await pending;
   };
 
+  const previousHome = home;
+  home = function() {
+    previousHome();
+    if (!isCouple() || state.demo) return;
+    const welcome = $('.welcome');
+    welcome.insertAdjacentHTML('afterend', `<section id="anniversary-home" class="ann-panel ann-entry">
+      <div><h2>${bi('Nuestro aniversario','Our anniversary')}</h2>
+      <p>${bi('Una aventura para jugar juntos.','An adventure to play together.')}</p></div>
+      ${button('enter','Abrir aniversario','Open anniversary')}</section>`);
+    $('#anniversary-home button').onclick = () => navigate(eventPage);
+  };
+
+  const previousProfile = profilePage;
+  profilePage = async function(version) {
+    await previousProfile(version);
+    if (version !== state.version || !isOwner()) return;
+    const main = $('#main');
+    const heading = main.querySelector('.page-heading');
+    (heading || main).insertAdjacentHTML(heading?'afterend':'afterbegin', `<section class="ann-panel" id="anniversary-profile">
+      <h2>${bi('Nuestro aniversario','Our anniversary')}</h2>
+      <div class="ann-actions">${button('preview','Ver vista previa','Open preview')} ${button('enter','Abrir aniversario','Open anniversary')}</div>
+      <p>${bi('Explora todas las escenas desde tu perfil.','Explore every scene from your profile.')}</p></section>`);
+    $('#anniversary-profile [data-anniversary-action="preview"]').onclick = () => navigate(previewPage);
+    $('#anniversary-profile [data-anniversary-action="enter"]').onclick = () => navigate(eventPage);
+  };
+
   const previousNavigate = navigate;
   navigate = async function(page) {
-    if (![eventPage,shortsPage].includes(page)) return previousNavigate(page);
-    if (!isCouple()) return;
-    if (page === eventPage && !sectionAllowed(page)) return previousNavigate('flowers');
+    if (![eventPage,shortsPage,previewPage].includes(page)) return previousNavigate(page);
+    if (!isCouple() || (page === previewPage && !isOwner())) return previousNavigate('home');
     jjCleanup();
     clearTimers();
     state.page = page;
@@ -113,7 +142,7 @@
     const root = $('#main');
     root.innerHTML = `<section class="ann-panel"><p role="status">${bi('Cargando…','Loading…')}</p></section>`;
     try {
-      if (page === eventPage) await eventRoom(root,current,owner);
+      if (page !== shortsPage) await eventRoom(root,current,owner,page===previewPage);
       else {
         const {data} = await read();
         if (!current()) return;
@@ -143,17 +172,73 @@
     return `<span class="ann-tile ann-tile-${correctTiles.indexOf(piece)}" aria-hidden="true"><span class="ann-scene ann-comic-frame ann-frame-5"><span class="ann-call">${sprites(true)}</span></span></span>`;
   }
 
-  async function eventRoom(root,current,owner) {
+  function rehearsal() {
+    const sequences = ['2013','3102'];
+    let data;
+    function select(stage) {
+      data = {available:true,stage,joined:['jesus','julisa'],route:'both',revision:0,sequence_round:0,
+        clue:sequences[0],dance_ready:[],dance_round:0,dance_start:null,submitted:false,
+        comic_read:[],tiles:[0,0,0,0,0,0],puzzle_ready:[],unlocked_at:null};
+    }
+    select(0);
+    async function request(action='read',value=null) {
+      switch (action) {
+        case 'route':
+          data.route=value;
+          data.stage=1;
+          break;
+        case 'sequence':
+          if (value!==data.clue) throw Error('TRY_SEQUENCE');
+          data.clue=sequences[++data.sequence_round];
+          if (data.sequence_round===2) data.stage=2;
+          break;
+        case 'dance_ready':
+          data.dance_round++;
+          data.dance_start=Date.now()+3500;
+          break;
+        case 'dance_score':
+          if ([...value].filter(c=>c==='1').length>=3) data.stage=3;
+          data.dance_start=null;
+          break;
+        case 'dance_retry':
+          data.dance_start=null;
+          break;
+        case 'comic':
+          data.stage=4;
+          break;
+        case 'place': {
+          const [piece,slot]=value.split(':').map(Number);
+          if (data.tiles[slot-1] && data.tiles[slot-1]!==piece) throw Error('OCCUPIED');
+          data.tiles=data.tiles.map((id,i)=>i===slot-1?piece:id===piece?0:id);
+          break;
+        }
+        case 'remove':
+          data.tiles=data.tiles.map(id=>id===Number(value)?0:id);
+          break;
+        case 'confirm':
+          if (data.tiles.some((id,i)=>id!==correctTiles[i])) throw Error('TRY_PUZZLE');
+          data.stage=5;
+          break;
+      }
+      if (action!=='read') data.revision++;
+      return {data:{...data},offset:0};
+    }
+    return {select,request};
+  }
+
+  async function eventRoom(root,current,owner,preview=false) {
     const header = `<h1>${bi('Hasta que salga el sol','Until the sun comes up')}</h1>`;
-    if (state.demo) {
+    if (state.demo && !preview) {
       root.innerHTML = `<section class="ann-panel">${header}${readout('Entren con sus perfiles para jugar juntos.','Sign in with your profiles to play together.')}</section>`;
       return;
     }
     const me = state.profile.handle;
     const isJesus = me === 'jesus';
-    let {data,offset} = await read();
+    const trial = preview ? rehearsal() : null;
+    const request = trial?.request || read;
+    let {data,offset} = await request();
     if (!current()) return;
-    refreshShorts(owner,data);
+    if (!preview) refreshShorts(owner,data);
     if (!data.available) {
       root.innerHTML = `<section class="ann-panel">${header}${readout('Disponible el 11 de diciembre.','Opens December 11.')}</section>`;
       return;
@@ -175,13 +260,16 @@
     function sequence() {
       const clue = data.clue;
       const round = data.sequence_round + 1;
-      return `<h2>${bi('¿De dónde vino el ruido?','Where did that noise come from?')} · ${round}/2</h2>` + (clue
-        ? readout('Lee estos símbolos en orden a tu pareja.','Read these symbols to your partner in order.') + `<ol class="ann-clue">${[...clue].map(d => `<li>${symbol(d)}</li>`).join('')}</ol>`
-        : readout('Tu pareja tiene la pista. Marca los cuatro símbolos en orden.','Your partner has the clue. Enter the four symbols in order.') +
+      return `<h2>${bi('¿De dónde vino el ruido?','Where did that noise come from?')} · ${round}/2</h2>`
+        + (clue ? readout(...(preview ? ['Marca los símbolos en este orden.','Enter the symbols in this order.']
+          : ['Lee estos símbolos en orden a tu pareja.','Read these symbols to your partner in order.']))
+          + `<ol class="ann-clue">${[...clue].map(d => `<li>${symbol(d)}</li>`).join('')}</ol>` : '')
+        + ((!clue || preview)
+          ? (preview ? '' : readout('Tu pareja tiene la pista. Marca los cuatro símbolos en orden.','Your partner has the clue. Enter the four symbols in order.')) +
           `<p class="ann-selection" aria-live="polite">${[...digits].map(d => symbols[d][0]).join(' ') || '· · · ·'} (${digits.length}/4)</p>
           <div class="ann-actions">${symbols.map(([glyph,es,en],i) => button('symbol',glyph+' '+es,glyph+' '+en,i,busy || digits.length>=4)).join('')}
           ${button('erase','Borrar último','Undo last','',busy || !digits.length)}
-          ${button('sequence','Comprobar','Check',digits,busy || digits.length!==4)}</div>`);
+          ${button('sequence','Comprobar','Check',digits,busy || digits.length!==4)}</div>` : '');
     }
 
     function rhythm() {
@@ -195,7 +283,7 @@
     }
 
     function puzzle() {
-      const deck = isJesus ? [1,2,3] : [4,5,6];
+      const deck = preview ? [1,2,3,4,5,6] : isJesus ? [1,2,3] : [4,5,6];
       const board = data.tiles.map((id,i) => `<button type="button" data-anniversary-action="slot" data-value="${i+1}"
         aria-label="${say('Casilla','Slot')} ${i+1}${id ? ', '+say('ocupada','occupied') : ''}" ${busy?'disabled':''}>${id?tile(id):i+1}</button>`).join('');
       return `<h2>${bi('La foto del amanecer','The sunrise picture')}</h2>
@@ -230,9 +318,14 @@
         <div class="ann-actions">${storyOptions(true)}</div>${endingReview?ending(endingReview):''}</details>`;
       const focused = document.activeElement?.dataset.anniversaryAction;
       const currentValue = document.activeElement?.dataset.value;
-      root.innerHTML = `<section class="ann-panel">${header}${body}
+      const previewControls = preview ? `<div class="ann-preview">
+        ${readout('Vista previa · Tu avance aquí es de ensayo.','Preview · This is a practice run.')}
+        <div class="ann-actions">${[
+          ['Historia','Story'],['Símbolos','Symbols'],['Ritmo','Rhythm'],['Cómic','Comic'],['Rompecabezas','Puzzle'],['Corto','Short']
+        ].map(([es,en],stage)=>button('preview-stage',es,en,stage)).join('')}</div></div>` : '';
+      root.innerHTML = `<section class="ann-panel">${header}${previewControls}${body}
         <p class="ann-status" role="status" aria-live="polite">${esc(notice)}</p>
-        ${button('events','Volver a Eventos','Back to Events')}</section>`;
+        ${preview ? button('profile','Volver a Perfiles','Back to Profiles') : button('events','Volver a Eventos','Back to Events')}</section>`;
       if (focused) [...root.querySelectorAll('button')].find(b => !b.disabled && b.dataset.anniversaryAction===focused && b.dataset.value===currentValue)?.focus({preventScroll:true});
       lastPulse = undefined;
     }
@@ -243,14 +336,14 @@
       if (next.data.stage !== data.stage) notice = '';
       const changed = context(next.data) !== context(data);
       ({data,offset} = next);
-      refreshShorts(owner,data);
+      if (!preview) refreshShorts(owner,data);
       if (changed) paint();
     }
     async function refresh() {
       if (!current() || document.hidden || busy || polling) return;
       polling = true;
       try {
-        const next = await read();
+        const next = await request();
         if (current() && !busy) update(next);
       } catch { /* Preserve the current scene while reconnecting. */ }
       finally { polling = false; }
@@ -260,7 +353,7 @@
       busy = true;
       notice = '';
       try {
-        const next = await read(action,value,round);
+        const next = await request(action,value,round);
         if (current()) {
           if (action === 'place') piece = 0;
           if (action === 'dance_score' && next.data.stage === 2 && !next.data.dance_start) {
@@ -308,13 +401,30 @@
       if (retry) retry.hidden = elapsed < 10300;
     }
 
-    root.onclick = event => {
+    root.onclick = async event => {
       const target = event.target.closest('[data-anniversary-action]');
       if (!target || !current()) return;
       const {anniversaryAction:action,value} = target.dataset;
       if (action === 'events') return navigate('flowers');
-      if (action === 'short') return navigate(shortsPage);
+      if (action === 'profile') return navigate('profile');
+      if (action === 'short' || (action === 'preview-stage' && value === '5')) {
+        if (!preview) return navigate(shortsPage);
+        clearInterval(clock);
+        root.onclick = null;
+        return playShort(root,current,previewPage);
+      }
       if (busy) return;
+      if (action === 'preview-stage') {
+        trial.select(Number(value));
+        const next = await request();
+        data = next.data;
+        offset = next.offset;
+        notice = digits = '';
+        piece = page = activeRound = 0;
+        endingReview = null;
+        comicReview = false;
+        return paint();
+      }
       if (action === 'symbol') { digits += value; return paint(); }
       if (action === 'erase') { digits = digits.slice(0,-1); return paint(); }
       if (action === 'next' || action === 'prev') { page += action==='next'?1:-1; return paint(); }
@@ -324,7 +434,7 @@
       if (action === 'slot') {
         const occupant = data.tiles[Number(value)-1];
         if (piece) return act('place',`${piece}:${value}`);
-        if (occupant && (occupant <= 3) === isJesus) return act('remove',String(occupant));
+        if (occupant && (preview || (occupant <= 3) === isJesus)) return act('remove',String(occupant));
         return;
       }
       if (action === 'beat') {
@@ -339,7 +449,7 @@
       const round = action==='sequence' ? data.sequence_round : action==='dance_retry' ? data.dance_round : null;
       return act(action,value || null,round);
     };
-    const poll = setInterval(refresh,1200);
+    const poll = preview ? null : setInterval(refresh,1200);
     const clock = setInterval(rhythmClock,50);
     JJ.cleanups.push(() => { clearInterval(poll); clearInterval(clock); root.onclick = null; });
     paint();
@@ -351,12 +461,12 @@
     [25200,'julisa','Also nothing.'], [32400,'jesus','Happy anniversary, Julie.'],
     [35100,'julisa','Happy anniversary, silly.']
   ];
-  function playShort(root,current) {
+  function playShort(root,current,returnPage=shortsPage) {
     root.innerHTML = `<section class="ann-panel">
       <h1>${bi(...shortTitle)}</h1><div class="ann-scene ann-short" aria-label="${say('Corto animado','Animated short')}">
         ${sprites()}<span class="ann-bouquet" aria-hidden="true">💐</span><span class="ann-flower" aria-hidden="true">🌼</span>
         <span class="ann-gift" aria-hidden="true">🎁</span><p class="ann-bubble" lang="en" translate="no" aria-live="polite" hidden></p></div>
-      <div class="ann-actions">${button('pause','Pausar','Pause')} ${button('replay','Repetir','Replay')} ${button('list','Volver a Shorts JxJ','Back to Shorts JxJ')}</div></section>`;
+      <div class="ann-actions">${button('pause','Pausar','Pause')} ${button('replay','Repetir','Replay')} ${returnPage===previewPage ? button('list','Volver a la vista previa','Back to preview') : button('list','Volver a Shorts JxJ','Back to Shorts JxJ')}</div></section>`;
     const scene = root.querySelector('.ann-short'), bubble = scene.querySelector('.ann-bubble');
     const pause = root.querySelector('[data-anniversary-action="pause"]');
     let elapsed = 0, previous = performance.now(), paused = false, frame, lastCaption;
@@ -388,9 +498,9 @@
     };
     root.querySelector('[data-anniversary-action="replay"]').onclick = () => {
       cancelAnimationFrame(frame);
-      playShort(root,current);
+      playShort(root,current,returnPage);
     };
-    root.querySelector('[data-anniversary-action="list"]').onclick = () => navigate(shortsPage);
+    root.querySelector('[data-anniversary-action="list"]').onclick = () => navigate(returnPage);
     frame=requestAnimationFrame(tick);
     JJ.cleanups.push(() => cancelAnimationFrame(frame));
   }

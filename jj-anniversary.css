@@ -139,3 +139,14 @@
 @media (prefers-reduced-motion: reduce) {
   .ann-short .ann-jesus,.ann-short .ann-julisa,.ann-short .ann-bouquet,.ann-short .ann-gift {animation:none}
 }
+.ann-entry {
+  width: 100%;max-width: none;margin: 10px 0 18px;
+  display: flex;align-items: center;justify-content: space-between;gap: 8px 18px;flex-wrap: wrap;
+  padding-block: clamp(14px,3vw,22px);
+  border-color: #bd93a7;
+  background: radial-gradient(ellipse at 88% 0,#6c4569,#26263f 55%,#1a1c30);
+}
+.ann-entry h2,.ann-entry p {margin: 0}
+.ann-entry p {margin-top: .25rem}
+.ann-preview {border-bottom: 1px solid var(--ann-line);margin-bottom: 1.25rem}
+.ann-preview .btn {background: #35314b;color: var(--ann-ink);border: 1px solid var(--ann-line)}

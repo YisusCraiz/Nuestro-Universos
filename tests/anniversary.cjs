@@ -38,8 +38,12 @@ async function run() {
     await db.exec('reset role; set role anon');
     await assert.rejects(play(),/permission denied/);
 
-    const playDefinition = migration.split('create function jj_anniversary_private.play')[1].split('revoke all on function jj_anniversary_private.play')[0];
-    await db.exec('reset role; create or replace function jj_anniversary_private.play'+playDefinition.replace("now() >= '2026-12-11 00:00:00 America/Matamoros'::timestamptz",'true'));
+    const launch = fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261127013000_open_jj_anniversary.sql'),'utf8');
+    await db.exec('reset role');
+    await db.exec(launch);
+    await db.exec(launch);
+    await actor(2);
+    assert.equal((await play()).available,true);
     await actor(3);
     await assert.rejects(play(),/NOT_MEMBER/);
     await actor(1);
