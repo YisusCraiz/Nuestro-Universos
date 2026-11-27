@@ -464,7 +464,7 @@
     [7200,'julisa','What are you hiding?'], [11000,'jesus','Nothing.'],
     [15500,'julisa','Then why is “nothing” in your hair?'], [20700,'jesus','And what’s that?'],
     [25200,'julisa','Also nothing.'], [32400,'jesus','Happy anniversary, Julie.'],
-    [35100,'julisa','Happy anniversary, silly.']
+    [35100,'julisa','Happy anniversary, Silly.']
   ];
   function playShort(root,current,returnPage=shortsPage) {
     root.innerHTML = `<section class="ann-panel">
