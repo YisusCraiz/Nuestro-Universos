@@ -150,3 +150,9 @@
 .ann-entry p {margin-top: .25rem}
 .ann-preview {border-bottom: 1px solid var(--ann-line);margin-bottom: 1.25rem}
 .ann-preview .btn {background: #35314b;color: var(--ann-ink);border: 1px solid var(--ann-line)}
+.ann-film-frame,.ann-cover {background-image:url('assets/anniversary-jxj/episode.webp');background-size:200% 300%;background-position:0 0}
+.ann-cover > *, .ann-cover::before,.ann-short::before {display:none}
+.ann-short {background:#201b29;aspect-ratio:auto;padding-bottom:clamp(55px,10vw,72px)}
+.ann-film-frame {width:100%;aspect-ratio:3/2;transform-origin:center}
+.ann-short .ann-bubble {top:auto;bottom:3px;margin:0;max-width:90%;color:#241a27}
+.ann-short .ann-bubble::after {display:none}

@@ -464,20 +464,22 @@
   function playShort(root,current,returnPage=shortsPage) {
     root.innerHTML = `<section class="ann-panel">
       <h1>${bi(...shortTitle)}</h1><div class="ann-scene ann-short" aria-label="${say('Corto animado','Animated short')}">
-        ${sprites()}<span class="ann-bouquet" aria-hidden="true">💐</span><span class="ann-flower" aria-hidden="true">🌼</span>
-        <span class="ann-gift" aria-hidden="true">🎁</span><p class="ann-bubble" lang="en" translate="no" aria-live="polite" hidden></p></div>
+        <div class="ann-film-frame" aria-hidden="true"></div><p class="ann-bubble" lang="en" translate="no" aria-live="polite" hidden></p></div>
       <div class="ann-actions">${button('pause','Pausar','Pause')} ${button('replay','Repetir','Replay')} ${returnPage===previewPage ? button('list','Volver a la vista previa','Back to preview') : button('list','Volver a Shorts JxJ','Back to Shorts JxJ')}</div></section>`;
     const scene = root.querySelector('.ann-short'), bubble = scene.querySelector('.ann-bubble');
     const pause = root.querySelector('[data-anniversary-action="pause"]');
     let elapsed = 0, previous = performance.now(), paused = false, frame, lastCaption;
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     function tick(now) {
       if (!current() || !scene.isConnected) return;
       if (!paused && !document.hidden) elapsed = Math.min(38000,elapsed+Math.min(now-previous,100));
       previous = now;
-      scene.getAnimations({subtree:true}).forEach(animation => {
-        animation.pause();
-        animation.currentTime = elapsed;
-      });
+      const starts = [0,7200,11000,20700,25200,32400,38000];
+      const shot = Math.min(5,starts.findLastIndex(start => elapsed >= start));
+      const fraction = (elapsed-starts[shot])/(starts[shot+1]-starts[shot]);
+      const frame = scene.querySelector('.ann-film-frame');
+      frame.style.backgroundPosition = (shot%2)*100+'% '+Math.floor(shot/2)*50+'%';
+      if (!reduceMotion) frame.style.transform = 'scale('+(1.015+fraction*.055)+')';
       let caption = captions.findLast(line => line[0]<=elapsed && elapsed-line[0]<4400);
       if (elapsed>=38000) caption = captions.at(-1);
       if (caption!==lastCaption) {
