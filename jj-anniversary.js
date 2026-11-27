@@ -477,9 +477,9 @@
       const starts = [0,7200,11000,20700,25200,32400,38000];
       const shot = Math.min(5,starts.findLastIndex(start => elapsed >= start));
       const fraction = (elapsed-starts[shot])/(starts[shot+1]-starts[shot]);
-      const frame = scene.querySelector('.ann-film-frame');
-      frame.style.backgroundPosition = (shot%2)*100+'% '+Math.floor(shot/2)*50+'%';
-      if (!reduceMotion) frame.style.transform = 'scale('+(1.015+fraction*.055)+')';
+      const artwork = scene.querySelector('.ann-film-frame');
+      artwork.style.backgroundPosition = (shot%2)*100+'% '+Math.floor(shot/2)*50+'%';
+      if (!reduceMotion) artwork.style.transform = 'scale('+(1.015+fraction*.055)+')';
       let caption = captions.findLast(line => line[0]<=elapsed && elapsed-line[0]<4400);
       if (elapsed>=38000) caption = captions.at(-1);
       if (caption!==lastCaption) {
