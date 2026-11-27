@@ -3,10 +3,11 @@ const source=fs.readFileSync('jj-collection.js','utf8');
 const bounds=JSON.parse(source.match(/const artBounds=(.*);/)[1]);
 const files=vm.runInNewContext('('+source.match(/const artFiles=(.*);/)[1]+')');
 const draw=source.slice(source.indexOf(' function art(c){'),source.indexOf(' function mini('));
+const expansionNames=JSON.parse(source.match(/const expansionNames=(.*);/)[1]);
+const art=vm.runInNewContext(draw+';art',{artFiles:files,artBounds:bounds,expansionNames,currentName:c=>c.id,esc:s=>s});
 let count=0;
 for(const [collection,file] of Object.entries(files)){
  const [xs,ys]=bounds[file];assert.equal(xs.length,7);assert.equal(ys.length,6);
- const art=vm.runInNewContext(draw+';art',{artFiles:files,artBounds:bounds,currentName:c=>c.id,esc:s=>s});
  for(let i=0;i<30;i++){
   const html=art({collection,art:i,id:'test'}),v=html.match(/background-size:([\d.]+)% ([\d.]+)%;--cx:([\d.]+)%;--cy:([\d.]+)%/).slice(1).map(Number);
   const w=xs[6]*100/v[0],h=ys[5]*100/v[1],x=v[2]/100*(xs[6]-w),y=v[3]/100*(ys[5]-h),col=i%6,row=Math.floor(i/6);
@@ -15,3 +16,17 @@ for(const [collection,file] of Object.entries(files)){
  }
 }
 assert.equal(count,630);console.log('PASS: all 630 cards sample only their measured panel, with a six-pixel interior margin at every size.');
+
+for (const collection of Object.keys(expansionNames)) {
+ for (let i=0;i<30;i++) {
+  const html=art({collection,art:i,id:'test'});
+  assert.ok(html.includes('assets/collection/'+collection+'.webp'));
+  assert.ok(html.includes('background-size:600% 500%;--cx:'+(i%6)*20+'%;--cy:'+Math.floor(i/6)*25+'%'));
+ }
+}
+for (const [rarity,file] of [[3,'legendary'],[4,'exe']]) {
+ const html=art({collection:'navidad-jj',season:'christmas',rarity,art:19,id:'test'});
+ assert.ok(html.includes('christmas-'+file+'.webp'));
+ assert.ok(html.includes('background-size:500% 400%;--cx:100%;--cy:100%'));
+}
+console.log('PASS: all 360 expansion cards and both Christmas atlases map to the correct image slots.');
