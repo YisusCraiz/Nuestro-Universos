@@ -66,7 +66,8 @@ summary { cursor: pointer; color: var(--accent); padding: .35rem 0; font-weight:
 .wizard-actions { margin-top: .8rem; justify-content: end; }
 .enable-gift { display: flex; align-items: center; margin: .85rem 0 .2rem; }
 #draftFiles { padding-inline-start: 1.3rem; }
-#draftFiles li { margin: .25rem 0; }
+#draftFiles li { margin: .25rem 0 .75rem; }
+#draftFiles label { margin: .35rem 0 0; max-width: 22rem; }
 #extras, #deliverySettings { margin-top: .7rem; }
 #extras[open] summary, #deliverySettings[open] summary { margin-bottom: .55rem; }
 #draftPreview[data-theme=christmas], main[data-theme=christmas] #gift { background: #213b34; border-color: #ae9873; }
