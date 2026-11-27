@@ -29,4 +29,4 @@ for (const [rarity,file] of [[3,'legendary'],[4,'exe']]) {
  assert.ok(html.includes('christmas-'+file+'.webp'));
  assert.ok(html.includes('background-size:500% 400%;--cx:100%;--cy:100%'));
 }
-console.log('PASS: all 360 expansion cards and both Christmas atlases map to the correct image slots.');
+console.log('PASS: all expansion cards and both Christmas atlases map to the correct image slots.');
