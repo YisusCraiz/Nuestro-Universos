@@ -1,0 +1,11 @@
+{
+  "name": "nuestro-mundo-prueba",
+  "private": true,
+  "scripts": {
+    "prepareWorld": "bash setup.sh",
+    "proxy": "node proxy.cjs"
+  },
+  "dependencies": {
+    "mwc-proxy": "0.0.4"
+  }
+}
