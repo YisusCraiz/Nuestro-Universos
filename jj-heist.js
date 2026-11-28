@@ -1,5 +1,6 @@
 'use strict';
 (() => {
+  const defaultPrize = 600;
   const rooms = {
     memory: ['Cámara de símbolos', 'Symbol Chamber',
       'Mira los seis símbolos que se iluminan. Cuando termine la secuencia, tócalos en el mismo orden.',
@@ -16,8 +17,7 @@
     lasers: ['Te cruzaste con un láser encendido.', 'You crossed a live laser.'],
     dial: ['La aguja estaba fuera del arco verde.', 'The needle was outside the green arc.'],
     timeout: ['Se agotaron los 60 segundos.', 'Your 60 seconds ran out.'],
-    abandoned: ['Terminaste este intento.', 'You ended this attempt.'],
-    funds: ['El saldo disponible de Yisus bajó de 300 JJ. Recuperaste tu intento.', 'Yisus’s available balance dropped below 300 JJ. Your attempt was restored.']
+    abandoned: ['Terminaste este intento.', 'You ended this attempt.']
   };
   const symbols = [
     ['☾','Luna','Moon'],['✦','Estrella','Star'],['♄','Saturno','Saturn'],
@@ -43,6 +43,7 @@
   function updateCard(value) {
     const card = document.querySelector('#heist-home');
     if (!card || !eligible() || !value) return;
+    card.querySelector('.heist-home-prize').textContent = (value.prize ?? defaultPrize) + ' JJ';
     card.querySelector('.heist-home-status').innerHTML = value.won ? bi('Premio de hoy conseguido','Today’s prize collected')
       : value.run && !value.run.result ? bi('Intento en curso','Attempt in progress') : attempts(value.remaining);
   }
@@ -87,21 +88,26 @@
 
   function overview() {
     const run = data.run;
+    const prize = data.prize ?? defaultPrize;
+    const lastResult = run?.result === 'funds'
+      ? [`El saldo disponible de Yisus bajó de ${prize} JJ. Recuperaste tu intento.`,
+         `Yisus’s available balance dropped below ${prize} JJ. Your attempt was restored.`]
+      : messages[run?.result];
     const available = data.remaining > 0 && data.funded !== false && !data.won;
     const result = data.won ? `<div class="heist-result heist-win"><div class="heist-win-door" aria-hidden="true">
-      <span>✦</span><span>◈</span><span>✧</span></div><strong>+300 JJ</strong><p>${bi('¡Golpe perfecto! Las monedas ya están en tu saldo.','Perfect heist! The coins are in your balance.')}</p></div>`
-      : run?.result && messages[run.result] ? `<div class="heist-result"><strong>${bi('Último intento','Last attempt')}</strong><p>${bi(...messages[run.result])}</p></div>`
+      <span>✦</span><span>◈</span><span>✧</span></div><strong>+${run?.paid ?? prize} JJ</strong><p>${bi('¡Golpe perfecto! Las monedas ya están en tu saldo.','Perfect heist! The coins are in your balance.')}</p></div>`
+      : lastResult ? `<div class="heist-result"><strong>${bi('Último intento','Last attempt')}</strong><p>${bi(...lastResult)}</p></div>`
       : '';
     return `${art('cover')}<div class="heist-rules">
       ${result}
-      <p class="heist-summary"><strong>300 JJ</strong><span>${attempts(data.remaining)}</span></p>
+      <p class="heist-summary"><strong>${prize} JJ</strong><span>${attempts(data.remaining)}</span></p>
       <p>${bi('Tienes 60 segundos para superar las tres salas. Un error termina el intento.',
         'You have 60 seconds to clear all three rooms. One mistake ends the attempt.')}</p>
       <ol>${Object.values(rooms).map(([es,en,howEs,howEn]) => `<li><strong>${bi(es,en)}</strong><p>${bi(howEs,howEn)}</p></li>`).join('')}</ol>
-      <p>${bi('Puedes llevarte 300 JJ de la cuenta de Yisus una vez al día. Los intentos se reinician a medianoche de Matamoros. El reloj sigue si cierras esta ventana.',
-        'You can take 300 JJ from Yisus’s balance once a day. Attempts reset at midnight, Matamoros time. The clock keeps running if you close this window.')}</p>
-      ${data.funded === false ? `<p>${bi('A la bóveda le faltan monedas. Conservas tus intentos hasta que Yisus tenga 300 JJ disponibles.',
-        'The vault is low on coins. Your attempts stay intact until Yisus has 300 JJ available.')}</p>` : ''}
+      <p>${bi(`Puedes llevarte ${prize} JJ de la cuenta de Yisus una vez al día. Los intentos se reinician a medianoche de Matamoros. El reloj sigue si cierras esta ventana.`,
+        `You can take ${prize} JJ from Yisus’s balance once a day. Attempts reset at midnight, Matamoros time. The clock keeps running if you close this window.`)}</p>
+      ${data.funded === false ? `<p>${bi(`A la bóveda le faltan monedas. Conservas tus intentos hasta que Yisus tenga ${prize} JJ disponibles.`,
+        `The vault is low on coins. Your attempts stay intact until Yisus has ${prize} JJ available.`)}</p>` : ''}
       ${!data.won && data.remaining===0 ? `<p>${bi('Ya usaste los tres intentos. La bóveda vuelve a abrir mañana.',
         'You’ve used all three attempts. The vault opens again tomorrow.')}</p>` : ''}
       ${available ? button('start','Empezar intento','Start attempt') : button('close','Volver a Inicio','Back to Home','heist-secondary')}
@@ -271,7 +277,7 @@
     $('.hero')?.insertAdjacentHTML('afterend',`<section id="heist-home">
       ${art('cover')}<div><h2>${bi('Robo del Siglo','Heist of the Century')}</h2>
       <p>${bi('La bóveda de Yisus','Yisus’s Vault')}</p>
-      <p class="heist-summary"><strong>300 JJ</strong><span class="heist-home-status">${bi('Hasta 3 intentos al día','Up to 3 attempts a day')}</span></p>
+      <p class="heist-summary"><strong class="heist-home-prize">${defaultPrize} JJ</strong><span class="heist-home-status">${bi('Hasta 3 intentos al día','Up to 3 attempts a day')}</span></p>
       ${button('open','Entrar a la bóveda','Enter the vault')}</div></section>`);
     const cardButton = $('#heist-home button');
     if (!cardButton) return;
