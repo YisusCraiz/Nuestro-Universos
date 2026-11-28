@@ -7,3 +7,62 @@
 .collect-peer-stats{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}.collect-peer-stats span{padding:9px 14px;border:1px solid var(--line);border-radius:30px;background:#ffffff05}.collect-peer-card{min-width:0}.collect-peer-card>.collect-card{width:100%;height:auto}.collect-peer-card>p{font-size:.8rem;color:var(--muted);line-height:1.5;margin:10px 4px 20px}.collect-visual-picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;max-height:340px;overflow-y:auto;padding:4px}.collect-visual-picks .collect-visual-pick{display:grid;grid-template-columns:22px 60px minmax(0,1fr);align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:14px;cursor:pointer;min-width:0}.collect-visual-pick:has(input:checked){border-color:var(--gold);background:#e8c47315}.collect-visual-pick input{width:20px;height:20px;accent-color:var(--gold)}.collect-visual-pick strong{display:block;font-size:.9rem;overflow-wrap:anywhere}.collect-visual-pick small{display:block;font-size:.75rem;color:var(--muted);line-height:1.5}.collect-trade-thumb{display:block;width:60px}.collect-trade-thumb .collect-art{width:100%;margin:0;border-radius:8px}.collect-request-hint{border-left:3px solid var(--gold);padding:12px;background:#e8c4730b}#collect-pick-count{position:sticky;bottom:0;background:var(--surface);padding:10px;border-radius:10px}@media(max-width:480px){.collect-visual-picks{grid-template-columns:1fr;max-height:280px}.collect-peer-stats{gap:6px}.collect-peer-stats span{font-size:.8rem}}
 
 .collect-pending-badge{display:inline-grid;place-items:center;min-width:22px;min-height:22px;padding:0 6px;margin-left:4px;border-radius:20px;background:var(--gold);color:#211b31;font-weight:bold}
+
+/* Consistent card proportions across rarities and title lengths. */
+.collect-grid {
+  grid-template-columns: repeat(4, minmax(0, 210px));
+  justify-content: center;
+}
+.collect-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+.collect-card .collect-art,
+.collect-card .collect-silhouette {
+  flex: 0 0 auto;
+}
+.collect-card strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  box-sizing: content-box;
+  height: 2.6em;
+}
+.collect-card-foot {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collect-reveal {
+  --collect-reveal-width: 198px;
+}
+.collect-reveal .collect-card,
+.collect-reveal .collect-card-back {
+  width: min(100%, var(--collect-reveal-width));
+  box-sizing: border-box;
+}
+.collect-reveal .collect-card-back {
+  aspect-ratio: .68;
+  gap: 16px;
+}
+.collect-detail > .collect-art,
+.collect-detail > .collect-silhouette {
+  width: min(100%, 250px);
+  margin: 14px auto;
+  box-sizing: border-box;
+}
+.collect-detail blockquote,
+.collect-reveal blockquote {
+  font-size: clamp(1rem, 2.2vw, 1.125rem);
+  line-height: 1.5;
+  margin-block: 16px;
+  padding: 6px 12px;
+}
+@media (max-width: 850px) {
+  .collect-grid { grid-template-columns: repeat(3, minmax(0, 210px)); }
+}
+@media (max-width: 600px) {
+  .collect-grid { grid-template-columns: repeat(2, minmax(0, 180px)); }
+  .collect-reveal { --collect-reveal-width: 176px; }
+}

@@ -20,13 +20,13 @@ assert.equal(count,630);console.log('PASS: all 630 cards sample only their measu
 for (const collection of Object.keys(expansionNames)) {
  for (let i=0;i<30;i++) {
   const html=art({collection,art:i,id:'test'});
-  assert.ok(html.includes('assets/collection/'+collection+'.webp'));
+  assert.ok(html.includes('assets/collection/'+collection+'.webp?v=2'));
   assert.ok(html.includes('background-size:600% 500%;--cx:'+(i%6)*20+'%;--cy:'+Math.floor(i/6)*25+'%'));
  }
 }
 for (const [rarity,file] of [[3,'legendary'],[4,'exe']]) {
  const html=art({collection:'navidad-jj',season:'christmas',rarity,art:19,id:'test'});
- assert.ok(html.includes('christmas-'+file+'.webp'));
+ assert.ok(html.includes('christmas-'+file+'.webp?v=2'));
  assert.ok(html.includes('background-size:500% 400%;--cx:100%;--cy:100%'));
 }
 console.log('PASS: all expansion cards and both Christmas atlases map to the correct image slots.');
